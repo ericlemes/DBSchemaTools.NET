@@ -5,25 +5,25 @@ namespace DBInfo.Core.Extractor {
   public interface IDBInfoExtractor {
     void Abrir();
     void Fechar();
-    DataSet PegarDatasetTabelas();
-    DataSet PegarDatasetColunas(string ATabela);
-    DataSet PegarDatasetForeignKeys(string ATabela);
-    DataSet PegarDatasetForeignKeyColumns(string AForeignKey);
-    DataSet PegarDatasetPrimaryKey(string ATabela);
-    DataSet PegarDatasetPrimaryKeyColumns(string ATabela, string APrimaryKeyName);
-    DataSet PegarDatasetIndices(string ATabela);
-    DataSet PegarDatasetColunasIndice(string ATabela, string AIndice);
-    DataSet PegarDatasetDadosIniciais(string ATabela);
-    DataSet PegarDatasetProcedures();
-    DataSet PegarDatasetProcedureText(string AProcedure);
-    DataSet PegarDatasetFunctions();
-    DataSet PegarDatasetFunctionText(string AFunction);
-    DataSet PegarDatasetTriggers(string ATabela);
-    DataSet PegarDatasetTriggerText(string ATrigger);
-    DataSet PegarDatasetViews();
-    DataSet PegarDatasetViewText(string AView);
-    DataSet PegarDatasetCheckConstraints(string ATabela);
-    DataSet PegarDatasetSequences();
-    DataSet PegarDatasetTableTriggers(string ATabela);
+    DataSet getTables();
+    DataSet getTableColumns(string ATabela);
+    DataSet getForeignKeys(string ATabela);
+    DataSet getForeignKeyColumns(string AForeignKey);
+    DataSet getPrimaryKey(string ATabela);
+    DataSet getPrimaryKeyColumns(string ATabela, string APrimaryKeyName);
+    DataSet getIndexes(string ATabela);
+    DataSet getIndexColumns(string ATabela, string AIndice);
+    DataSet getTableData(string ATabela);
+    DataSet getProcedures();
+    DataSet getProcedureText(string AProcedure);
+    DataSet getFunctions();
+    DataSet getFunctionText(string AFunction);
+    DataSet getTriggers(string ATabela);
+    DataSet getTriggerText(string ATrigger);
+    DataSet getViews();
+    DataSet getViewText(string AView);
+    DataSet getCheckConstraints(string ATabela);
+    DataSet getSequences();
+    DataSet getTableTriggers(string ATabela);
   }
 }

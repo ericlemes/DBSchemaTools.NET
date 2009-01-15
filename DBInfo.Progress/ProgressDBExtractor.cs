@@ -19,7 +19,7 @@ namespace DBInfo.DBExtractors {
 
     }
 
-    public DataSet PegarDatasetCheckConstraints(string ATabela) {
+    public DataSet getCheckConstraints(string ATabela) {
       return null;
     }
 
@@ -42,7 +42,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet PegarDatasetColunas(string ATabela) {
+    public DataSet getTableColumns(string ATabela) {
       OdbcCommand qry = new OdbcCommand(
         "select " +
         "  fi.\"_Field-Name\", " +
@@ -125,7 +125,7 @@ namespace DBInfo.DBExtractors {
       return dsretorno;
     }
 
-    public DataSet PegarDatasetColunasIndice(string ATabela, string AIndice) {
+    public DataSet getIndexColumns(string ATabela, string AIndice) {
       OdbcCommand qry = new OdbcCommand(
         "select colname, idxorder from sysindexes where tbl = " + QuotedString(ATabela) + " and idxname = " + QuotedString(AIndice) + " order by idxseq", Connection);
       OdbcDataAdapter dat = new OdbcDataAdapter();
@@ -150,23 +150,23 @@ namespace DBInfo.DBExtractors {
       return dsretorno;
     }
 
-    public DataSet PegarDatasetDadosIniciais(string ATabela) {
+    public DataSet getTableData(string ATabela) {
       return null;
     }
 
-    public DataSet PegarDatasetForeignKeys(string ATabela) {
+    public DataSet getForeignKeys(string ATabela) {
       return null;
     }
 
-    public DataSet PegarDatasetForeignKeyColumns(string AForeignKey) {
+    public DataSet getForeignKeyColumns(string AForeignKey) {
       return null;
     }
 
-    public DataSet PegarDatasetFunctions() {
+    public DataSet getFunctions() {
       return null;
     }
 
-    public DataSet PegarDatasetFunctionText(string AFunction) {
+    public DataSet getFunctionText(string AFunction) {
       return null;
     }
 
@@ -191,7 +191,7 @@ namespace DBInfo.DBExtractors {
       return ds.Tables[0].Rows.Count > 0;
     }
 
-    public DataSet PegarDatasetIndices(string ATabela) {
+    public DataSet getIndexes(string ATabela) {
       OdbcCommand qry = new OdbcCommand(
         "select " +
         "  i.\"_Index-Name\", " +
@@ -232,23 +232,23 @@ namespace DBInfo.DBExtractors {
       return dsretorno;
     }
 
-    public DataSet PegarDatasetPrimaryKey(string ATabela) {
+    public DataSet getPrimaryKey(string ATabela) {
       return null;
     }
 
-    public DataSet PegarDatasetPrimaryKeyColumns(string ATabela, string APrimaryKeyName) {
+    public DataSet getPrimaryKeyColumns(string ATabela, string APrimaryKeyName) {
       return null;
     }
 
-    public DataSet PegarDatasetProcedures() {
+    public DataSet getProcedures() {
       return null;
     }
 
-    public DataSet PegarDatasetProcedureText(string AProcedure) {
+    public DataSet getProcedureText(string AProcedure) {
       return null;
     }
 
-    public DataSet PegarDatasetTabelas() {
+    public DataSet getTables() {
       OdbcCommand qry = new OdbcCommand(
         "select " +
         "  f.\"_File-Name\", " +
@@ -277,23 +277,23 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetTriggers(string ATabela) {
+    public DataSet getTriggers(string ATabela) {
       return null;
     }
 
-    public DataSet PegarDatasetTriggerText(string ATrigger) {
+    public DataSet getTriggerText(string ATrigger) {
       return null;
     }
 
-    public DataSet PegarDatasetViews() {
+    public DataSet getViews() {
       return null;
     }
 
-    public DataSet PegarDatasetViewText(string AView) {
+    public DataSet getViewText(string AView) {
       return null;
     }
 
-    public DataSet PegarDatasetSequences() {
+    public DataSet getSequences() {
       OdbcCommand qry = new OdbcCommand(
         "select " +
         "  s.\"_Seq-Name\", " +
@@ -313,7 +313,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetTableTriggers(string ATabela) {
+    public DataSet getTableTriggers(string ATabela) {
       OdbcCommand qry = new OdbcCommand(
         "select " +
         "  t.\"_Event\", " +

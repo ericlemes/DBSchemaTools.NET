@@ -82,7 +82,7 @@ namespace DBInfo.Core.Extractor {
 
     private void LerTabelas() {
       DataSet TablesDataset;
-      TablesDataset = ConexaoBD.PegarDatasetTabelas();
+      TablesDataset = ConexaoBD.getTables();
       if (TablesDataset == null)
         return;
 
@@ -110,7 +110,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.Colunas, Table.TableName);
 
-        DataSet ColumnsDataset = ConexaoBD.PegarDatasetColunas(Table.TableName);
+        DataSet ColumnsDataset = ConexaoBD.getTableColumns(Table.TableName);
         foreach (DataRow row in ColumnsDataset.Tables[0].Rows) {
           Column c = new Column();
           c.Table = Table;
@@ -141,7 +141,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.TableTriggers, Table.TableName);
 
-        DataSet trg = ConexaoBD.PegarDatasetTableTriggers(Table.TableName);
+        DataSet trg = ConexaoBD.getTableTriggers(Table.TableName);
         if (trg == null)
           continue;
 
@@ -162,14 +162,14 @@ namespace DBInfo.Core.Extractor {
           EventoAntesLerDadosBanco(DadosALer.PrimaryKey, Table.TableName);
 
         DataSet PKDataset;
-        PKDataset = ConexaoBD.PegarDatasetPrimaryKey(Table.TableName);
+        PKDataset = ConexaoBD.getPrimaryKey(Table.TableName);
 
         if (PKDataset == null)
           return;
 
         if (PKDataset.Tables[0].Rows.Count > 0) {
           Table.PrimaryKeyName = Convert.ToString(PKDataset.Tables[0].Rows[0][0]);
-          DataSet PKColsDataset = ConexaoBD.PegarDatasetPrimaryKeyColumns(Table.TableName, Table.PrimaryKeyName);
+          DataSet PKColsDataset = ConexaoBD.getPrimaryKeyColumns(Table.TableName, Table.PrimaryKeyName);
           foreach (DataRow r in PKColsDataset.Tables[0].Rows) {
             Column c = Table.FindColumn((string)r[0]);
             if (c == null)
@@ -186,7 +186,7 @@ namespace DBInfo.Core.Extractor {
           EventoAntesLerDadosBanco(DadosALer.CheckConstraints, Table.TableName);
 
         DataSet CheckDataset;
-        CheckDataset = ConexaoBD.PegarDatasetCheckConstraints(Table.TableName);
+        CheckDataset = ConexaoBD.getCheckConstraints(Table.TableName);
 
         if (CheckDataset == null)
           return;
@@ -208,7 +208,7 @@ namespace DBInfo.Core.Extractor {
           EventoAntesLerDadosBanco(DadosALer.Indices, t.TableName);
 
         DataSet IndexesDataset;
-        IndexesDataset = ConexaoBD.PegarDatasetIndices(t.TableName);
+        IndexesDataset = ConexaoBD.getIndexes(t.TableName);
 
         if (IndexesDataset == null)
           return;
@@ -219,7 +219,7 @@ namespace DBInfo.Core.Extractor {
           i.Unique = Convert.ToBoolean(r[1]);
           i.Area = GetString(r[2]);
           i.Primary = GetBoolean(r[3]);
-          DataSet IndexColsDataset = ConexaoBD.PegarDatasetColunasIndice(t.TableName, i.IndexName);
+          DataSet IndexColsDataset = ConexaoBD.getIndexColumns(t.TableName, i.IndexName);
           foreach (DataRow r2 in IndexColsDataset.Tables[0].Rows) {
             IndexColumn c = new IndexColumn();
             c.Column = t.FindColumn((string)r2[0]);
@@ -245,7 +245,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.ForeignKeys, Table.TableName);
 
-        DataSet FKsDataset = ConexaoBD.PegarDatasetForeignKeys(Table.TableName);
+        DataSet FKsDataset = ConexaoBD.getForeignKeys(Table.TableName);
 
         if (FKsDataset == null)
           return;
@@ -260,7 +260,7 @@ namespace DBInfo.Core.Extractor {
           Table.ForeignKeys.Add(fk);
 
 
-          FKColumnsDataset = ConexaoBD.PegarDatasetForeignKeyColumns(fk.ForeignKeyName);
+          FKColumnsDataset = ConexaoBD.getForeignKeyColumns(fk.ForeignKeyName);
           foreach (DataRow colrow in FKColumnsDataset.Tables[0].Rows) {
             ForeignKeyColumn col = new ForeignKeyColumn();
             col.RefTable = new Table();
@@ -277,13 +277,13 @@ namespace DBInfo.Core.Extractor {
       foreach (string s in DataTables) {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.DadosIniciais, s);
-        DataSet dsDados = ConexaoBD.PegarDatasetDadosIniciais(s);
+        DataSet dsDados = ConexaoBD.getTableData(s);
         DadosIniciais.Add(dsDados);
       }
     }
 
     private void LerProcedures() {
-      DataSet dsProcedures = ConexaoBD.PegarDatasetProcedures();
+      DataSet dsProcedures = ConexaoBD.getProcedures();
 
       if (dsProcedures == null)
         return;
@@ -292,7 +292,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.Procedures, (string)r[0]);
 
-        DataSet dsProc = ConexaoBD.PegarDatasetProcedureText((string)r[0]);
+        DataSet dsProc = ConexaoBD.getProcedureText((string)r[0]);
 
         if (dsProc == null)
           return;
@@ -312,7 +312,7 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void LerFunctions() {
-      DataSet dsFunctions = ConexaoBD.PegarDatasetFunctions();
+      DataSet dsFunctions = ConexaoBD.getFunctions();
 
       if (dsFunctions == null)
         return;
@@ -321,7 +321,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.Functions, (string)r[0]);
 
-        DataSet dsFunction = ConexaoBD.PegarDatasetFunctionText((string)r[0]);
+        DataSet dsFunction = ConexaoBD.getFunctionText((string)r[0]);
 
         if (dsFunction == null)
           return;
@@ -345,7 +345,7 @@ namespace DBInfo.Core.Extractor {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DadosALer.Triggers, t.TableName);
 
-        DataSet dsTriggers = ConexaoBD.PegarDatasetTriggers(t.TableName);
+        DataSet dsTriggers = ConexaoBD.getTriggers(t.TableName);
 
         if (dsTriggers == null)
           return;
@@ -355,7 +355,7 @@ namespace DBInfo.Core.Extractor {
           tr.Name = (string)r[0];
           tr.Table = t;
           tr.Body = "";
-          DataSet dsTriggerBody = ConexaoBD.PegarDatasetTriggerText(tr.Name);
+          DataSet dsTriggerBody = ConexaoBD.getTriggerText(tr.Name);
           if (dsTriggerBody.Tables.Count > 0) {
             foreach (DataRow r2 in dsTriggerBody.Tables[0].Rows) {
               tr.Body += r2[0];
@@ -367,7 +367,7 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void LerViews() {
-      DataSet dsViews = ConexaoBD.PegarDatasetViews();
+      DataSet dsViews = ConexaoBD.getViews();
 
       if (dsViews == null)
         return;
@@ -379,7 +379,7 @@ namespace DBInfo.Core.Extractor {
         View v = new View();
         v.Name = (string)dr[0];
         v.Body = "";
-        DataSet dsViewBody = ConexaoBD.PegarDatasetViewText(v.Name);
+        DataSet dsViewBody = ConexaoBD.getViewText(v.Name);
         if (dsViewBody.Tables.Count > 0) {
           foreach (DataRow r2 in dsViewBody.Tables[0].Rows) {
             v.Body += (string)r2[0];
@@ -390,7 +390,7 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void LerSequences() {
-      DataSet dsSequences = ConexaoBD.PegarDatasetSequences();
+      DataSet dsSequences = ConexaoBD.getSequences();
 
       if (dsSequences == null)
         return;

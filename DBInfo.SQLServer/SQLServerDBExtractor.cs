@@ -20,7 +20,7 @@ namespace DBInfo.DBExtractors {
       SqlConn.Close();
     }
 
-    public DataSet PegarDatasetTabelas() {
+    public DataSet getTables() {
       SqlCommand qry = new SqlCommand("select name, case when ident_seed(name) is null then 0 else 1 end HasIdentity, ident_seed(name) IdentSeed, ident_incr(name) IdentIncr from sysobjects where xtype = 'U' and uid = 1 and status >= 0 order by name", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       DataSet ds = new DataSet();
@@ -29,7 +29,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetColunas(string ATabela) {
+    public DataSet getTableColumns(string ATabela) {
       SqlCommand qry = new SqlCommand(
           "select " +
           "  c.name, " +
@@ -92,7 +92,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetForeignKeys(string ATabela) {
+    public DataSet getForeignKeys(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  const.name, " +
@@ -130,7 +130,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetForeignKeyColumns(string AForeignKey) {
+    public DataSet getForeignKeyColumns(string AForeignKey) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  origincolumn.name, " +
@@ -158,7 +158,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetPrimaryKey(string ATabela) {
+    public DataSet getPrimaryKey(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  constraint_name " +
@@ -175,7 +175,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetPrimaryKeyColumns(string ATabela, string APrimaryKeyName) {
+    public DataSet getPrimaryKeyColumns(string ATabela, string APrimaryKeyName) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  column_name " +
@@ -196,7 +196,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetIndices(string ATabela) {
+    public DataSet getIndexes(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  i.name, " +
@@ -222,7 +222,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetColunasIndice(string ATabela, string AIndice) {
+    public DataSet getIndexColumns(string ATabela, string AIndice) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  c.name " +
@@ -251,7 +251,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetDadosIniciais(string ATabela) {
+    public DataSet getTableData(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select * from " + ATabela, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
@@ -261,7 +261,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetProcedures() {
+    public DataSet getProcedures() {
       SqlCommand qry = new SqlCommand(
         "select  " +
         "  routine_name  " +
@@ -279,7 +279,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetProcedureText(string AProcedure) {
+    public DataSet getProcedureText(string AProcedure) {
       SqlCommand qry = new SqlCommand("sp_helptext " + AProcedure, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
@@ -288,7 +288,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetFunctions() {
+    public DataSet getFunctions() {
       SqlCommand qry = new SqlCommand(
         "select  " +
         "  routine_name  " +
@@ -306,7 +306,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetFunctionText(string AFunction) {
+    public DataSet getFunctionText(string AFunction) {
       SqlCommand qry = new SqlCommand("sp_helptext " + AFunction, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
@@ -315,7 +315,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetTriggers(string ATabela) {
+    public DataSet getTriggers(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  name " +
@@ -334,7 +334,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetTriggerText(string ATrigger) {
+    public DataSet getTriggerText(string ATrigger) {
       SqlCommand qry = new SqlCommand("sp_helptext " + ATrigger, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
@@ -343,7 +343,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetViews() {
+    public DataSet getViews() {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  table_name " +
@@ -360,7 +360,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetViewText(string AView) {
+    public DataSet getViewText(string AView) {
       SqlCommand qry = new SqlCommand("sp_helptext " + AView, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
@@ -369,7 +369,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetCheckConstraints(string ATabela) {
+    public DataSet getCheckConstraints(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  o.name, " +
@@ -392,11 +392,11 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet PegarDatasetSequences() {
+    public DataSet getSequences() {
       return null;
     }
 
-    public DataSet PegarDatasetTableTriggers(string ATabela) {
+    public DataSet getTableTriggers(string ATabela) {
       return null;
     }
   }
