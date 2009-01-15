@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9DAD8CAD-F721-4E08-9DC3-C9D080B89CD3}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DBInfo.CommandLine</RootNamespace>
+    <AssemblyName>DBInfo.CommandLine</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DBInfoMain.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DBInfo.Core\DBInfo.Core.csproj">
+      <Project>{4C3C4618-A3D3-49F9-BD96-95054A36F511}</Project>
+      <Name>DBInfo.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DBInfo.DBSync\DBInfo.DBSync.csproj">
+      <Project>{3278220A-DC36-4C56-B660-407B5814CBC1}</Project>
+      <Name>DBInfo.DBSync</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DBInfo.Oracle\DBInfo.Oracle.csproj">
+      <Project>{79005FC8-35D1-4B04-874C-22106BD691B7}</Project>
+      <Name>DBInfo.Oracle</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DBInfo.Progress\DBInfo.Progress.csproj">
+      <Project>{F6A1C2BA-77F2-4D52-A1B8-879EF3C83216}</Project>
+      <Name>DBInfo.Progress</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DBInfo.SQLServer\DBInfo.SQLServer.csproj">
+      <Project>{D4536008-17B8-4BB6-B83F-2FC937CA1B8C}</Project>
+      <Name>DBInfo.SQLServer</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
