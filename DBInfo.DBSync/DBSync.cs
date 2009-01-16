@@ -168,14 +168,12 @@ namespace DBInfo.DBSync {
     }
 
 
-    protected ForeignKeyColumn PegarColunasFK(ForeignKeyColumn fkAtual, System.Collections.ArrayList ColunasFK) {
-      foreach (object col in ColunasFK) {
-        ForeignKeyColumn fk = (ForeignKeyColumn)col;
-
+    protected ForeignKeyColumn PegarColunasFK(ForeignKeyColumn fkAtual, List<ForeignKeyColumn> ColunasFK) {
+      foreach (ForeignKeyColumn fk in ColunasFK) {        
         if ((fkAtual.RefTable.TableName == fk.RefTable.TableName) &&
           (fkAtual.Column.Name == fk.Column.Name) &&
           (fkAtual.RefColumn.Name == fk.RefColumn.Name))
-          return (ForeignKeyColumn)col;
+          return fk;
       }
       return null;
     }
