@@ -7,6 +7,7 @@ using DBInfo.Core;
 using DBInfo.Core.Model;
 using DBInfo.Core.Extractor;
 using DBInfo.OutputGenerators;
+using System.Collections.Generic;
 
 namespace DBInfo.DBSync {
   public class DBSyncScript : DBSync {
@@ -693,7 +694,7 @@ namespace DBInfo.DBSync {
 
     #region Especializados
 
-    private bool ValidaAlteracaoColumnsPrimaryKey(System.Collections.ArrayList pkAtual, System.Collections.ArrayList pkNova) {
+    private bool ValidaAlteracaoColumnsPrimaryKey(List<Column> pkAtual, List<Column> pkNova) {
       foreach (object col in pkAtual) {
         Column pk = PegarColuna(((Column)col).Name, pkNova);
         if (pk == null)
@@ -788,15 +789,15 @@ namespace DBInfo.DBSync {
     }
 
 
-    private bool ValidaAlteracaoColumnsIndice(System.Collections.ArrayList ixAtual, System.Collections.ArrayList ixNova, string NomeTabela) {
+    private bool ValidaAlteracaoColumnsIndice(List<IndexColumn> ixAtual, List<IndexColumn> ixNova, string NomeTabela) {
       foreach (object col in ixAtual) {
-        Column ix = PegarColuna(((Column)col).Name, ixNova);
+        Column ix = PegarColuna(((Column)col).Name, ixNova).Column;
         if (ix == null)
           return false;
       }
 
       foreach (object col in ixNova) {
-        Column ix = PegarColuna(((Column)col).Name, ixAtual);
+        Column ix = PegarColuna(((Column)col).Name, ixAtual).Column;
 
         if (ix == null)
           return false;
@@ -949,11 +950,11 @@ namespace DBInfo.DBSync {
 
     protected override void ScriptAlteracaoCheckConstraint(Table tbAtual, Table tbNova) {
       foreach (object chkc in tbAtual.CheckConstraints) {
-        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).Nome, tbNova.CheckConstraints);
+        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbNova.CheckConstraints);
 
         if (ccdestino != null) {
           if (!ValidaAlteracaoCheckConstraint((CheckConstraint)chkc, ccdestino, tbAtual.TableName)) {
-            string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Nome, tbAtual.TableName);
+            string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Name, tbAtual.TableName);
             lstScriptExclusaoCheckConstraint.Add(segmentacao);
             AdicionarScriptSegmentado(tbAtual.TableName, segmentacao);
 
@@ -963,7 +964,7 @@ namespace DBInfo.DBSync {
 
           }
         } else {
-          string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Nome, tbAtual.TableName);
+          string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Name, tbAtual.TableName);
           lstScriptExclusaoCheckConstraint.Add(segmentacao);
           AdicionarScriptSegmentado(tbAtual.TableName, segmentacao);
         }
@@ -971,7 +972,7 @@ namespace DBInfo.DBSync {
 
 
       foreach (object chkc in tbNova.CheckConstraints) {
-        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).Nome, tbAtual.CheckConstraints);
+        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbAtual.CheckConstraints);
 
         if (ccorigem == null) {
           string segmentacao = ScriptInclusaoCheckConstraint((CheckConstraint)chkc, tbAtual.TableName);
@@ -985,13 +986,13 @@ namespace DBInfo.DBSync {
     #region Especializados
 
     private bool ValidaAlteracaoCheckConstraint(CheckConstraint ccAtual, CheckConstraint ccNova, string NomeTabela) {
-      return (ccAtual.Expressao == ccNova.Expressao);
+      return (ccAtual.Expression == ccNova.Expression);
     }
 
 
     private string ScriptInclusaoCheckConstraint(CheckConstraint cc, string NomeTabelaOrigem) {
       string script = "ALTER TABLE [dbo].[" + NomeTabelaOrigem + "] ADD " + Environment.NewLine;
-      script += "CONSTRAINT [" + cc.Nome + "] CHECK " + cc.Expressao + Environment.NewLine;
+      script += "CONSTRAINT [" + cc.Name + "] CHECK " + cc.Expression + Environment.NewLine;
       script += "GO " + Environment.NewLine + Environment.NewLine;
       return script;
     }

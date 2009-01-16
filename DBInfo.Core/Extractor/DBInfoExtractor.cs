@@ -89,8 +89,9 @@ namespace DBInfo.Core.Extractor {
       if (EventoAntesLerDadosBanco != null)
         EventoAntesLerDadosBanco(DadosALer.Tabelas, "");
 
-      foreach (DataRow row in TablesDataset.Tables[0].Rows) {
-        Table t = new Table((string)row[0]);
+      foreach (DataRow row in TablesDataset.Tables[0].Rows) {        
+        Table t = new Table();
+        t.TableName = (string)row[0];
         t.HasIdentity = Convert.ToBoolean(row[1]);
         if (t.HasIdentity) {
           t.IdentitySeed = Convert.ToInt32(row[2]);
@@ -194,8 +195,8 @@ namespace DBInfo.Core.Extractor {
         if (CheckDataset.Tables[0].Rows.Count > 0) {
           foreach (DataRow r in CheckDataset.Tables[0].Rows) {
             CheckConstraint ch = new CheckConstraint();
-            ch.Nome = (string)r[0];
-            ch.Expressao = (string)r[1];
+            ch.Name = (string)r[0];
+            ch.Expression = (string)r[1];
             Table.CheckConstraints.Add(ch);
           }
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using DBInfo.Core.Model;
 using DBInfo.Core.Extractor;
+using System.Collections.Generic;
 
 namespace DBInfo.DBSync {
   public class DBSync {
@@ -91,10 +92,19 @@ namespace DBInfo.DBSync {
 
     #region Colunas
 
-    protected Column PegarColuna(string NomeColuna, System.Collections.ArrayList colunas) {
-      foreach (object col in colunas) {
-        if (((Column)col).Name == NomeColuna) {
-          return (Column)col;
+    protected Column PegarColuna(string NomeColuna, List<Column> colunas) {
+      foreach (Column col in colunas) {
+        if (col.Name == NomeColuna) {
+          return col;
+        }
+      }
+      return null;
+    }
+
+    protected IndexColumn PegarColuna(string NomeColuna, List<IndexColumn> colunas) {
+      foreach (IndexColumn col in colunas) {
+        if (col.Column.Name == NomeColuna) {
+          return col;
         }
       }
       return null;
@@ -131,10 +141,10 @@ namespace DBInfo.DBSync {
 
     #region Indexes
 
-    protected Index PegarIndice(string NomeIndice, System.Collections.ArrayList Indexes) {
-      foreach (object ix in Indexes) {
-        if (((Index)ix).IndexName == NomeIndice) {
-          return (Index)ix;
+    protected Index PegarIndice(string NomeIndice, List<Index> Indexes) {
+      foreach (Index ix in Indexes) {
+        if (ix.IndexName == NomeIndice) {
+          return ix;
         }
       }
       return null;
@@ -148,10 +158,10 @@ namespace DBInfo.DBSync {
 
     #region ForeignKeys
 
-    protected ForeignKey PegarForeignKey(string NomeForeignKey, System.Collections.ArrayList ForeignKeys) {
-      foreach (object fk in ForeignKeys) {
-        if (((ForeignKey)fk).ForeignKeyName == NomeForeignKey) {
-          return (ForeignKey)fk;
+    protected ForeignKey PegarForeignKey(string NomeForeignKey, List<ForeignKey> ForeignKeys) {
+      foreach (ForeignKey fk in ForeignKeys) {
+        if (fk.ForeignKeyName == NomeForeignKey) {
+          return fk;
         }
       }
       return null;
@@ -178,10 +188,10 @@ namespace DBInfo.DBSync {
 
     #region Constraints
 
-    protected CheckConstraint PegarCheckConstraint(string Nome, System.Collections.ArrayList CheckConstraints) {
-      foreach (object constraint in CheckConstraints) {
-        if (((CheckConstraint)constraint).Nome == Nome) {
-          return (CheckConstraint)constraint;
+    protected CheckConstraint PegarCheckConstraint(string Nome, List<CheckConstraint> CheckConstraints) {
+      foreach (CheckConstraint constraint in CheckConstraints) {
+        if (constraint.Name == Nome) {
+          return constraint;
         }
       }
       return null;

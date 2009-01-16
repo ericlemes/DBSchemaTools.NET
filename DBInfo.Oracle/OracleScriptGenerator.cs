@@ -74,10 +74,10 @@ namespace DBInfo.OutputGenerators {
 
       foreach (CheckConstraint c in ATable.CheckConstraints) {
         TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
-        TmpScript += "  add constraint " + c.Nome + Environment.NewLine;
+        TmpScript += "  add constraint " + c.Name + Environment.NewLine;
 
         // validar se irá realmente retirar os [ ]
-        TmpScript += "  check " + c.Expressao.Replace("[", string.Empty).Replace("]", string.Empty) + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+        TmpScript += "  check " + c.Expression.Replace("[", string.Empty).Replace("]", string.Empty) + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
       }
 
 

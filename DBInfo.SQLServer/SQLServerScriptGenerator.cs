@@ -79,8 +79,8 @@ namespace DBInfo.OutputGenerators {
       TmpScript += ")" + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
       foreach (CheckConstraint c in ATable.CheckConstraints) {
         TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
-        TmpScript += "  add constraint " + c.Nome + Environment.NewLine;
-        TmpScript += "  check " + c.Expressao + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+        TmpScript += "  add constraint " + c.Name + Environment.NewLine;
+        TmpScript += "  check " + c.Expression + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
       }
 
       return TmpScript;
