@@ -5,11 +5,7 @@ using DBInfo.Core.Model;
 using DBInfo.Core.OutputGenerators;
 
 namespace DBInfo.OutputGenerators {
-  public class SQLServerScriptGenerator : IOutputGenerator {
-
-    public SQLServerScriptGenerator() {
-    }
-
+  public class SQLServerOutputGenerator : IOutputGenerator {
 
     private bool IsPK(string colName, Table tb) {
       bool retorno = false;

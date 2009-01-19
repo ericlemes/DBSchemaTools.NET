@@ -5,17 +5,35 @@ using DBInfo.Core.Extractor;
 
 namespace DBInfo.DBExtractors {
   public class ProgressDBExtractor : IDBInfoExtractor {
+    private InputOutputType _InputType;
+    public InputOutputType InputType {
+      get { return _InputType; }
+      set { _InputType = value; }
+    }
+
+    private string _InputConnectionString;
+    public string InputConnectionString {
+      get { return _InputConnectionString; }
+      set { _InputConnectionString = value; }
+    }
+
+    private string _InputDir;
+    public string InputDir {
+      get { return _InputDir; }
+      set { _InputDir = value; }
+    }  
+  
     public OdbcConnection Connection;
 
     public ProgressDBExtractor() {
       Connection = new OdbcConnection();
     }
 
-    public void Abrir() {
+    public void Open() {
       Connection.Open();
     }
 
-    public void Fechar() {
+    public void Close() {
 
     }
 

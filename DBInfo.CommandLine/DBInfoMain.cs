@@ -59,7 +59,7 @@ namespace DBInfo.CommandLine {
 
 
     static void SelecionarIntrospectar(string[] args) {
-      if (args.Length < 2)
+      /*if (args.Length < 2)
         throw new Exception("Informe a connection string: DBInfo introspectar <connectionstring>");
 
       DBInfoExtractor Introspector = new DBInfoExtractor();
@@ -67,11 +67,11 @@ namespace DBInfo.CommandLine {
       SQLServerDBExtractor conn = new SQLServerDBExtractor();
 
       conn.SqlConn.ConnectionString = args[1];
-      Introspector.ConexaoBD = conn;
+      Introspector. = conn;
       Introspector.IntrospectarBancoDados();
 
       SQLServerScriptGenerator sg = new SQLServerScriptGenerator();
-      /*sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
       sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
       sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
       sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
@@ -111,7 +111,7 @@ namespace DBInfo.CommandLine {
 
 
     static void SelecionarComparacao(string[] args) {
-      if (args.Length < 4)
+      /*if (args.Length < 4)
         throw new Exception("Informe a connection string: DBInfo comparacao <connectionstringDBOrigem> <connectionstringDBDestino> <caminho resultado>");
 
       DBInfoExtractor Introspector1 = new DBInfoExtractor();
@@ -123,7 +123,7 @@ namespace DBInfo.CommandLine {
       conn1.SqlConn.ConnectionString = args[1];
       conn2.SqlConn.ConnectionString = args[2];
 
-      Introspector1.ConexaoBD = conn1;
+      Introspector1.Extractor = conn1;
       Introspector2.ConexaoBD = conn2;
 
       Introspector1.IntrospectarBancoDados();
@@ -136,7 +136,7 @@ namespace DBInfo.CommandLine {
       dbc2.CompararDB(Introspector1, Introspector2);
 
       dbc.GerarScriptOrdenado(args[3]);
-      dbc2.GerarScriptOrdenado(args[3]);
+      dbc2.GerarScriptOrdenado(args[3]);*/
     }
 
 
@@ -176,7 +176,7 @@ namespace DBInfo.CommandLine {
           Introspector.DataTables.Add(s);
 
         conn.SqlConn.ConnectionString = args[1];
-        Introspector.ConexaoBD = conn;
+        Introspector.Extractor = conn;
         Introspector.IntrospectarDadosIniciais();
 
         DBSyncScript dbc = new DBSyncScript();
@@ -188,7 +188,7 @@ namespace DBInfo.CommandLine {
 
 
     static void SelecionarDadosIniciais(string[] args) {
-      if (args.Length < 3)
+      /*if (args.Length < 3)
         throw new Exception("Informe os parâmetros corretamente: DBInfo dadosiniciais <connectionstring> <tabelasseparadaspor;>");
 
       DBInfoExtractor Introspector = new DBInfoExtractor();
@@ -202,11 +202,11 @@ namespace DBInfo.CommandLine {
       }
 
       conn.SqlConn.ConnectionString = args[1];
-      Introspector.ConexaoBD = conn;
+      Introspector.Extractor = conn;
       Introspector.IntrospectarDadosIniciais();
 
       SQLServerScriptGenerator sg = new SQLServerScriptGenerator();
-      /*sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
       sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
       sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
       sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
@@ -227,7 +227,7 @@ namespace DBInfo.CommandLine {
       SQLServerDBExtractor conn = new SQLServerDBExtractor();
 
       conn.SqlConn.ConnectionString = args[1];
-      Introspector.ConexaoBD = conn;
+      Introspector.Extractor = conn;
       Introspector.IntrospectarPrimaryKeysEForeignKeys();
 
       Console.WriteLine("");
@@ -298,7 +298,7 @@ namespace DBInfo.CommandLine {
     }
 
     static void SelecionarIntrospectarFromProgress(string[] args) {
-      if (args.Length < 2)
+      /*if (args.Length < 2)
         throw new Exception("Informe a connection string: DBInfo introspectarfrompg <connectionstring>");
 
       DBInfoExtractor Introspector = new DBInfoExtractor();
@@ -319,7 +319,7 @@ namespace DBInfo.CommandLine {
 
       sg.GerarScripts();
       sg.FullScriptName = "all.df";
-      sg.SalvarFullScript(System.Text.Encoding.Default);
+      sg.SalvarFullScript(System.Text.Encoding.Default);*/
     }
   }
 }

@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQLServerDBExtractor.cs" />
-    <Compile Include="SQLServerScriptGenerator.cs" />
+    <Compile Include="SQLServerOutputGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DBInfo.Core\DBInfo.Core.csproj">

@@ -3,8 +3,20 @@ using System.Data;
 
 namespace DBInfo.Core.Extractor {
   public interface IDBInfoExtractor {
-    void Abrir();
-    void Fechar();
+    InputOutputType InputType{
+      get;
+      set;
+    }
+    string InputConnectionString{
+      get;
+      set;
+    }
+    string InputDir{
+      get;
+      set;
+    }
+    void Open();
+    void Close();
     DataSet getTables();
     DataSet getTableColumns(string ATabela);
     DataSet getForeignKeys(string ATabela);

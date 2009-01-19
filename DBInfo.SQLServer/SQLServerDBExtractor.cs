@@ -6,17 +6,35 @@ using DBInfo.Core.Extractor;
 
 namespace DBInfo.DBExtractors {
   public class SQLServerDBExtractor : IDBInfoExtractor {
+    private InputOutputType _InputType;
+    public InputOutputType InputType {
+      get { return _InputType; }
+      set { _InputType = value; }
+    }
+
+    private string _InputConnectionString;
+    public string InputConnectionString {
+      get { return _InputConnectionString; }
+      set { _InputConnectionString = value; }
+    }
+
+    private string _InputDir;
+    public string InputDir {
+      get { return _InputDir; }
+      set { _InputDir = value; }
+    }  
+  
     public SqlConnection SqlConn;
 
     public SQLServerDBExtractor() {
       SqlConn = new SqlConnection();
     }
 
-    public void Abrir() {
+    public void Open() {
       SqlConn.Open();
     }
 
-    public void Fechar() {
+    public void Close() {
       SqlConn.Close();
     }
 

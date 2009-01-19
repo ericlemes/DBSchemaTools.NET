@@ -55,7 +55,7 @@ namespace DBInfo.DBSync {
 
     public void CompararDadosIniciais(DBInfoExtractor Base, string[] DadosIniciais, string CaminhoCargaInicial, string OrigemComparacao) {
       Table tabela = new Table();
-      SQLServerScriptGenerator sg = new SQLServerScriptGenerator();
+      SQLServerOutputGenerator sg = new SQLServerOutputGenerator();
       string script = string.Empty;
 
       foreach (string s in DadosIniciais) {
