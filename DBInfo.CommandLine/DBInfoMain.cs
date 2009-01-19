@@ -71,10 +71,10 @@ namespace DBInfo.CommandLine {
       Introspector.IntrospectarBancoDados();
 
       SQLServerScriptGenerator sg = new SQLServerScriptGenerator();
-      sg.EventoAntesGerarScripts += new ScriptGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
-      sg.EventoAntesSalvarScripts += new ScriptGenerator.AntesSalvarScripts(AntesSalvarScripts);
-      sg.EventoAntesGerarDadosIniciais += new ScriptGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
-      sg.EventoAntesGerarLinhaDadoInicial += new ScriptGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
+      /*sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
+      sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
+      sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
       sg.Introspector = Introspector;
       sg.ScriptsRootDir = System.AppDomain.CurrentDomain.BaseDirectory + "Scripts\\";
 
@@ -84,7 +84,7 @@ namespace DBInfo.CommandLine {
       else
         sg.SalvarScriptsTabelasSQL(new System.Text.UTF8Encoding());
 
-      sg.SalvarScripts();
+      sg.SalvarScripts();*/
     }
 
 
@@ -96,10 +96,10 @@ namespace DBInfo.CommandLine {
       DBInfoExtractor Introspector = new DBInfoExtractor();
       OracleScriptGenerator sg = new OracleScriptGenerator();
 
-      sg.EventoAntesGerarScripts += new ScriptGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
-      sg.EventoAntesSalvarScripts += new ScriptGenerator.AntesSalvarScripts(AntesSalvarScripts);
-      sg.EventoAntesGerarDadosIniciais += new ScriptGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
-      sg.EventoAntesGerarLinhaDadoInicial += new ScriptGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
+      sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
+      sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
+      sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
 
       Introspector.DeserializarXML(args[1]);
 
@@ -206,15 +206,15 @@ namespace DBInfo.CommandLine {
       Introspector.IntrospectarDadosIniciais();
 
       SQLServerScriptGenerator sg = new SQLServerScriptGenerator();
-      sg.EventoAntesGerarScripts += new ScriptGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
-      sg.EventoAntesSalvarScripts += new ScriptGenerator.AntesSalvarScripts(AntesSalvarScripts);
-      sg.EventoAntesGerarDadosIniciais += new ScriptGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
-      sg.EventoAntesGerarLinhaDadoInicial += new ScriptGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
+      /*sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
+      sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
+      sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
       sg.Introspector = Introspector;
       sg.ScriptsRootDir = System.AppDomain.CurrentDomain.BaseDirectory + "Scripts\\";
       sg.GerarScripts();
       sg.SalvarScriptsTabelasSQL(new System.Text.UTF8Encoding());
-      sg.SalvarScripts();
+      sg.SalvarScripts();*/
     }
 
 
@@ -280,15 +280,15 @@ namespace DBInfo.CommandLine {
     }
 
 
-    static void AntesGerarScripts(ScriptGenerator.ScriptsAGerar AScript, string AObjeto) {
+    static void AntesGerarScripts(OutputGenerator.ScriptsAGerar AScript, string AObjeto) {
       switch (AScript) {
-        case ScriptGenerator.ScriptsAGerar.DadosIniciais: Console.WriteLine("Gerando dados iniciais: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.ForeignKeys: Console.WriteLine("Gerando foreign keys: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.Functions: Console.WriteLine("Gerando function: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.Procedures: Console.WriteLine("Gerando procedure: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.Tabelas: Console.WriteLine("Gerando tabela: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.Triggers: Console.WriteLine("Gerando trigger: " + AObjeto); break;
-        case ScriptGenerator.ScriptsAGerar.Sequences: Console.WriteLine("Gerando sequences: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.DadosIniciais: Console.WriteLine("Gerando dados iniciais: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.ForeignKeys: Console.WriteLine("Gerando foreign keys: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.Functions: Console.WriteLine("Gerando function: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.Procedures: Console.WriteLine("Gerando procedure: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.Tabelas: Console.WriteLine("Gerando tabela: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.Triggers: Console.WriteLine("Gerando trigger: " + AObjeto); break;
+        case OutputGenerator.ScriptsAGerar.Sequences: Console.WriteLine("Gerando sequences: " + AObjeto); break;
       }
     }
 
@@ -310,10 +310,10 @@ namespace DBInfo.CommandLine {
       Introspector.IntrospectarBancoDados();
 
       ProgressScriptGenerator sg = new ProgressScriptGenerator();
-      sg.EventoAntesGerarScripts += new ScriptGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
-      sg.EventoAntesSalvarScripts += new ScriptGenerator.AntesSalvarScripts(AntesSalvarScripts);
-      sg.EventoAntesGerarDadosIniciais += new ScriptGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
-      sg.EventoAntesGerarLinhaDadoInicial += new ScriptGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
+      sg.EventoAntesGerarScripts += new OutputGenerator.AntesGerarScriptsHandler(AntesGerarScripts);
+      sg.EventoAntesSalvarScripts += new OutputGenerator.AntesSalvarScripts(AntesSalvarScripts);
+      sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
+      sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
       sg.Introspector = Introspector;
       sg.ScriptsRootDir = System.AppDomain.CurrentDomain.BaseDirectory + "Scripts\\";
 

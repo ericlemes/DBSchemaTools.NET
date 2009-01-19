@@ -5,7 +5,7 @@ using DBInfo.Core.OutputGenerators;
 using DBInfo.Core.Model;
 
 namespace DBInfo.OutputGenerators {
-  public class OracleScriptGenerator : ScriptGenerator {
+  public class OracleScriptGenerator : OutputGenerator {
     public OracleScriptGenerator() {
     }
 
@@ -60,7 +60,7 @@ namespace DBInfo.OutputGenerators {
       }
     }
 
-    protected override string GenerateTableOutput(Table ATable) {
+    public string GenerateTableOutput(Table ATable) {
       string TmpScript = "";
       TmpScript = "create table " + ATable.TableName + "(" + Environment.NewLine;
       foreach (Column c in ATable.Columns) {
@@ -84,7 +84,7 @@ namespace DBInfo.OutputGenerators {
       return TmpScript;
     }
 
-    protected override string GerarScriptPrimaryKey(Table ATable) {
+    public string GeneratePrimaryKeyOutput(Table ATable) {
       string TmpScript = "";
       if (ATable.PrimaryKeyName != String.Empty) {
         TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
@@ -110,7 +110,7 @@ namespace DBInfo.OutputGenerators {
         return "";
     }
 
-    protected override string GerarScriptIndices(Table ATable) {
+    public string GenerateIndexesOutput(Table ATable) {
       string TmpScript = "";
       foreach (Index i in ATable.Indexes) {
         TmpScript += "create " + PegarUnique(i.Unique) + "index " + RetirarUnderline(i.IndexName) + " on " + ATable.TableName + " (" + Environment.NewLine;
@@ -134,7 +134,7 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    protected override string GerarScriptForeignKey(Table ATable) {
+    public string GenerateForeignKeysOutput(Table ATable) {
       string TmpScript = "";
       foreach (ForeignKey fk in ATable.ForeignKeys) {
         TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
@@ -199,21 +199,21 @@ namespace DBInfo.OutputGenerators {
       return s;
     }
 
-    public override string GerarScriptDadosIniciaisInicioScript(Table ATable) {
+    public string GenerateTableDataStartOutput(Table ATable) {
       if (ATable.HasIdentity)
         return "set IDENTITY_INSERT dbo." + ATable.TableName + " on" + Environment.NewLine + Environment.NewLine;
       else
         return "";
     }
 
-    public override string GerarScriptDadosIniciaisFimScript(Table ATable) {
+    public string GenerateTableDataEndOutput(Table ATable) {
       if (ATable.HasIdentity)
         return "set IDENTITY_INSERT dbo." + ATable.TableName + " off" + Environment.NewLine + Environment.NewLine;
       else
         return "";
     }
 
-    public override string GerarScriptDadosIniciaisLinha(Table ATable, DataRow ARow) {
+    public string GenerateTableDataRowOutput(Table ATable, DataRow ARow) {
       string s = "";
       if (ATable.PrimaryKeyName != String.Empty)
         s += "if not exists(select 1 from " + ATable.TableName + MontarWherePK(ATable, ARow) + ")" + Environment.NewLine;
@@ -236,7 +236,7 @@ namespace DBInfo.OutputGenerators {
       return s;
     }
 
-    protected override string GerarScriptProcedure(Procedure AProcedure) {
+    public string GenerateProcedureOutput(Procedure AProcedure) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + AProcedure.Name + "')" + Environment.NewLine;
       Tmp += "  drop procedure dbo." + AProcedure.Name + Environment.NewLine;
@@ -246,7 +246,7 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    protected override string GerarScriptFunction(Function AFunction) {
+    public string GenerateFunctionOutput(Function AFunction) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + AFunction.Name + "')" + Environment.NewLine;
       Tmp += "  drop function dbo." + AFunction.Name + Environment.NewLine;
@@ -256,7 +256,7 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    protected override string GerarScriptTrigger(Trigger ATrigger) {
+    public string GenerateTriggerOutput(Trigger ATrigger) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + ATrigger.Name + "')" + Environment.NewLine;
       Tmp += "  drop trigger dbo." + ATrigger.Name + Environment.NewLine;
@@ -266,7 +266,7 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    protected override string GerarScriptView(View AView) {
+    public string GenerateViewOutput(View AView) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + AView.Name + "')" + Environment.NewLine;
       Tmp += "  drop view dbo." + AView.Name + Environment.NewLine;
@@ -276,7 +276,7 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    protected override string GerarScriptSequence(Sequence ASequence) {
+    public string GenerateSequenceOutput(Sequence ASequence) {
       return String.Empty;
     }
 

@@ -66,7 +66,7 @@ namespace DBInfo.DBSync {
           DataSet DatasetDados = (DataSet)Base.DadosIniciais[Base.DataTables.IndexOf(s)];
           DataSet dsImportado = new DataSet();
           dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
-          script += sg.GerarScriptDadosIniciaisInicioScript(tabela);
+          script += sg.GenerateTableDataStartOutput(tabela);
 
           if (DatasetDados != null) {
             foreach (DataRow dr in dsImportado.Tables[0].Rows) {
@@ -79,7 +79,7 @@ namespace DBInfo.DBSync {
                   HasChanges = true;
                 }
               } else {
-                script += sg.GerarScriptDadosIniciaisLinha(tabela, dr);
+                script += sg.GenerateTableDataRowOutput(tabela, dr);
                 HasChanges = true;
               }
             }
@@ -88,7 +88,7 @@ namespace DBInfo.DBSync {
           throw new Exception("Não foi encontrada tabela " + s);
         }
 
-        script += sg.GerarScriptDadosIniciaisFimScript(tabela);
+        script += sg.GenerateTableDataEndOutput(tabela);
 
         if (HasChanges) {
           StreamWriter sw = new StreamWriter(OrigemComparacao + s + "CargaInicial.sql", false, System.Text.Encoding.Default);

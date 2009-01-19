@@ -3,27 +3,27 @@ using DBInfo.Core.OutputGenerators;
 using DBInfo.Core.Model;
 
 namespace DBInfo.OutputGenerators {
-  public class ProgressScriptGenerator : ScriptGenerator {
+  public class ProgressScriptGenerator : OutputGenerator {
     public ProgressScriptGenerator() {
     }
 
-    public override string GerarScriptDadosIniciaisFimScript(Table ATable) {
+    public string GenerateTableDataEndOutput(Table ATable) {
       return String.Empty;
     }
 
-    public override string GerarScriptDadosIniciaisInicioScript(Table ATable) {
+    public string GenerateTableDataStartOutput(Table ATable) {
       return String.Empty;
     }
 
-    public override string GerarScriptDadosIniciaisLinha(Table ATable, System.Data.DataRow ARow) {
+    public string GenerateTableDataRowOutput(Table ATable, System.Data.DataRow ARow) {
       return String.Empty;
     }
 
-    protected override string GerarScriptForeignKey(Table ATable) {
+    public string GenerateForeignKeysOutput(Table ATable) {
       return String.Empty;
     }
 
-    protected override string GerarScriptFunction(Function AFunction) {
+    public string GenerateFunctionOutput(Function AFunction) {
       return String.Empty;
     }
 
@@ -34,7 +34,7 @@ namespace DBInfo.OutputGenerators {
         return "ASCENDING";
     }
 
-    protected override string GerarScriptIndices(Table ATable) {
+    public string GenerateIndexesOutput(Table ATable) {
       string script = "";
       foreach (Index idx in ATable.Indexes) {
         script +=
@@ -51,11 +51,11 @@ namespace DBInfo.OutputGenerators {
       return script;
     }
 
-    protected override string GerarScriptPrimaryKey(Table ATable) {
+    public string GeneratePrimaryKeyOutput(Table ATable) {
       return String.Empty;
     }
 
-    protected override string GerarScriptProcedure(Procedure AProcedure) {
+    public string GenerateProcedureOutput(Procedure AProcedure) {
       return String.Empty;
     }
 
@@ -86,7 +86,7 @@ namespace DBInfo.OutputGenerators {
         return "\"" + CRC + "\"";
     }
 
-    protected override string GenerateTableOutput(Table ATable) {
+    public string GenerateTableOutput(Table ATable) {
       string script;
       script =
         "ADD TABLE \"" + ATable.TableName + "\"\n" +
@@ -131,11 +131,11 @@ namespace DBInfo.OutputGenerators {
       return script;
     }
 
-    protected override string GerarScriptTrigger(Trigger ATrigger) {
+    public string GenerateTriggerOutput(Trigger ATrigger) {
       return String.Empty;
     }
 
-    protected override string GerarScriptView(View AView) {
+    public string GenerateViewOutput(View AView) {
       return String.Empty;
     }
 
@@ -146,7 +146,7 @@ namespace DBInfo.OutputGenerators {
         return "no";
     }
 
-    protected override string GerarScriptSequence(Sequence ASequence) {
+    public string GenerateSequenceOutput(Sequence ASequence) {
       string script =
         "ADD SEQUENCE \"" + ASequence.SequenceName + "\"\n" +
         "  INITIAL " + ASequence.Initial.ToString() + "\n" +

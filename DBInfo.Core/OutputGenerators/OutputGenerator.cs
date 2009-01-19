@@ -6,7 +6,7 @@ using DBInfo.Core.Extractor;
 using DBInfo.Core.Model;
 
 namespace DBInfo.Core.OutputGenerators {
-  public abstract class ScriptGenerator {
+  public class OutputGenerator {
     public DBInfoExtractor Introspector;
     public ArrayList ScriptsTabelas;
     public ArrayList ScriptsForeignKeys;
@@ -31,8 +31,14 @@ namespace DBInfo.Core.OutputGenerators {
     public event AntesGerarDadosIniciais EventoAntesGerarDadosIniciais;
     public delegate void AntesGerarLinhaDadoInicial(Table ATAble, DataRow ARow);
     public event AntesGerarLinhaDadoInicial EventoAntesGerarLinhaDadoInicial;
+    
+    private IOutputGenerator _OutputGen;
+    public IOutputGenerator OutputGen{
+      get { return _OutputGen;}
+      set { _OutputGen = value;}
+    }
 
-    public ScriptGenerator() {
+    public OutputGenerator() {
       ScriptsRootDir = String.Empty;
       ScriptsTabelas = new ArrayList();
       ScriptsForeignKeys = new ArrayList();
@@ -44,18 +50,7 @@ namespace DBInfo.Core.OutputGenerators {
       ScriptsSequences = new ArrayList();
     }
 
-    protected abstract string GenerateTableOutput(Table ATable);
-    protected abstract string GerarScriptPrimaryKey(Table ATable);
-    protected abstract string GerarScriptIndices(Table ATable);
-    protected abstract string GerarScriptForeignKey(Table ATable);
-    public abstract string GerarScriptDadosIniciaisInicioScript(Table ATable);
-    public abstract string GerarScriptDadosIniciaisLinha(Table ATable, DataRow ARow);
-    public abstract string GerarScriptDadosIniciaisFimScript(Table ATable);
-    protected abstract string GerarScriptProcedure(Procedure AProcedure);
-    protected abstract string GerarScriptFunction(Function AFunction);
-    protected abstract string GerarScriptTrigger(Trigger ATrigger);
-    protected abstract string GerarScriptView(View AView);
-    protected abstract string GerarScriptSequence(Sequence ASequence);
+
 
     public void SalvarScriptsTabelasXML() {
       if (ScriptsRootDir == String.Empty)
@@ -85,17 +80,17 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Tabelas, table.TableName);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = table.TableName + ".Tabela.sql";
-        ds.ScriptContent = GenerateTableOutput(table);
+        ds.ScriptContent = OutputGen.GenerateTableOutput(table);
         //ds.ScriptContent += "\n\n";
-        ds.ScriptContent += GerarScriptPrimaryKey(table);
+        ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);
         //ds.ScriptContent += "\n\n";
-        ds.ScriptContent += GerarScriptIndices(table);
+        ds.ScriptContent += OutputGen.GenerateIndexesOutput(table);
         ScriptsTabelas.Add(ds);
 
         EventoAntesGerarScripts(ScriptsAGerar.ForeignKeys, table.TableName);
         DatabaseScript dsFK = new DatabaseScript();
         dsFK.ScriptName = table.TableName + ".ForeignKeys.sql";
-        dsFK.ScriptContent = GerarScriptForeignKey(table);
+        dsFK.ScriptContent = OutputGen.GenerateForeignKeysOutput(table);
         ScriptsForeignKeys.Add(dsFK);
       }
 
@@ -119,13 +114,13 @@ namespace DBInfo.Core.OutputGenerators {
         if (DatasetDados.Tables[0].Rows.Count > 0) {
           if (EventoAntesGerarDadosIniciais != null)
             EventoAntesGerarDadosIniciais(t, DatasetDados);
-          ds.ScriptContent += GerarScriptDadosIniciaisInicioScript(t);
+          ds.ScriptContent += OutputGen.GenerateTableDataStartOutput(t);
           foreach (DataRow r in DatasetDados.Tables[0].Rows) {
             if (EventoAntesGerarLinhaDadoInicial != null)
               EventoAntesGerarLinhaDadoInicial(t, r);
-            ds.ScriptContent += GerarScriptDadosIniciaisLinha(t, r);
+            ds.ScriptContent += OutputGen.GenerateTableDataRowOutput(t, r);
           }
-          ds.ScriptContent += GerarScriptDadosIniciaisFimScript(t);
+          ds.ScriptContent += OutputGen.GenerateTableDataEndOutput(t);
           ScriptsDadosIniciais.Add(ds);
         }
 
@@ -139,7 +134,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Procedures, p.Name);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = p.Name + ".prc";
-        ds.ScriptContent = GerarScriptProcedure(p);
+        ds.ScriptContent = OutputGen.GenerateProcedureOutput(p);
         ScriptsProcedures.Add(ds);
       }
 
@@ -148,7 +143,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Functions, f.Name);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = f.Name + ".udf";
-        ds.ScriptContent = GerarScriptFunction(f);
+        ds.ScriptContent = OutputGen.GenerateFunctionOutput(f);
         ScriptsFunctions.Add(ds);
       }
 
@@ -157,7 +152,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Triggers, t.Table.TableName + "." + t.Name);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = t.Table.TableName + "." + t.Name + ".trg";
-        ds.ScriptContent = GerarScriptTrigger(t);
+        ds.ScriptContent = OutputGen.GenerateTriggerOutput(t);
         ScriptsTriggers.Add(ds);
       }
 
@@ -166,7 +161,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Views, v.Name);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = v.Name + ".viw";
-        ds.ScriptContent = GerarScriptView(v);
+        ds.ScriptContent = OutputGen.GenerateViewOutput(v);
         ScriptsViews.Add(ds);
       }
 
@@ -175,7 +170,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Sequences, s.SequenceName);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = s.SequenceName + ".seq";
-        ds.ScriptContent = GerarScriptSequence(s);
+        ds.ScriptContent = OutputGen.GenerateSequenceOutput(s);
         ScriptsSequences.Add(ds);
       }
     }
