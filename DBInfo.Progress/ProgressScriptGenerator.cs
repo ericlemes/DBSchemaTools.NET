@@ -86,7 +86,7 @@ namespace DBInfo.OutputGenerators {
         return "\"" + CRC + "\"";
     }
 
-    protected override string GerarScriptTabela(Table ATable) {
+    protected override string GenerateTableOutput(Table ATable) {
       string script;
       script =
         "ADD TABLE \"" + ATable.TableName + "\"\n" +

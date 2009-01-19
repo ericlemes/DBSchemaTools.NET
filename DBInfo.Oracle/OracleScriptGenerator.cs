@@ -60,7 +60,7 @@ namespace DBInfo.OutputGenerators {
       }
     }
 
-    protected override string GerarScriptTabela(Table ATable) {
+    protected override string GenerateTableOutput(Table ATable) {
       string TmpScript = "";
       TmpScript = "create table " + ATable.TableName + "(" + Environment.NewLine;
       foreach (Column c in ATable.Columns) {

@@ -44,7 +44,7 @@ namespace DBInfo.Core.OutputGenerators {
       ScriptsSequences = new ArrayList();
     }
 
-    protected abstract string GerarScriptTabela(Table ATable);
+    protected abstract string GenerateTableOutput(Table ATable);
     protected abstract string GerarScriptPrimaryKey(Table ATable);
     protected abstract string GerarScriptIndices(Table ATable);
     protected abstract string GerarScriptForeignKey(Table ATable);
@@ -85,7 +85,7 @@ namespace DBInfo.Core.OutputGenerators {
           EventoAntesGerarScripts(ScriptsAGerar.Tabelas, table.TableName);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = table.TableName + ".Tabela.sql";
-        ds.ScriptContent = GerarScriptTabela(table);
+        ds.ScriptContent = GenerateTableOutput(table);
         //ds.ScriptContent += "\n\n";
         ds.ScriptContent += GerarScriptPrimaryKey(table);
         //ds.ScriptContent += "\n\n";
