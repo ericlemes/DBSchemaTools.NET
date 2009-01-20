@@ -55,6 +55,10 @@
       <Project>{4C3C4618-A3D3-49F9-BD96-95054A36F511}</Project>
       <Name>DBInfo.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DBInfo.SQLServer\DBInfo.SQLServer.csproj">
+      <Project>{D4536008-17B8-4BB6-B83F-2FC937CA1B8C}</Project>
+      <Name>DBInfo.SQLServer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

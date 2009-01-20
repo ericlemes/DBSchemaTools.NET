@@ -67,10 +67,10 @@ namespace DBInfo.DBSync {
 
     #region Tabelas
 
-    protected Table PegarTabela(string NomeTabela, System.Collections.ArrayList tabelas) {
-      foreach (object tb in tabelas) {
-        if (((Table)tb).TableName == NomeTabela) {
-          return (Table)tb;
+    protected Table PegarTabela(string NomeTabela, List<Table> tabelas) {
+      foreach (Table tb in tabelas) {
+        if (tb.TableName == NomeTabela) {
+          return tb;
         }
       }
       return null;

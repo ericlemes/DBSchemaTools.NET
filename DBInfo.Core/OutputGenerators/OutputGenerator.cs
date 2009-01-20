@@ -94,7 +94,7 @@ namespace DBInfo.Core.OutputGenerators {
         ScriptsForeignKeys.Add(dsFK);
       }
 
-      foreach (string s in Introspector.DataTables) {
+      foreach (string s in Introspector.TableNames) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.DadosIniciais, s);
 
@@ -110,7 +110,7 @@ namespace DBInfo.Core.OutputGenerators {
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = t.TableName + ".DadosIniciais.sql";
         ds.ScriptContent = "";
-        DataSet DatasetDados = (DataSet)Introspector.DadosIniciais[Introspector.DataTables.IndexOf(s)];
+        DataSet DatasetDados = (DataSet)Introspector.TableData[Introspector.TableNames.IndexOf(s)];
         if (DatasetDados.Tables[0].Rows.Count > 0) {
           if (EventoAntesGerarDadosIniciais != null)
             EventoAntesGerarDadosIniciais(t, DatasetDados);

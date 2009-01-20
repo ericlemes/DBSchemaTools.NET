@@ -63,7 +63,7 @@ namespace DBInfo.DBSync {
 
         tabela = Base.FindTable(s, true);
         if (tabela != null) {
-          DataSet DatasetDados = (DataSet)Base.DadosIniciais[Base.DataTables.IndexOf(s)];
+          DataSet DatasetDados = (DataSet)Base.TableData[Base.TableNames.IndexOf(s)];
           DataSet dsImportado = new DataSet();
           dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
           script += sg.GenerateTableDataStartOutput(tabela);

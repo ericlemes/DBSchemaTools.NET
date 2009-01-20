@@ -5,6 +5,7 @@ using System.Collections;
 using DBInfo.Core;
 using DBInfo.Core.Model;
 using System.IO;
+using System.Collections.Generic;
 
 namespace DBInfo.Core.Extractor {
   public enum InputOutputType{
@@ -36,33 +37,59 @@ namespace DBInfo.Core.Extractor {
       get { return _Extractor;}
       set {_Extractor = value;}
     }
-    public ArrayList Tables;
-    public ArrayList DataTables; //Tabelas para extrair dados iniciais
-    public ArrayList DadosIniciais;
-    public ArrayList Procedures;
-    public ArrayList Functions;
-    public ArrayList Triggers;
-    public ArrayList Views;
-    public ArrayList Sequences;
-    public string ScriptDadosIniciais;
-
-
-    public enum DadosALer { Tabelas, CheckConstraints, Colunas, PrimaryKey, Indices, ForeignKeys, Procedures, Functions, DadosIniciais, Triggers, Views, Sequences, TableTriggers };
-
-    public delegate void AntesLerDadosBancoHandler(DadosALer ADados, string AObjeto);
-    public event AntesLerDadosBancoHandler EventoAntesLerDadosBanco;
-
-    public DBInfoExtractor() {
-      Tables = new ArrayList();
-      DataTables = new ArrayList();
-      DadosIniciais = new ArrayList();
-      Procedures = new ArrayList();
-      Functions = new ArrayList();
-      Triggers = new ArrayList();
-      Views = new ArrayList();
-      Sequences = new ArrayList();
+    
+    private List<Table> _Tables = new List<Table>();
+    public List<Table> Tables{
+      get { return _Tables;}
+      set { _Tables = value;}
+    }
+    
+    private List<string> _TableNames = new List<string>();
+    public List<string> TableNames{
+      get { return _TableNames;}
+      set { _TableNames = value;}
+    }
+        
+    private List<DataSet> _TableData = new List<DataSet>();
+    public List<DataSet> TableData{
+      get { return _TableData;}
+      set { _TableData = value;}
+    }
+    
+    private List<Procedure> _Procedures = new List<Procedure>();
+    public List<Procedure> Procedures{
+      get { return _Procedures;}
+      set { _Procedures = value;}
+    }
+    
+    private List<Function> _Functions = new List<Function>();    
+    public List<Function> Functions{
+      get { return _Functions;}
+      set { _Functions = value;}
+    }
+    
+    private List<Trigger> _Triggers = new List<Trigger>();
+    public List<Trigger> Triggers{
+      get { return _Triggers;}
+      set { _Triggers = value;}
+    }
+    
+    private List<View> _Views;    
+    public List<View> Views{
+      get { return _Views;}
+      set { _Views= value;}
+    }
+    
+    private List<Sequence> _Sequences;
+    public List<Sequence> Sequences{
+      get { return _Sequences;}
+      set { _Sequences = value;}
     }
 
+    public enum DataToRead { Tabelas, CheckConstraints, Colunas, PrimaryKey, Indices, ForeignKeys, Procedures, Functions, DadosIniciais, Triggers, Views, Sequences, TableTriggers };
+
+    public delegate void AntesLerDadosBancoHandler(DataToRead ADados, string AObjeto);
+    public event AntesLerDadosBancoHandler EventoAntesLerDadosBanco;
 
     public Table FindTable(string ATableName, bool ACaseInsensitive) {
       Table TmpTable = null;
@@ -108,14 +135,14 @@ namespace DBInfo.Core.Extractor {
       return AValue == DBNull.Value ? false : (bool)AValue;
     }
 
-    private void LerTabelas() {
+    private void ReadTables() {
       DataSet TablesDataset;
       TablesDataset = _Extractor.getTables();
       if (TablesDataset == null)
         return;
 
       if (EventoAntesLerDadosBanco != null)
-        EventoAntesLerDadosBanco(DadosALer.Tabelas, "");
+        EventoAntesLerDadosBanco(DataToRead.Tabelas, "");
 
       foreach (DataRow row in TablesDataset.Tables[0].Rows) {        
         Table t = new Table();
@@ -137,7 +164,7 @@ namespace DBInfo.Core.Extractor {
 
       foreach (Table Table in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Colunas, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.Colunas, Table.TableName);
 
         DataSet ColumnsDataset = Extractor.getTableColumns(Table.TableName);
         foreach (DataRow row in ColumnsDataset.Tables[0].Rows) {
@@ -168,7 +195,7 @@ namespace DBInfo.Core.Extractor {
         }
 
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.TableTriggers, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.TableTriggers, Table.TableName);
 
         DataSet trg = Extractor.getTableTriggers(Table.TableName);
         if (trg == null)
@@ -185,10 +212,10 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerPrimaryKeys() {
+    private void ReadPrimaryKeys() {
       foreach (Table Table in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.PrimaryKey, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.PrimaryKey, Table.TableName);
 
         DataSet PKDataset;
         PKDataset = Extractor.getPrimaryKey(Table.TableName);
@@ -209,10 +236,10 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerCheckConstraints() {
+    private void ReadCheckConstraints() {
       foreach (Table Table in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.CheckConstraints, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.CheckConstraints, Table.TableName);
 
         DataSet CheckDataset;
         CheckDataset = Extractor.getCheckConstraints(Table.TableName);
@@ -231,10 +258,10 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerIndices() {
+    private void ReadIndices() {
       foreach (Table t in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Indices, t.TableName);
+          EventoAntesLerDadosBanco(DataToRead.Indices, t.TableName);
 
         DataSet IndexesDataset;
         IndexesDataset = Extractor.getIndexes(t.TableName);
@@ -262,17 +289,17 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void AtribuiValoresTabelaFK(Table tborigem, Table tbdestino) {
+    private void SetValuesTableForeignKey(Table tborigem, Table tbdestino) {
       tbdestino.TableName = tborigem.TableName;
       tbdestino.HasIdentity = tborigem.HasIdentity;
       tbdestino.IdentitySeed = tborigem.IdentitySeed;
       tbdestino.IdentityIncrement = tborigem.IdentityIncrement;
     }
 
-    private void LerForeignKeys() {
+    private void ReadForeignKeys() {
       foreach (Table Table in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.ForeignKeys, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.ForeignKeys, Table.TableName);
 
         DataSet FKsDataset = Extractor.getForeignKeys(Table.TableName);
 
@@ -295,23 +322,23 @@ namespace DBInfo.Core.Extractor {
             col.RefTable = new Table();
             col.Column = FindColumn(Table.TableName, (string)colrow[0]);
             col.RefColumn = FindColumn(fk.RefTableName, (string)colrow[1]);
-            AtribuiValoresTabelaFK(FindTable(fk.RefTableName, false), col.RefTable);
+            SetValuesTableForeignKey(FindTable(fk.RefTableName, false), col.RefTable);
             fk.Columns.Add(col);
           }
         }
       }
     }
 
-    private void LerDadosIniciais() {
-      foreach (string s in DataTables) {
+    private void ReadTableData() {
+      foreach (string s in TableNames) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.DadosIniciais, s);
+          EventoAntesLerDadosBanco(DataToRead.DadosIniciais, s);
         DataSet dsDados = Extractor.getTableData(s);
-        DadosIniciais.Add(dsDados);
+        TableData.Add(dsDados);
       }
     }
 
-    private void LerProcedures() {
+    private void ReadProcedures() {
       DataSet dsProcedures = Extractor.getProcedures();
 
       if (dsProcedures == null)
@@ -319,7 +346,7 @@ namespace DBInfo.Core.Extractor {
 
       foreach (DataRow r in dsProcedures.Tables[0].Rows) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Procedures, (string)r[0]);
+          EventoAntesLerDadosBanco(DataToRead.Procedures, (string)r[0]);
 
         DataSet dsProc = Extractor.getProcedureText((string)r[0]);
 
@@ -340,7 +367,7 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerFunctions() {
+    private void ReadFunctions() {
       DataSet dsFunctions = _Extractor.getFunctions();
 
       if (dsFunctions == null)
@@ -348,7 +375,7 @@ namespace DBInfo.Core.Extractor {
 
       foreach (DataRow r in dsFunctions.Tables[0].Rows) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Functions, (string)r[0]);
+          EventoAntesLerDadosBanco(DataToRead.Functions, (string)r[0]);
 
         DataSet dsFunction = _Extractor.getFunctionText((string)r[0]);
 
@@ -369,10 +396,10 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerTriggers() {
+    private void ReadTriggers() {
       foreach (Table t in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Triggers, t.TableName);
+          EventoAntesLerDadosBanco(DataToRead.Triggers, t.TableName);
 
         DataSet dsTriggers = _Extractor.getTriggers(t.TableName);
 
@@ -395,7 +422,7 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerViews() {
+    private void ReadViews() {
       DataSet dsViews = _Extractor.getViews();
 
       if (dsViews == null)
@@ -403,7 +430,7 @@ namespace DBInfo.Core.Extractor {
 
       foreach (DataRow dr in dsViews.Tables[0].Rows) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Views, (string)dr[0]);
+          EventoAntesLerDadosBanco(DataToRead.Views, (string)dr[0]);
 
         View v = new View();
         v.Name = (string)dr[0];
@@ -418,7 +445,7 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void LerSequences() {
+    private void ReadSequences() {
       DataSet dsSequences = _Extractor.getSequences();
 
       if (dsSequences == null)
@@ -426,7 +453,7 @@ namespace DBInfo.Core.Extractor {
 
       foreach (DataRow dr in dsSequences.Tables[0].Rows) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DadosALer.Sequences, (string)dr[0]);
+          EventoAntesLerDadosBanco(DataToRead.Sequences, (string)dr[0]);
 
         Sequence s = new Sequence();
         s.SequenceName = GetString(dr[0]);
@@ -439,10 +466,10 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    public void DeserializarXML(string caminho) {
+    public void DeserializeXML(string path) {
       System.Xml.XmlDocument xm = new System.Xml.XmlDocument();
       System.Xml.Serialization.XmlSerializer ser = new System.Xml.Serialization.XmlSerializer(typeof(Table));
-      string[] arquivos = System.IO.Directory.GetFiles(caminho);
+      string[] arquivos = System.IO.Directory.GetFiles(path);
       Tables.Clear();
 
       foreach (string arquivo in arquivos) {
@@ -461,7 +488,7 @@ namespace DBInfo.Core.Extractor {
       if (_InputType == InputOutputType.File && !Directory.Exists(_InputDir))
         throw new Exception(String.Format("The input directory don't exists: {0}", _InputDir));
 
-      if (_InputType == InputOutputType.Database && !Directory.Exists(_InputConnectionString))
+      if (_InputType == InputOutputType.Database && String.IsNullOrEmpty(_InputConnectionString))
         throw new Exception(String.Format("The input connection string don't exists: {0}", _InputConnectionString));        
       
       _Extractor.InputType = _InputType;
@@ -471,43 +498,20 @@ namespace DBInfo.Core.Extractor {
     
       _Extractor.Open();
       try {
-        LerTabelas();
-        LerPrimaryKeys();
-        LerForeignKeys();
-        LerCheckConstraints();
-        LerIndices();
+        ReadTables();
+        ReadPrimaryKeys();
+        ReadForeignKeys();
+        ReadCheckConstraints();
+        ReadIndices();
 
-        LerFunctions();
-        LerProcedures();
-        LerTriggers();
-        LerViews();
-        LerSequences();
+        ReadFunctions();
+        ReadProcedures();
+        ReadTriggers();
+        ReadViews();
+        ReadSequences();
       } finally {
         _Extractor.Close();
       }
     }
-
-    public void IntrospectarDadosIniciais() {
-      _Extractor.Open();
-      try {
-        LerTabelas();
-        LerPrimaryKeys();
-        LerDadosIniciais();
-      } finally {
-        _Extractor.Close();
-      }
-    }
-
-    public void IntrospectarPrimaryKeysEForeignKeys() {
-      _Extractor.Open();
-      try {
-        LerTabelas();
-        LerPrimaryKeys();
-        LerForeignKeys();
-      } finally {
-        _Extractor.Close();
-      }
-    }
-
   }
 }

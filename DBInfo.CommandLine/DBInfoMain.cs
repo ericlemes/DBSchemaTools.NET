@@ -101,7 +101,7 @@ namespace DBInfo.CommandLine {
       sg.EventoAntesGerarDadosIniciais += new OutputGenerator.AntesGerarDadosIniciais(AntesGerarDadosIniciais);
       sg.EventoAntesGerarLinhaDadoInicial += new OutputGenerator.AntesGerarLinhaDadoInicial(AntesGerarLinhaDadosIniciais);
 
-      Introspector.DeserializarXML(args[1]);
+      Introspector.DeserializeXML(args[1]);
 
       sg.ScriptsRootDir = System.AppDomain.CurrentDomain.BaseDirectory + "Scripts\\Tabelas\\";
       sg.Introspector = Introspector;
@@ -147,8 +147,8 @@ namespace DBInfo.CommandLine {
       DBInfoExtractor Introspector1 = new DBInfoExtractor();
       DBInfoExtractor Introspector2 = new DBInfoExtractor();
 
-      Introspector1.DeserializarXML(args[1]);
-      Introspector2.DeserializarXML(args[2]);
+      Introspector1.DeserializeXML(args[1]);
+      Introspector2.DeserializeXML(args[2]);
 
       DBSyncScript dbc = new DBSyncScript();
       DBSyncReport dbc2 = new DBSyncReport();
@@ -164,7 +164,7 @@ namespace DBInfo.CommandLine {
 
 
     static void SelecionarComparacaoDadosIniciais(string[] args) {
-      if (args.Length < 4)
+      /*if (args.Length < 4)
         throw new Exception("Informe os parâmetros corretamente: DBInfo comparardadosiniciais <connectionstring> <tabelasseparadaspor;> <CaminhoOrigemXMLDadosIniciais> <DestinoComparacao>");
 
       DBInfoExtractor Introspector = new DBInfoExtractor();
@@ -173,7 +173,7 @@ namespace DBInfo.CommandLine {
       if (args.Length >= 4) {
         string[] DadosIniciais = args[2].Split(';');
         foreach (string s in DadosIniciais)
-          Introspector.DataTables.Add(s);
+          Introspector.TableNames.Add(s);
 
         conn.SqlConn.ConnectionString = args[1];
         Introspector.Extractor = conn;
@@ -182,7 +182,7 @@ namespace DBInfo.CommandLine {
         DBSyncScript dbc = new DBSyncScript();
         dbc.CompararDadosIniciais(Introspector, DadosIniciais, args[3], args[4]);
 
-      }
+      }*/
 
     }
 
@@ -219,7 +219,7 @@ namespace DBInfo.CommandLine {
 
 
     static void SelecionarRelatorio(string[] args) {
-      if (args.Length < 2)
+      /*if (args.Length < 2)
         throw new Exception("Informe os parâmetros corretamente: DBInfo relatorio <connectionstring> ");
 
       DBInfoExtractor Introspector = new DBInfoExtractor();
@@ -242,7 +242,7 @@ namespace DBInfo.CommandLine {
       foreach (Table t in Introspector.Tables) {
         if (t.ForeignKeys.Count <= 0)
           Console.WriteLine(t.TableName);
-      }
+      }*/
     }
 
 
@@ -264,18 +264,18 @@ namespace DBInfo.CommandLine {
     }
 
 
-    static void AntesLerDadosBanco(DBInfoExtractor.DadosALer ADados, string AObjeto) {
+    static void AntesLerDadosBanco(DBInfoExtractor.DataToRead ADados, string AObjeto) {
       switch (ADados) {
-        case DBInfoExtractor.DadosALer.Tabelas: Console.WriteLine("Lendo tabelas"); break;
-        case DBInfoExtractor.DadosALer.Colunas: Console.WriteLine("Lendo colunas da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.DadosIniciais: Console.WriteLine("Lendo dados iniciais da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.ForeignKeys: Console.WriteLine("Lendo foreign keys da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.Functions: Console.WriteLine("Lendo function " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.Indices: Console.WriteLine("Lendo índices da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.PrimaryKey: Console.WriteLine("Lendo primary key da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.Procedures: Console.WriteLine("Lendo procedure " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.Triggers: Console.WriteLine("Lendo triggers da tabela " + AObjeto); break;
-        case DBInfoExtractor.DadosALer.Sequences: Console.WriteLine("Lendo sequence " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Tabelas: Console.WriteLine("Lendo tabelas"); break;
+        case DBInfoExtractor.DataToRead.Colunas: Console.WriteLine("Lendo colunas da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.DadosIniciais: Console.WriteLine("Lendo dados iniciais da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.ForeignKeys: Console.WriteLine("Lendo foreign keys da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Functions: Console.WriteLine("Lendo function " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Indices: Console.WriteLine("Lendo índices da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.PrimaryKey: Console.WriteLine("Lendo primary key da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Procedures: Console.WriteLine("Lendo procedure " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Triggers: Console.WriteLine("Lendo triggers da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Sequences: Console.WriteLine("Lendo sequence " + AObjeto); break;
       }
     }
 

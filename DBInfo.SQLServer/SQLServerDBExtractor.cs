@@ -31,6 +31,9 @@ namespace DBInfo.DBExtractors {
     }
 
     public void Open() {
+      if (_InputType == InputOutputType.File)
+        throw new Exception(String.Format("The class {0} don't support file extraction", this.GetType().FullName));
+      SqlConn.ConnectionString = InputConnectionString;
       SqlConn.Open();
     }
 

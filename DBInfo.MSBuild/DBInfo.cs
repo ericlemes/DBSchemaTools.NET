@@ -26,6 +26,7 @@ namespace DBInfo.MSBuild {
     }
     
     private string _InputType;
+    [Required]
     public string InputType{
       get { return _InputType;}
       set {_InputType = value;}
@@ -74,13 +75,7 @@ namespace DBInfo.MSBuild {
       if (_OutputType == InputOutputType.Database && !Directory.Exists(_OutputConnectionString))
         throw new Exception(String.Format("The output connection string not exists: {0}", _OutputConnectionString));        */
         
-      string[] extractorClassInfo = _DBExtractorClass.Split(',');
-      if (extractorClassInfo.Length != 2)
-        throw new Exception(String.Format("Class name must be in the format 'Namespace.ClassName, Assembly'"));
-        
-      Assembly.Load(extractorClassInfo[1].Trim());
-      
-      Type extractorClass = Type.GetType(extractorClassInfo[0].Trim());
+      Type extractorClass = Type.GetType(_DBExtractorClass);
       if (extractorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
       IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);
