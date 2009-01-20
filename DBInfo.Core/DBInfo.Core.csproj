@@ -57,7 +57,6 @@
     <Compile Include="Model\Procedure.cs" />
     <Compile Include="Model\Sequence.cs" />
     <Compile Include="Model\Table.cs" />
-    <Compile Include="Model\TableTrigger.cs" />
     <Compile Include="Model\Trigger.cs" />
     <Compile Include="Model\View.cs" />
     <Compile Include="OutputGenerators\DatabaseScript.cs" />
