@@ -61,6 +61,52 @@ namespace DBInfo.MSBuild {
       get { return _OutputDir;}
       set { _OutputDir = value;}
     }
+    
+    private string _DataToExtract;
+    [Required]
+    public string DataToExtract{
+      get { return _DataToExtract;}
+      set { _DataToExtract = value;}
+    }
+    
+    private string _DataToGenerateOutput;
+    [Required]
+    public string DataToGenerateOutput{
+      get { return _DataToGenerateOutput;}
+      set { _DataToGenerateOutput = value;}
+    }
+
+    private EnumType DescriptionToEnum<EnumType>(string description) where EnumType : new() {      
+      //Case-insensitive search.
+      string allTypes = "";
+      foreach (FieldInfo fi in typeof(EnumType).GetFields()) {                
+        if (allTypes != "")
+          allTypes += ", ";
+        allTypes += fi.Name;
+        if (description.ToLower() == fi.Name.ToLower()) {          
+          return (EnumType)fi.GetValue(fi);          
+        }
+      }
+      throw new Exception(String.Format("Invalid database object type: {0}. The following types are valid: {1}", description, allTypes));
+    }
+    
+    private List<DBObjectType> GetDataToExtractEnum(){
+      List<DBObjectType> l = new List<DBObjectType>();
+      string[] splited = _DataToExtract.Split(';');
+      foreach(string s in splited){
+        l.Add(DescriptionToEnum<DBObjectType>(s));
+      }
+      return l;
+    }
+
+    private List<DBObjectType> GetDataToGenerateOutputEnum() {
+      List<DBObjectType> l = new List<DBObjectType>();
+      string[] splited = _DataToGenerateOutput.Split(';');
+      foreach (string s in splited) {
+        l.Add(DescriptionToEnum<DBObjectType>(s));
+      }
+      return l;
+    }
 
     public override bool Execute() {
       /*if (_InputType == InputOutputType.File && !Directory.Exists(_InputDir))
@@ -74,6 +120,9 @@ namespace DBInfo.MSBuild {
         
       if (_OutputType == InputOutputType.Database && !Directory.Exists(_OutputConnectionString))
         throw new Exception(String.Format("The output connection string not exists: {0}", _OutputConnectionString));        */
+        
+      List<DBObjectType> dataToExtract = GetDataToExtractEnum();
+      List<DBObjectType> dataToGenerateOutput = GetDataToGenerateOutputEnum();
         
       Type extractorClass = Type.GetType(_DBExtractorClass);
       if (extractorClass == null)
@@ -91,7 +140,17 @@ namespace DBInfo.MSBuild {
         throw new Exception(String.Format("Invalid input type: {0}.", InputType));      
       dbe.InputConnectionString = _InputConnectionString;
       dbe.InputDir = _InputDir;
-      dbe.Extract();
+      dbe.Extract(dataToExtract);
+      
+      Type generatorClass = Type.GetType(_OutputGeneratorClass);
+      if (generatorClass == null)
+        throw new Exception(String.Format("Couldn't create instance for type {0}", _OutputGeneratorClass));
+      IOutputGenerator generator = (IOutputGenerator)Activator.CreateInstance(generatorClass);           
+      
+      OutputGenerator gen = new OutputGenerator();
+      gen.OutputGen = generator;
+      gen.Extractor = dbe;
+      gen.GenerateOutput(dataToGenerateOutput);
       
       return true;
     }

@@ -37,7 +37,8 @@ namespace DBInfo.OutputGenerators {
         case Column.DBColumnType.DBTinyInt: return "tinyint";
         case Column.DBColumnType.DBBinary: return "binary";
         case Column.DBColumnType.DBNVarchar: return "nvarchar(" + Coluna.Size.ToString() + ")";
-        default: throw new Exception("Tipo de dados não suportado " + Coluna.Size.ToString());
+        case Column.DBColumnType.DBTimeStamp: return "timestamp";
+        default: throw new Exception("Tipo de dados não suportado " + Coluna.Type.ToString());
       }
     }
 

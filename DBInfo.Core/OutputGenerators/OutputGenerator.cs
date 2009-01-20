@@ -4,28 +4,69 @@ using System.IO;
 using System.Data;
 using DBInfo.Core.Extractor;
 using DBInfo.Core.Model;
+using System.Collections.Generic;
 
 namespace DBInfo.Core.OutputGenerators {
   public class OutputGenerator {
-    public DBInfoExtractor Introspector;
-    public ArrayList ScriptsTabelas;
-    public ArrayList ScriptsForeignKeys;
-    public ArrayList ScriptsDadosIniciais;
-    public ArrayList ScriptsProcedures;
-    public ArrayList ScriptsFunctions;
-    public ArrayList ScriptsTriggers;
-    public ArrayList ScriptsViews;
-    public ArrayList ScriptsSequences;
-    public string ScriptsRootDir;
-    public string FullScriptName;
+  
+    private DBInfoExtractor _Extractor;
+    public DBInfoExtractor Extractor{
+      get { return _Extractor;}
+      set { _Extractor = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsTabelas = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsTabelas{
+      get { return _ScriptsTabelas;}
+      set { _ScriptsTabelas = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsForeignKeys = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsForeignKeys{
+      get { return _ScriptsForeignKeys;}
+      set { _ScriptsForeignKeys = value;}
+    }        
+    
+    private List<DatabaseScript> _ScriptsDadosIniciais = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsDadosIniciais{
+      get { return _ScriptsDadosIniciais;}
+      set { _ScriptsDadosIniciais = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsProcedures = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsProcedures{
+      get { return _ScriptsProcedures;}
+      set { _ScriptsProcedures = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsFunctions = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsFunctions{
+      get {return _ScriptsFunctions;}
+      set { _ScriptsFunctions =value;}
+    }
+        
+    private List<DatabaseScript> _ScriptsTriggers = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsTriggers{
+      get { return _ScriptsTriggers;}
+      set { _ScriptsTriggers = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsViews = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsViews{
+      get { return _ScriptsViews;}
+      set { _ScriptsViews = value;}
+    }
+    
+    private List<DatabaseScript> _ScriptsSequences = new List<DatabaseScript>();    
+    public List<DatabaseScript> ScriptsSequences{
+      get { return _ScriptsSequences;}
+      set { _ScriptsSequences = value;}
+    }            
 
     public enum ScriptsAGerar { Tabelas, ForeignKeys, Procedures, Functions, DadosIniciais, Triggers, Views, Sequences };
 
     public delegate void AntesGerarScriptsHandler(ScriptsAGerar AScripts, string AObjeto);
-    public event AntesGerarScriptsHandler EventoAntesGerarScripts;
-
-    public delegate void AntesSalvarScripts(string AScript);
-    public event AntesSalvarScripts EventoAntesSalvarScripts;
+    public event AntesGerarScriptsHandler EventoAntesGerarScripts;    
 
     public delegate void AntesGerarDadosIniciais(Table ATable, DataSet ADataset);
     public event AntesGerarDadosIniciais EventoAntesGerarDadosIniciais;
@@ -36,81 +77,41 @@ namespace DBInfo.Core.OutputGenerators {
     public IOutputGenerator OutputGen{
       get { return _OutputGen;}
       set { _OutputGen = value;}
-    }
-
-    public OutputGenerator() {
-      ScriptsRootDir = String.Empty;
-      ScriptsTabelas = new ArrayList();
-      ScriptsForeignKeys = new ArrayList();
-      ScriptsDadosIniciais = new ArrayList();
-      ScriptsProcedures = new ArrayList();
-      ScriptsFunctions = new ArrayList();
-      ScriptsTriggers = new ArrayList();
-      ScriptsViews = new ArrayList();
-      ScriptsSequences = new ArrayList();
-    }
-
-
-
-    public void SalvarScriptsTabelasXML() {
-      if (ScriptsRootDir == String.Empty)
-        throw new Exception("ScriptsRootDir não informado");
-      if (!Directory.Exists(ScriptsRootDir))
-        Directory.CreateDirectory(ScriptsRootDir);
-
-      if (!Directory.Exists(ScriptsRootDir + "Tabelas"))
-        Directory.CreateDirectory(ScriptsRootDir + "Tabelas");
-
-      System.Xml.Serialization.XmlSerializer mySerializer =
-        new System.Xml.Serialization.XmlSerializer(typeof(Table));
-
-      foreach (Table table in Introspector.Tables) {
-        StreamWriter myWriter = new StreamWriter(ScriptsRootDir + "Tabelas\\" + table.TableName + ".xml");
-        mySerializer.Serialize(myWriter, table);
-      }
-
-    }
-
-
-    public void GerarScripts() {
-      ScriptsTabelas.Clear();
-      ScriptsForeignKeys.Clear();
-      foreach (Table table in Introspector.Tables) {
+    }    
+    
+    private void GenerateTables(){
+      foreach (Table table in Extractor.Tables) {        
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Tabelas, table.TableName);
+          
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = table.TableName + ".Tabela.sql";
-        ds.ScriptContent = OutputGen.GenerateTableOutput(table);
-        //ds.ScriptContent += "\n\n";
-        ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);
-        //ds.ScriptContent += "\n\n";
+        ds.ScriptContent = OutputGen.GenerateTableOutput(table);        
+        ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);        
         ds.ScriptContent += OutputGen.GenerateIndexesOutput(table);
         ScriptsTabelas.Add(ds);
 
-        EventoAntesGerarScripts(ScriptsAGerar.ForeignKeys, table.TableName);
+        if (EventoAntesGerarScripts != null)
+          EventoAntesGerarScripts(ScriptsAGerar.ForeignKeys, table.TableName);
         DatabaseScript dsFK = new DatabaseScript();
         dsFK.ScriptName = table.TableName + ".ForeignKeys.sql";
         dsFK.ScriptContent = OutputGen.GenerateForeignKeysOutput(table);
         ScriptsForeignKeys.Add(dsFK);
       }
-
-      foreach (string s in Introspector.TableNames) {
+    }
+    
+    private void GenerateTableData(){
+      foreach (string s in Extractor.TableNames) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.DadosIniciais, s);
 
-        if (!Directory.Exists(ScriptsRootDir + "DadosIniciais"))
-          Directory.CreateDirectory(ScriptsRootDir + "DadosIniciais");
-
-        if (!Directory.Exists(ScriptsRootDir + "DadosIniciais\\XML"))
-          Directory.CreateDirectory(ScriptsRootDir + "DadosIniciais\\XML");
-
-        Table t = Introspector.FindTable(s, true);
+        Table t = Extractor.FindTable(s, true);
         if (t == null)
           throw new Exception("Não foi encontrada tabela " + s);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = t.TableName + ".DadosIniciais.sql";
         ds.ScriptContent = "";
-        DataSet DatasetDados = (DataSet)Introspector.TableData[Introspector.TableNames.IndexOf(s)];
+        DataSet DatasetDados = (DataSet)Extractor.TableData[Extractor.TableNames.IndexOf(s)];
         if (DatasetDados.Tables[0].Rows.Count > 0) {
           if (EventoAntesGerarDadosIniciais != null)
             EventoAntesGerarDadosIniciais(t, DatasetDados);
@@ -123,13 +124,11 @@ namespace DBInfo.Core.OutputGenerators {
           ds.ScriptContent += OutputGen.GenerateTableDataEndOutput(t);
           ScriptsDadosIniciais.Add(ds);
         }
-
-        FileStream fs = new FileStream(ScriptsRootDir + "DadosIniciais\\XML\\" + s + ".xml", FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        DatasetDados.WriteXml(fs, System.Data.XmlWriteMode.WriteSchema);
-
       }
-
-      foreach (Procedure p in Introspector.Procedures) {
+    }
+    
+    private void GenerateProcedures(){
+      foreach (Procedure p in Extractor.Procedures) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Procedures, p.Name);
         DatabaseScript ds = new DatabaseScript();
@@ -137,8 +136,10 @@ namespace DBInfo.Core.OutputGenerators {
         ds.ScriptContent = OutputGen.GenerateProcedureOutput(p);
         ScriptsProcedures.Add(ds);
       }
-
-      foreach (Function f in Introspector.Functions) {
+    }
+    
+    private void GenerateFunctions(){
+      foreach (Function f in Extractor.Functions) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Functions, f.Name);
         DatabaseScript ds = new DatabaseScript();
@@ -146,8 +147,10 @@ namespace DBInfo.Core.OutputGenerators {
         ds.ScriptContent = OutputGen.GenerateFunctionOutput(f);
         ScriptsFunctions.Add(ds);
       }
-
-      foreach (Trigger t in Introspector.Triggers) {
+    }
+    
+    private void GenerateTriggers(){
+      foreach (Trigger t in Extractor.Triggers) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Triggers, t.Table.TableName + "." + t.Name);
         DatabaseScript ds = new DatabaseScript();
@@ -155,17 +158,21 @@ namespace DBInfo.Core.OutputGenerators {
         ds.ScriptContent = OutputGen.GenerateTriggerOutput(t);
         ScriptsTriggers.Add(ds);
       }
-
-      foreach (View v in Introspector.Views) {
+    }
+    
+    private void GenerateViews(){
+      foreach (View v in Extractor.Views) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Views, v.Name);
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = v.Name + ".viw";
         ds.ScriptContent = OutputGen.GenerateViewOutput(v);
         ScriptsViews.Add(ds);
-      }
-
-      foreach (Sequence s in Introspector.Sequences) {
+      }            
+    }
+    
+    private void GenerateSequences(){
+      foreach (Sequence s in Extractor.Sequences) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Sequences, s.SequenceName);
         DatabaseScript ds = new DatabaseScript();
@@ -175,37 +182,17 @@ namespace DBInfo.Core.OutputGenerators {
       }
     }
 
-
-    public void SalvarScriptsTabelasSQL(System.Text.Encoding AEncoding) {
-      if (ScriptsRootDir == String.Empty)
-        throw new Exception("ScriptsRootDir não informado");
-      if (!Directory.Exists(ScriptsRootDir))
-        Directory.CreateDirectory(ScriptsRootDir);
-
-      if (!Directory.Exists(ScriptsRootDir + "Tabelas"))
-        Directory.CreateDirectory(ScriptsRootDir + "Tabelas");
-      foreach (DatabaseScript ds in ScriptsTabelas) {
-        if (EventoAntesSalvarScripts != null)
-          EventoAntesSalvarScripts(ds.ScriptName);
-        StreamWriter sw = new StreamWriter(ScriptsRootDir + "Tabelas\\" + ds.ScriptName, false, AEncoding);
-        sw.Write(ds.ScriptContent);
-        sw.Close();
-      }
-
-      if (!Directory.Exists(ScriptsRootDir + "ForeignKeys"))
-        Directory.CreateDirectory(ScriptsRootDir + "ForeignKeys");
-      foreach (DatabaseScript ds in ScriptsForeignKeys) {
-        if (EventoAntesSalvarScripts != null)
-          EventoAntesSalvarScripts(ds.ScriptName);
-        if (ds.ScriptContent.Trim() != String.Empty) {
-          StreamWriter sw = new StreamWriter(ScriptsRootDir + "ForeignKeys\\" + ds.ScriptName);
-          sw.Write(ds.ScriptContent);
-          sw.Close();
-        }
-      }
+    public void GenerateOutput(List<DBObjectType> dataToGenerateOutput) {            
+      GenerateTables();
+      GenerateTableData();
+      GenerateProcedures();      
+      GenerateFunctions();
+      GenerateTriggers();
+      GenerateViews();
+      GenerateSequences();            
     }
 
-
+    /*
     public void SalvarScripts() {
       if (!Directory.Exists(ScriptsRootDir + "DadosIniciais"))
         Directory.CreateDirectory(ScriptsRootDir + "DadosIniciais");
@@ -293,6 +280,7 @@ namespace DBInfo.Core.OutputGenerators {
       }
       sw.Close();
     }
+     */
 
   }
 }

@@ -295,23 +295,24 @@ namespace DBInfo.DBExtractors {
     public void getIndexColumns(Table table, Index index) {
       SqlCommand qry = new SqlCommand(
         "select " +
-        "  c.name " +
+        "  c.name, " +
+        "  k.is_descending_key " +
         "from " +
-        "  sysindexkeys k " +
+        "  sys.index_columns k " +
         "    inner join syscolumns c on " +
-        "      c.id = k.id and " +
-        "      c.colid = k.colid " +
+        "      c.id = k.object_id and " +
+        "      c.colid = k.column_id " +
         "    inner join sysobjects o on " +
-        "      k.id = o.id " +
+        "      k.object_id = o.id " +
         "    inner join sysindexes i on " +
-        "      i.id = k.id and " +
-        "      i.indid = k.indid  " +
+        "      i.id = k.object_id and " +
+        "      i.indid = k.index_id  " +
         "where " +
         "  o.uid = 1 and " +
         "  o.name = @TableName and " +
         "  i.name = @IndexName " +
         "order by " +
-        "  k.keyno ", SqlConn);
+        "  k.index_column_id ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
@@ -322,7 +323,7 @@ namespace DBInfo.DBExtractors {
       foreach (DataRow r2 in ds.Tables[0].Rows) {
         IndexColumn c = new IndexColumn();
         c.Column = table.FindColumn((string)r2[0]);
-        c.Order = ((IndexColumn.EnumOrder)r2[1]);
+        c.Order = ((IndexColumn.EnumOrder)Convert.ToInt32(r2[1]));
         if (c == null)
           throw new Exception("Não foi localizada a coluna " + (string)r2[0] + " do índice " + table.TableName + "." + index.IndexName);
         index.Columns.Add(c);
