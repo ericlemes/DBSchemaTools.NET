@@ -62,60 +62,7 @@ namespace DBInfo.Core.Model {
     public List<CheckConstraint> CheckConstraints {
       get { return _CheckConstraints; }
       set { _CheckConstraints = value; }
-    }
-
-    #region Progress-Database Specific
-
-    private string _Area;
-    public string Area {
-      get { return _Area; }
-      set { _Area = value; }
-    }
-
-    private string _Description;
-    public string Description {
-      get { return _Description; }
-      set { _Description = value; }
-    }
-
-    private string _DumpName;
-    public string DumpName {
-      get { return _DumpName; }
-      set { _DumpName = value; }
-    }
-
-    private string _Label;
-    public string Label {
-      get { return _Label; }
-      set { _Label = value; }
-    }
-
-    private string _ValExp;
-    public string ValExp {
-      get { return _ValExp; }
-      set { _ValExp = value; }
-    }
-
-    private string _ValMsg;
-    public string ValMsg {
-      get { return _ValMsg; }
-      set { _ValMsg = value; }
-    }
-
-    private string _ForeignName;
-    public string ForeignName {
-      get { return _ForeignName; }
-      set { _ForeignName = value; }
-    }
-
-    private List<TableTrigger> _TableTriggers = new List<TableTrigger>();
-    public List<TableTrigger> TableTriggers {
-      get { return _TableTriggers; }
-      set { _TableTriggers = value; }
-    }
-
-    #endregion
-
+    }    
 
     public Column FindColumn(string AColumnName) {
       Column TmpColumn = null;

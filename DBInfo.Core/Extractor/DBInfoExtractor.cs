@@ -147,19 +147,7 @@ namespace DBInfo.Core.Extractor {
 
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DataToRead.TableTriggers, Table.TableName);
-
-        DataSet trg = Extractor.getTableTriggers(Table.TableName);
-        if (trg == null)
-          continue;
-
-        foreach (DataRow row in trg.Tables[0].Rows) {
-          TableTrigger tt = new TableTrigger();
-          tt.Event = GetString(row[0]);
-          tt.Procedure = GetString(row[1]);
-          tt.Override = GetBoolean(row[2]);
-          tt.CRC = GetString(row[3]);
-          Table.TableTriggers.Add(tt);
-        }
+        
       }
     }
 
@@ -228,8 +216,6 @@ namespace DBInfo.Core.Extractor {
           Index i = new Index();
           i.IndexName = (string)r[0];
           i.Unique = Convert.ToBoolean(r[1]);
-          i.Area = GetString(r[2]);
-          i.Primary = GetBoolean(r[3]);
           DataSet IndexColsDataset = Extractor.getIndexColumns(t.TableName, i.IndexName);
           foreach (DataRow r2 in IndexColsDataset.Tables[0].Rows) {
             IndexColumn c = new IndexColumn();

@@ -144,22 +144,12 @@ namespace DBInfo.DBExtractors {
         if (((int)c.Type) == -1)
           throw new Exception("Tipo de dados não suportado para a coluna " + table.TableName + "." + c.Name);
         c.Size = Convert.ToInt32(row[2]);
-        c.SqlWidth = Convert.ToInt32(row[2]);
         c.Precision = Convert.ToInt32(row[3]);
         c.Scale = Convert.ToInt32(row[4]);
         c.IsNull = Convert.ToBoolean(row[5]);
         c.IdentityColumn = Convert.ToBoolean(row[6]);
         c.DefaultValue = (string)row[7];
         c.ConstraintDefaultName = (string)row[8];
-        c.Description = GetString(row[9]);
-        c.Format = GetString(row[10]);
-        c.Label = GetString(row[11]);
-        c.Position = GetInteger(row[12]);
-        c.Help = GetString(row[13]);
-        c.Order = GetInteger(row[14]);
-        c.ValExp = GetString(row[15]);
-        c.ValMsg = GetString(row[16]);
-        c.Decimals = row[17] == DBNull.Value ? -1 : (int)row[17];
         table.Columns.Add(c);
 
       }      

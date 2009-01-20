@@ -88,71 +88,7 @@ namespace DBInfo.Core.Model {
     public string ConstraintDefaultName{
       get { return _ConstraintDefaultName;}
       set { _ConstraintDefaultName = value;}
-    }
-    
-    #region Progress-Specific
-
-    private string _Description;    
-    public string Description{
-      get {return _Description;}
-      set { _Description = value;}
-    }
-    
-    private string _Format;
-    public string Format{
-      get { return _Format;}
-      set { _Format = value;}
-    }
-    
-    private string _Label;    
-    public string Label{
-      get { return _Label;}
-      set { _Label = value;}
-    }
-    
-    private int _Position;
-    public int Position {
-      get { return _Position;}
-      set { _Position = value;}
-    }
-    
-    private int _SqlWidth;
-    public int SqlWidth{
-      get { return _SqlWidth;}
-      set { _SqlWidth = value;}
-    }
-    
-    private string _Help;
-    public string Help{
-      get { return _Help;}
-      set { _Help = value;}
-    }
-    
-    private int _Order;
-    public int Order{
-      get { return _Order;}
-      set { _Order = value;}
-    }
-    
-    private string _ValExp;
-    public string ValExp{
-      get { return _ValExp;}
-      set { _ValExp = value;}
-    }
-    
-    private string _ValMsg;
-    public string ValMsg{
-      get { return _ValMsg;}
-      set { _ValMsg = value;}
-    }
-    
-    private int _Decimals;
-    public int Decimals{
-      get { return _Decimals;}
-      set { _Decimals= value;}
-    }
-    
-    #endregion
+    }    
     
   }
 }

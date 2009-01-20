@@ -37,7 +37,6 @@ namespace DBInfo.Core.Extractor {
     DataSet getViews();
     DataSet getViewText(string AView);
     DataSet getCheckConstraints(string ATabela);
-    DataSet getSequences();
-    DataSet getTableTriggers(string ATabela);
+    DataSet getSequences();    
   }
 }
