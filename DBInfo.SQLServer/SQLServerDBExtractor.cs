@@ -99,6 +99,7 @@ namespace DBInfo.DBExtractors {
           "    when c.xtype = 127 then 15 " +
           "    when c.xtype = 48 then 16 " +
           "    when c.xtype = 173 then 17 " +
+          "    when c.xtype = 189 then 20 " + 
           "    else -1 " +
           "  end type, " +
           "  length, " +
@@ -259,7 +260,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet getIndexes(string ATabela) {
+    public void GetIndexes(Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  i.name, " +
@@ -279,13 +280,19 @@ namespace DBInfo.DBExtractors {
         "order by indid ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = ATabela;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+      
+      foreach(DataRow r in ds.Tables[0].Rows){
+        Index i = new Index();
+        i.IndexName = (string)r[0];
+        i.Unique = Convert.ToBoolean(r[1]);
+        table.Indexes.Add(i);
+      }                  
     }
 
-    public DataSet getIndexColumns(string ATabela, string AIndice) {
+    public void getIndexColumns(Table table, Index index) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  c.name " +
@@ -307,11 +314,19 @@ namespace DBInfo.DBExtractors {
         "  k.keyno ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = ATabela;
-      qry.Parameters.Add("@IndexName", SqlDbType.VarChar).Value = AIndice;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
+      qry.Parameters.Add("@IndexName", SqlDbType.VarChar).Value = index.IndexName;
       DataSet ds = new DataSet();
-      dat.Fill(ds);
-      return ds;
+      dat.Fill(ds);      
+      
+      foreach (DataRow r2 in ds.Tables[0].Rows) {
+        IndexColumn c = new IndexColumn();
+        c.Column = table.FindColumn((string)r2[0]);
+        c.Order = ((IndexColumn.EnumOrder)r2[1]);
+        if (c == null)
+          throw new Exception("Não foi localizada a coluna " + (string)r2[0] + " do índice " + table.TableName + "." + index.IndexName);
+        index.Columns.Add(c);
+      }
     }
 
     public DataSet getTableData(string ATabela) {

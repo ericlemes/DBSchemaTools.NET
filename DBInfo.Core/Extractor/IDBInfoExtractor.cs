@@ -25,8 +25,8 @@ namespace DBInfo.Core.Extractor {
     DataSet getForeignKeyColumns(string AForeignKey);
     DataSet getPrimaryKey(string ATabela);
     DataSet getPrimaryKeyColumns(string ATabela, string APrimaryKeyName);
-    DataSet getIndexes(string ATabela);
-    DataSet getIndexColumns(string ATabela, string AIndice);
+    void GetIndexes(Table table);
+    void getIndexColumns(Table table, Index index);
     DataSet getTableData(string ATabela);
     DataSet getProcedures();
     DataSet getProcedureText(string AProcedure);

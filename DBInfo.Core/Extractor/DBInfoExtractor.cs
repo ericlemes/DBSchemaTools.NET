@@ -201,31 +201,15 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void ReadIndices() {
+    private void ReadIndexes() {
       foreach (Table t in Tables) {
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DataToRead.Indexes, t.TableName);
+        
+        Extractor.GetIndexes(t);        
 
-        DataSet IndexesDataset;
-        IndexesDataset = Extractor.getIndexes(t.TableName);
-
-        if (IndexesDataset == null)
-          return;
-
-        foreach (DataRow r in IndexesDataset.Tables[0].Rows) {
-          Index i = new Index();
-          i.IndexName = (string)r[0];
-          i.Unique = Convert.ToBoolean(r[1]);
-          DataSet IndexColsDataset = Extractor.getIndexColumns(t.TableName, i.IndexName);
-          foreach (DataRow r2 in IndexColsDataset.Tables[0].Rows) {
-            IndexColumn c = new IndexColumn();
-            c.Column = t.FindColumn((string)r2[0]);
-            c.Order = ((IndexColumn.EnumOrder)r2[1]);
-            if (c == null)
-              throw new Exception("Não foi localizada a coluna " + (string)r2[0] + " do índice " + t.TableName + "." + i.IndexName);
-            i.Columns.Add(c);
-          }
-          t.Indexes.Add(i);
+        foreach (Index i in t.Indexes) {
+          Extractor.getIndexColumns(t, i);          
         }
       }
     }
@@ -443,7 +427,7 @@ namespace DBInfo.Core.Extractor {
         ReadPrimaryKeys();
         ReadForeignKeys();
         ReadCheckConstraints();
-        ReadIndices();
+        ReadIndexes();
 
         ReadFunctions();
         ReadProcedures();

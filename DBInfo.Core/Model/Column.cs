@@ -21,7 +21,8 @@ namespace DBInfo.Core.Model {
       DBTinyInt = 16,
       DBBinary = 17,
       DBNVarchar = 18,
-      DBRowID = 19 //RowID Oracle, RecID Progress
+      DBRowID = 19, //RowID Oracle, RecID Progress
+      DBTimeStamp = 20
     }
 
     private Table _Table;
