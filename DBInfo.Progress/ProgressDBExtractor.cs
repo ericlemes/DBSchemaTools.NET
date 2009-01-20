@@ -2,6 +2,8 @@ using System;
 using System.Data;
 using System.Data.Odbc;
 using DBInfo.Core.Extractor;
+using DBInfo.Core.Model;
+using System.Collections.Generic;
 
 namespace DBInfo.DBExtractors {
   public class ProgressDBExtractor : IDBInfoExtractor {
@@ -60,8 +62,9 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet getTableColumns(string ATabela) {
-      OdbcCommand qry = new OdbcCommand(
+    public void GetTableColumns(Table table) {
+      return;
+      /*OdbcCommand qry = new OdbcCommand(
         "select " +
         "  fi.\"_Field-Name\", " +
         "  fi.\"_Data-Type\", " +
@@ -140,7 +143,7 @@ namespace DBInfo.DBExtractors {
         dt.Rows.Add(newrow);
       }
 
-      return dsretorno;
+      return dsretorno;*/
     }
 
     public DataSet getIndexColumns(string ATabela, string AIndice) {
@@ -266,8 +269,9 @@ namespace DBInfo.DBExtractors {
       return null;
     }
 
-    public DataSet getTables() {
-      OdbcCommand qry = new OdbcCommand(
+    public List<Table> GetTables() {
+      return new List<Table>();
+      /*OdbcCommand qry = new OdbcCommand(
         "select " +
         "  f.\"_File-Name\", " +
         "  0, " +
@@ -292,7 +296,7 @@ namespace DBInfo.DBExtractors {
       DataSet ds = new DataSet();
       dat.SelectCommand = qry;
       dat.Fill(ds);
-      return ds;
+      return ds;*/
     }
 
     public DataSet getTriggers(string ATabela) {

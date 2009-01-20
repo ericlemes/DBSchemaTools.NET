@@ -1,5 +1,7 @@
 using System;
 using System.Data;
+using DBInfo.Core.Model;
+using System.Collections.Generic;
 
 namespace DBInfo.Core.Extractor {
   public interface IDBInfoExtractor {
@@ -17,8 +19,8 @@ namespace DBInfo.Core.Extractor {
     }
     void Open();
     void Close();
-    DataSet getTables();
-    DataSet getTableColumns(string ATabela);
+    List<Table> GetTables();
+    void GetTableColumns(Table table);
     DataSet getForeignKeys(string ATabela);
     DataSet getForeignKeyColumns(string AForeignKey);
     DataSet getPrimaryKey(string ATabela);

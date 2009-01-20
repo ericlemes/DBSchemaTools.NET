@@ -266,12 +266,12 @@ namespace DBInfo.CommandLine {
 
     static void AntesLerDadosBanco(DBInfoExtractor.DataToRead ADados, string AObjeto) {
       switch (ADados) {
-        case DBInfoExtractor.DataToRead.Tabelas: Console.WriteLine("Lendo tabelas"); break;
-        case DBInfoExtractor.DataToRead.Colunas: Console.WriteLine("Lendo colunas da tabela " + AObjeto); break;
-        case DBInfoExtractor.DataToRead.DadosIniciais: Console.WriteLine("Lendo dados iniciais da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Tables: Console.WriteLine("Lendo tabelas"); break;
+        case DBInfoExtractor.DataToRead.Columns: Console.WriteLine("Lendo colunas da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.TableData: Console.WriteLine("Lendo dados iniciais da tabela " + AObjeto); break;
         case DBInfoExtractor.DataToRead.ForeignKeys: Console.WriteLine("Lendo foreign keys da tabela " + AObjeto); break;
         case DBInfoExtractor.DataToRead.Functions: Console.WriteLine("Lendo function " + AObjeto); break;
-        case DBInfoExtractor.DataToRead.Indices: Console.WriteLine("Lendo índices da tabela " + AObjeto); break;
+        case DBInfoExtractor.DataToRead.Indexes: Console.WriteLine("Lendo índices da tabela " + AObjeto); break;
         case DBInfoExtractor.DataToRead.PrimaryKey: Console.WriteLine("Lendo primary key da tabela " + AObjeto); break;
         case DBInfoExtractor.DataToRead.Procedures: Console.WriteLine("Lendo procedure " + AObjeto); break;
         case DBInfoExtractor.DataToRead.Triggers: Console.WriteLine("Lendo triggers da tabela " + AObjeto); break;

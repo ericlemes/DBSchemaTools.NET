@@ -63,6 +63,7 @@ namespace DBInfo.Core.Model {
     private bool _IsPk;
     public bool IsPK{
       get { return _IsPk;}
+      set { _IsPk = value;}
     }
     
     private bool _IsNull;        
@@ -74,7 +75,7 @@ namespace DBInfo.Core.Model {
     private bool _IdentityColumn;
     public bool IdentityColumn{
       get { return _IdentityColumn;}
-      set { _IsNull = value;}
+      set { _IdentityColumn = value; }
     }
     
     private string _DefaultValue;

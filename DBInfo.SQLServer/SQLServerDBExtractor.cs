@@ -3,6 +3,8 @@ using System.Data;
 using System.Data.SqlClient;
 using DBInfo.Core;
 using DBInfo.Core.Extractor;
+using DBInfo.Core.Model;
+using System.Collections.Generic;
 
 namespace DBInfo.DBExtractors {
   public class SQLServerDBExtractor : IDBInfoExtractor {
@@ -22,8 +24,8 @@ namespace DBInfo.DBExtractors {
     public string InputDir {
       get { return _InputDir; }
       set { _InputDir = value; }
-    }  
-  
+    }
+
     public SqlConnection SqlConn;
 
     public SQLServerDBExtractor() {
@@ -41,16 +43,39 @@ namespace DBInfo.DBExtractors {
       SqlConn.Close();
     }
 
-    public DataSet getTables() {
+    private string GetString(object AValue) {
+      return AValue == DBNull.Value ? String.Empty : (string)AValue;
+    }
+
+    private int GetInteger(object AValue) {
+      return AValue == DBNull.Value ? 0 : (int)AValue;
+    }
+
+    public List<Table> GetTables() {
+      List<Table> result = new List<Table>();
+
       SqlCommand qry = new SqlCommand("select name, case when ident_seed(name) is null then 0 else 1 end HasIdentity, ident_seed(name) IdentSeed, ident_incr(name) IdentIncr from sysobjects where xtype = 'U' and uid = 1 and status >= 0 order by name", SqlConn);
+
       SqlDataAdapter dat = new SqlDataAdapter();
       DataSet ds = new DataSet();
       dat.SelectCommand = qry;
       dat.Fill(ds);
-      return ds;
+
+      foreach (DataRow row in ds.Tables[0].Rows) {
+        Table t = new Table();
+        t.TableName = (string)row[0];
+        t.HasIdentity = Convert.ToBoolean(row[1]);
+        if (t.HasIdentity) {
+          t.IdentitySeed = Convert.ToInt32(row[2]);
+          t.IdentityIncrement = Convert.ToInt32(row[3]);
+        }
+        result.Add(t);
+      }
+
+      return result;
     }
 
-    public DataSet getTableColumns(string ATabela) {
+    public void GetTableColumns(Table table) {
       SqlCommand qry = new SqlCommand(
           "select " +
           "  c.name, " +
@@ -106,11 +131,38 @@ namespace DBInfo.DBExtractors {
       SqlDataAdapter dat = new SqlDataAdapter();
       DataSet ds = new DataSet();
 
-      qry.Parameters.Add("@Tabela", SqlDbType.VarChar).Value = ATabela;
-      qry.Parameters.Add("@Tabela2", SqlDbType.VarChar).Value = ATabela;
+      qry.Parameters.Add("@Tabela", SqlDbType.VarChar).Value = table.TableName;
+      qry.Parameters.Add("@Tabela2", SqlDbType.VarChar).Value = table.TableName;
       dat.SelectCommand = qry;
       dat.Fill(ds);
-      return ds;
+
+      foreach (DataRow row in ds.Tables[0].Rows) {
+        Column c = new Column();
+        c.Table = table;
+        c.Name = (string)row[0];
+        c.Type = (Column.DBColumnType)Convert.ToInt32(row[1]);
+        if (((int)c.Type) == -1)
+          throw new Exception("Tipo de dados não suportado para a coluna " + table.TableName + "." + c.Name);
+        c.Size = Convert.ToInt32(row[2]);
+        c.SqlWidth = Convert.ToInt32(row[2]);
+        c.Precision = Convert.ToInt32(row[3]);
+        c.Scale = Convert.ToInt32(row[4]);
+        c.IsNull = Convert.ToBoolean(row[5]);
+        c.IdentityColumn = Convert.ToBoolean(row[6]);
+        c.DefaultValue = (string)row[7];
+        c.ConstraintDefaultName = (string)row[8];
+        c.Description = GetString(row[9]);
+        c.Format = GetString(row[10]);
+        c.Label = GetString(row[11]);
+        c.Position = GetInteger(row[12]);
+        c.Help = GetString(row[13]);
+        c.Order = GetInteger(row[14]);
+        c.ValExp = GetString(row[15]);
+        c.ValMsg = GetString(row[16]);
+        c.Decimals = row[17] == DBNull.Value ? -1 : (int)row[17];
+        table.Columns.Add(c);
+
+      }      
     }
 
     public DataSet getForeignKeys(string ATabela) {

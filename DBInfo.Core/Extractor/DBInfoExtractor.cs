@@ -86,7 +86,7 @@ namespace DBInfo.Core.Extractor {
       set { _Sequences = value;}
     }
 
-    public enum DataToRead { Tabelas, CheckConstraints, Colunas, PrimaryKey, Indices, ForeignKeys, Procedures, Functions, DadosIniciais, Triggers, Views, Sequences, TableTriggers };
+    public enum DataToRead { Tables, CheckConstraints, Columns, PrimaryKey, Indexes, ForeignKeys, Procedures, Functions, TableData, Triggers, Views, Sequences, TableTriggers };
 
     public delegate void AntesLerDadosBancoHandler(DataToRead ADados, string AObjeto);
     public event AntesLerDadosBancoHandler EventoAntesLerDadosBanco;
@@ -121,11 +121,7 @@ namespace DBInfo.Core.Extractor {
         }
       }
       return TmpColumn;
-    }
-
-    private string GetString(object AValue) {
-      return AValue == DBNull.Value ? String.Empty : (string)AValue;
-    }
+    }    
 
     private int GetInteger(object AValue) {
       return AValue == DBNull.Value ? 0 : (int)AValue;
@@ -136,63 +132,18 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void ReadTables() {
-      DataSet TablesDataset;
-      TablesDataset = _Extractor.getTables();
-      if (TablesDataset == null)
-        return;
+      Tables = _Extractor.GetTables();
+      if (Tables == null)
+        throw new Exception("The IDBExtractor GetTables method mustn't return null");
 
       if (EventoAntesLerDadosBanco != null)
-        EventoAntesLerDadosBanco(DataToRead.Tabelas, "");
-
-      foreach (DataRow row in TablesDataset.Tables[0].Rows) {        
-        Table t = new Table();
-        t.TableName = (string)row[0];
-        t.HasIdentity = Convert.ToBoolean(row[1]);
-        if (t.HasIdentity) {
-          t.IdentitySeed = Convert.ToInt32(row[2]);
-          t.IdentityIncrement = Convert.ToInt32(row[3]);
-        }
-        t.Area = GetString(row[4]);
-        t.Description = GetString(row[5]);
-        t.DumpName = GetString(row[6]);
-        t.Label = GetString(row[7]);
-        t.ValExp = GetString(row[8]);
-        t.ValMsg = GetString(row[9]);
-        t.ForeignName = GetString(row[10]);
-        Tables.Add(t);
-      }
+        EventoAntesLerDadosBanco(DataToRead.Tables, "");      
 
       foreach (Table Table in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DataToRead.Colunas, Table.TableName);
+          EventoAntesLerDadosBanco(DataToRead.Columns, Table.TableName);
 
-        DataSet ColumnsDataset = Extractor.getTableColumns(Table.TableName);
-        foreach (DataRow row in ColumnsDataset.Tables[0].Rows) {
-          Column c = new Column();
-          c.Table = Table;
-          c.Name = (string)row[0];
-          c.Type = (Column.DBColumnType)Convert.ToInt32(row[1]);
-          if (((int)c.Type) == -1)
-            throw new Exception("Tipo de dados não suportado para a coluna " + Table.TableName + "." + c.Name);
-          c.Size = Convert.ToInt32(row[2]);
-          c.SqlWidth = Convert.ToInt32(row[2]);
-          c.Precision = Convert.ToInt32(row[3]);
-          c.Scale = Convert.ToInt32(row[4]);
-          c.IsNull = Convert.ToBoolean(row[5]);
-          c.IdentityColumn = Convert.ToBoolean(row[6]);
-          c.DefaultValue = (string)row[7];
-          c.ConstraintDefaultName = (string)row[8];
-          c.Description = GetString(row[9]);
-          c.Format = GetString(row[10]);
-          c.Label = GetString(row[11]);
-          c.Position = GetInteger(row[12]);
-          c.Help = GetString(row[13]);
-          c.Order = GetInteger(row[14]);
-          c.ValExp = GetString(row[15]);
-          c.ValMsg = GetString(row[16]);
-          c.Decimals = row[17] == DBNull.Value ? -1 : (int)row[17];
-          Table.Columns.Add(c);
-        }
+        Extractor.GetTableColumns(Table);
 
         if (EventoAntesLerDadosBanco != null)
           EventoAntesLerDadosBanco(DataToRead.TableTriggers, Table.TableName);
@@ -210,6 +161,10 @@ namespace DBInfo.Core.Extractor {
           Table.TableTriggers.Add(tt);
         }
       }
+    }
+
+    private string GetString(object AValue) {
+      return AValue == DBNull.Value ? String.Empty : (string)AValue;
     }
 
     private void ReadPrimaryKeys() {
@@ -261,7 +216,7 @@ namespace DBInfo.Core.Extractor {
     private void ReadIndices() {
       foreach (Table t in Tables) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DataToRead.Indices, t.TableName);
+          EventoAntesLerDadosBanco(DataToRead.Indexes, t.TableName);
 
         DataSet IndexesDataset;
         IndexesDataset = Extractor.getIndexes(t.TableName);
@@ -332,7 +287,7 @@ namespace DBInfo.Core.Extractor {
     private void ReadTableData() {
       foreach (string s in TableNames) {
         if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DataToRead.DadosIniciais, s);
+          EventoAntesLerDadosBanco(DataToRead.TableData, s);
         DataSet dsDados = Extractor.getTableData(s);
         TableData.Add(dsDados);
       }
