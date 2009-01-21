@@ -8,99 +8,104 @@ using System.Collections.Generic;
 
 namespace DBInfo.Core.OutputGenerators {
   public class OutputGenerator {
-  
+
     private DBInfoExtractor _Extractor;
-    public DBInfoExtractor Extractor{
-      get { return _Extractor;}
-      set { _Extractor = value;}
+    public DBInfoExtractor Extractor {
+      get { return _Extractor; }
+      set { _Extractor = value; }
     }
-    
+
     private List<DatabaseScript> _ScriptsTabelas = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsTabelas{
-      get { return _ScriptsTabelas;}
-      set { _ScriptsTabelas = value;}
+    public List<DatabaseScript> ScriptsTabelas {
+      get { return _ScriptsTabelas; }
+      set { _ScriptsTabelas = value; }
     }
-    
+
     private List<DatabaseScript> _ScriptsForeignKeys = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsForeignKeys{
-      get { return _ScriptsForeignKeys;}
-      set { _ScriptsForeignKeys = value;}
-    }        
-    
+    public List<DatabaseScript> ScriptsForeignKeys {
+      get { return _ScriptsForeignKeys; }
+      set { _ScriptsForeignKeys = value; }
+    }
+
     private List<DatabaseScript> _ScriptsDadosIniciais = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsDadosIniciais{
-      get { return _ScriptsDadosIniciais;}
-      set { _ScriptsDadosIniciais = value;}
+    public List<DatabaseScript> ScriptsDadosIniciais {
+      get { return _ScriptsDadosIniciais; }
+      set { _ScriptsDadosIniciais = value; }
     }
-    
+
     private List<DatabaseScript> _ScriptsProcedures = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsProcedures{
-      get { return _ScriptsProcedures;}
-      set { _ScriptsProcedures = value;}
+    public List<DatabaseScript> ScriptsProcedures {
+      get { return _ScriptsProcedures; }
+      set { _ScriptsProcedures = value; }
     }
-    
+
     private List<DatabaseScript> _ScriptsFunctions = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsFunctions{
-      get {return _ScriptsFunctions;}
-      set { _ScriptsFunctions =value;}
+    public List<DatabaseScript> ScriptsFunctions {
+      get { return _ScriptsFunctions; }
+      set { _ScriptsFunctions = value; }
     }
-        
+
     private List<DatabaseScript> _ScriptsTriggers = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsTriggers{
-      get { return _ScriptsTriggers;}
-      set { _ScriptsTriggers = value;}
+    public List<DatabaseScript> ScriptsTriggers {
+      get { return _ScriptsTriggers; }
+      set { _ScriptsTriggers = value; }
     }
-    
+
     private List<DatabaseScript> _ScriptsViews = new List<DatabaseScript>();
-    public List<DatabaseScript> ScriptsViews{
-      get { return _ScriptsViews;}
-      set { _ScriptsViews = value;}
+    public List<DatabaseScript> ScriptsViews {
+      get { return _ScriptsViews; }
+      set { _ScriptsViews = value; }
     }
-    
-    private List<DatabaseScript> _ScriptsSequences = new List<DatabaseScript>();    
-    public List<DatabaseScript> ScriptsSequences{
-      get { return _ScriptsSequences;}
-      set { _ScriptsSequences = value;}
-    }            
+
+    private List<DatabaseScript> _ScriptsSequences = new List<DatabaseScript>();
+    public List<DatabaseScript> ScriptsSequences {
+      get { return _ScriptsSequences; }
+      set { _ScriptsSequences = value; }
+    }
 
     public enum ScriptsAGerar { Tabelas, ForeignKeys, Procedures, Functions, DadosIniciais, Triggers, Views, Sequences };
 
     public delegate void AntesGerarScriptsHandler(ScriptsAGerar AScripts, string AObjeto);
-    public event AntesGerarScriptsHandler EventoAntesGerarScripts;    
+    public event AntesGerarScriptsHandler EventoAntesGerarScripts;
 
     public delegate void AntesGerarDadosIniciais(Table ATable, DataSet ADataset);
     public event AntesGerarDadosIniciais EventoAntesGerarDadosIniciais;
     public delegate void AntesGerarLinhaDadoInicial(Table ATAble, DataRow ARow);
     public event AntesGerarLinhaDadoInicial EventoAntesGerarLinhaDadoInicial;
-    
+
     private IOutputGenerator _OutputGen;
-    public IOutputGenerator OutputGen{
-      get { return _OutputGen;}
-      set { _OutputGen = value;}
-    }    
-    
-    private void GenerateTables(){
-      foreach (Table table in Extractor.Tables) {        
+    public IOutputGenerator OutputGen {
+      get { return _OutputGen; }
+      set { _OutputGen = value; }
+    }
+
+    private void GenerateTables(List<DBObjectType> dataToGenerateOutput) {
+      foreach (Table table in Extractor.Tables) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Tabelas, table.TableName);
-          
+
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = table.TableName + ".Tabela.sql";
-        ds.ScriptContent = OutputGen.GenerateTableOutput(table);        
-        ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);        
-        ds.ScriptContent += OutputGen.GenerateIndexesOutput(table);
+        ds.ScriptContent = OutputGen.GenerateTableOutput(table);
+        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey))
+          ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);
+        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes))
+          ds.ScriptContent += OutputGen.GenerateIndexesOutput(table);
         ScriptsTabelas.Add(ds);
 
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.ForeignKeys, table.TableName);
-        DatabaseScript dsFK = new DatabaseScript();
-        dsFK.ScriptName = table.TableName + ".ForeignKeys.sql";
-        dsFK.ScriptContent = OutputGen.GenerateForeignKeysOutput(table);
-        ScriptsForeignKeys.Add(dsFK);
+
+        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
+          DatabaseScript dsFK = new DatabaseScript();
+          dsFK.ScriptName = table.TableName + ".ForeignKeys.sql";
+          dsFK.ScriptContent = OutputGen.GenerateForeignKeysOutput(table);
+          ScriptsForeignKeys.Add(dsFK);
+        }
       }
     }
-    
-    private void GenerateTableData(){
+
+    private void GenerateTableData() {
       foreach (string s in Extractor.TableNames) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.DadosIniciais, s);
@@ -108,9 +113,11 @@ namespace DBInfo.Core.OutputGenerators {
         Table t = Extractor.FindTable(s, true);
         if (t == null)
           throw new Exception("Não foi encontrada tabela " + s);
+
         DatabaseScript ds = new DatabaseScript();
         ds.ScriptName = t.TableName + ".DadosIniciais.sql";
         ds.ScriptContent = "";
+
         DataSet DatasetDados = (DataSet)Extractor.TableData[Extractor.TableNames.IndexOf(s)];
         if (DatasetDados.Tables[0].Rows.Count > 0) {
           if (EventoAntesGerarDadosIniciais != null)
@@ -126,8 +133,8 @@ namespace DBInfo.Core.OutputGenerators {
         }
       }
     }
-    
-    private void GenerateProcedures(){
+
+    private void GenerateProcedures() {
       foreach (Procedure p in Extractor.Procedures) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Procedures, p.Name);
@@ -137,8 +144,8 @@ namespace DBInfo.Core.OutputGenerators {
         ScriptsProcedures.Add(ds);
       }
     }
-    
-    private void GenerateFunctions(){
+
+    private void GenerateFunctions() {
       foreach (Function f in Extractor.Functions) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Functions, f.Name);
@@ -148,8 +155,8 @@ namespace DBInfo.Core.OutputGenerators {
         ScriptsFunctions.Add(ds);
       }
     }
-    
-    private void GenerateTriggers(){
+
+    private void GenerateTriggers() {
       foreach (Trigger t in Extractor.Triggers) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Triggers, t.Table.TableName + "." + t.Name);
@@ -159,8 +166,8 @@ namespace DBInfo.Core.OutputGenerators {
         ScriptsTriggers.Add(ds);
       }
     }
-    
-    private void GenerateViews(){
+
+    private void GenerateViews() {
       foreach (View v in Extractor.Views) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Views, v.Name);
@@ -168,10 +175,10 @@ namespace DBInfo.Core.OutputGenerators {
         ds.ScriptName = v.Name + ".viw";
         ds.ScriptContent = OutputGen.GenerateViewOutput(v);
         ScriptsViews.Add(ds);
-      }            
+      }
     }
-    
-    private void GenerateSequences(){
+
+    private void GenerateSequences() {
       foreach (Sequence s in Extractor.Sequences) {
         if (EventoAntesGerarScripts != null)
           EventoAntesGerarScripts(ScriptsAGerar.Sequences, s.SequenceName);
@@ -182,14 +189,21 @@ namespace DBInfo.Core.OutputGenerators {
       }
     }
 
-    public void GenerateOutput(List<DBObjectType> dataToGenerateOutput) {            
-      GenerateTables();
-      GenerateTableData();
-      GenerateProcedures();      
-      GenerateFunctions();
-      GenerateTriggers();
-      GenerateViews();
-      GenerateSequences();            
+    public void GenerateOutput(List<DBObjectType> dataToGenerateOutput) {
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Tables))
+        GenerateTables(dataToGenerateOutput);
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.TableData))
+        GenerateTableData();
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures))
+        GenerateProcedures();
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Functions))
+        GenerateFunctions();
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Triggers))
+        GenerateTriggers();
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Views))
+        GenerateViews();
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Sequences))
+        GenerateSequences();
     }
 
     /*
