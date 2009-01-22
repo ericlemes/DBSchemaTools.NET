@@ -128,7 +128,7 @@ namespace DBInfo.MSBuild {
       if (extractorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
       IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);
-      IOutputGenerator outputGenerator = (IOutputGenerator)Activator.CreateInstance(Type.GetType(_OutputGeneratorClass));
+      IScriptsOutputGenerator outputGenerator = (IScriptsOutputGenerator)Activator.CreateInstance(Type.GetType(_OutputGeneratorClass));
       
       DBInfoExtractor dbe = new DBInfoExtractor();
       dbe.Extractor = extractor;
@@ -145,9 +145,9 @@ namespace DBInfo.MSBuild {
       Type generatorClass = Type.GetType(_OutputGeneratorClass);
       if (generatorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _OutputGeneratorClass));
-      IOutputGenerator generator = (IOutputGenerator)Activator.CreateInstance(generatorClass);           
+      IScriptsOutputGenerator generator = (IScriptsOutputGenerator)Activator.CreateInstance(generatorClass);           
       
-      OutputGenerator gen = new OutputGenerator();
+      ScriptOutputGenerator gen = new ScriptOutputGenerator();
       gen.OutputGen = generator;      
       gen.GenerateOutput(dbe.Database, dataToGenerateOutput);
       
