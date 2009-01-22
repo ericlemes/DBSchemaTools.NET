@@ -62,7 +62,13 @@ namespace DBInfo.Core.Model {
     public List<CheckConstraint> CheckConstraints {
       get { return _CheckConstraints; }
       set { _CheckConstraints = value; }
-    }    
+    }
+
+    private List<Trigger> _Triggers = new List<Trigger>();
+    public List<Trigger> Triggers {
+      get { return _Triggers; }
+      set { _Triggers = value; }
+    }
 
     public Column FindColumn(string AColumnName) {
       Column TmpColumn = null;
@@ -73,7 +79,7 @@ namespace DBInfo.Core.Model {
         }
       }
       return TmpColumn;
-    }
+    }        
 
     public ForeignKeyColumn ColumnHasForeignKey(Column AColumn) {
       foreach (ForeignKey fk in ForeignKeys) {

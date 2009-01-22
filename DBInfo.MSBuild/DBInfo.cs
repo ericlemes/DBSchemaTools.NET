@@ -148,9 +148,8 @@ namespace DBInfo.MSBuild {
       IOutputGenerator generator = (IOutputGenerator)Activator.CreateInstance(generatorClass);           
       
       OutputGenerator gen = new OutputGenerator();
-      gen.OutputGen = generator;
-      gen.Extractor = dbe;
-      gen.GenerateOutput(dataToGenerateOutput);
+      gen.OutputGen = generator;      
+      gen.GenerateOutput(dbe.Database, dataToGenerateOutput);
       
       return true;
     }

@@ -61,9 +61,9 @@ namespace DBInfo.DBSync {
       foreach (string s in DadosIniciais) {
         bool HasChanges = false;
 
-        tabela = Base.FindTable(s, true);
+        tabela = Base.Database.FindTable(s, true);
         if (tabela != null) {
-          DataSet DatasetDados = (DataSet)Base.TableData[Base.TableNames.IndexOf(s)];
+          DataSet DatasetDados = (DataSet)Base.Database.TableData[Base.Database.TableNames.IndexOf(s)];
           DataSet dsImportado = new DataSet();
           dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
           script += sg.GenerateTableDataStartOutput(tabela);
@@ -103,9 +103,9 @@ namespace DBInfo.DBSync {
     public override void CompararDB(DBInfoExtractor BaseAtual, DBInfoExtractor NovaBase) {
       LimparScripts();
 
-      foreach (object tb in BaseAtual.Tables) {
+      foreach (object tb in BaseAtual.Database.Tables) {
 
-        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Tables);
+        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Database.Tables);
 
         if (tbdestino != null) {
           ScriptAlteracaoColumns((Table)tb, tbdestino);
@@ -121,8 +121,8 @@ namespace DBInfo.DBSync {
 
       }
 
-      foreach (object tb in NovaBase.Tables) {
-        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Tables);
+      foreach (object tb in NovaBase.Database.Tables) {
+        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Database.Tables);
 
         if (tbdorigem == null) {
           ScriptInclusaoTabela(((Table)tb));

@@ -49,6 +49,7 @@
     <Compile Include="Extractor\IDBInfoExtractor.cs" />
     <Compile Include="Model\CheckConstraint.cs" />
     <Compile Include="Model\Column.cs" />
+    <Compile Include="Model\Database.cs" />
     <Compile Include="Model\ForeignKey.cs" />
     <Compile Include="Model\ForeignKeyColumn.cs" />
     <Compile Include="Model\Function.cs" />

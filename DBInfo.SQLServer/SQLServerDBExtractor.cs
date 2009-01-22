@@ -156,7 +156,7 @@ namespace DBInfo.DBExtractors {
       }      
     }
 
-    public DataSet getForeignKeys(string ATabela) {
+    public void GetForeignKeys(Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  const.name, " +
@@ -186,15 +186,24 @@ namespace DBInfo.DBExtractors {
         "  const.xtype = 'F' and " +
         "  const.uid = 1 and " +
         "  ownertable.name = @tablename", SqlConn);
-      qry.Parameters.Add("@tablename", SqlDbType.VarChar).Value = ATabela;
+      qry.Parameters.Add("@tablename", SqlDbType.VarChar).Value = table.TableName;
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+                    
+      foreach (DataRow fkrow in ds.Tables[0].Rows) {
+        ForeignKey fk = new ForeignKey();
+        fk.ForeignKeyName = (string)fkrow[0];
+        fk.RefTableName = (string)fkrow[1];
+        fk.UpdateCascade = Convert.ToBoolean(fkrow[2]);
+        fk.DeleteCascade = Convert.ToBoolean(fkrow[3]);
+        table.ForeignKeys.Add(fk);
+      }
+
     }
 
-    public DataSet getForeignKeyColumns(string AForeignKey) {
+    public void GetForeignKeyColumns(Database db, Table table, ForeignKey fk) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  origincolumn.name, " +
@@ -217,12 +226,19 @@ namespace DBInfo.DBExtractors {
       SqlDataAdapter dat = new SqlDataAdapter();
       DataSet ds = new DataSet();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@foreignkeyname", SqlDbType.VarChar).Value = AForeignKey;
+      qry.Parameters.Add("@foreignkeyname", SqlDbType.VarChar).Value = fk.ForeignKeyName;
       dat.Fill(ds);
-      return ds;
+      
+      foreach (DataRow colrow in ds.Tables[0].Rows) {
+        ForeignKeyColumn col = new ForeignKeyColumn();                
+        col.RefTable = db.FindTable(fk.RefTableName, true);
+        col.Column = table.FindColumn((string)colrow[0]);
+        col.RefColumn = col.RefTable.FindColumn((string)colrow[1]);
+        fk.Columns.Add(col);
+      }
     }
 
-    public DataSet getPrimaryKey(string ATabela) {
+    public void GetPrimaryKey(Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  constraint_name " +
@@ -234,12 +250,15 @@ namespace DBInfo.DBExtractors {
       SqlDataAdapter dat = new SqlDataAdapter();
       DataSet ds = new DataSet();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = ATabela;
-      dat.Fill(ds);
-      return ds;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
+      dat.Fill(ds);      
+
+      if (ds.Tables[0].Rows.Count > 0) {
+        table.PrimaryKeyName = Convert.ToString(ds.Tables[0].Rows[0][0]);        
+      }
     }
 
-    public DataSet getPrimaryKeyColumns(string ATabela, string APrimaryKeyName) {
+    public void GetPrimaryKeyColumns(Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  column_name " +
@@ -253,11 +272,17 @@ namespace DBInfo.DBExtractors {
         "  ordinal_position ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = ATabela;
-      qry.Parameters.Add("@PKName", SqlDbType.VarChar).Value = APrimaryKeyName;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
+      qry.Parameters.Add("@PKName", SqlDbType.VarChar).Value = table.PrimaryKeyName;
       DataSet ds = new DataSet();
-      dat.Fill(ds);
-      return ds;
+      dat.Fill(ds);      
+      
+      foreach (DataRow r in ds.Tables[0].Rows) {
+        Column c = table.FindColumn((string)r[0]);
+        if (c == null)
+          throw new Exception("Não foi localizada a coluna " + (string)r[0] + " da primary key da tabela " + table.TableName);
+        table.PrimaryKeyColumns.Add(c);
+      }
     }
 
     public void GetIndexes(Table table) {
@@ -292,7 +317,7 @@ namespace DBInfo.DBExtractors {
       }                  
     }
 
-    public void getIndexColumns(Table table, Index index) {
+    public void GetIndexColumns(Table table, Index index) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  c.name, " +
@@ -330,7 +355,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet getTableData(string ATabela) {
+    public DataSet GetTableData(string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select * from " + ATabela, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
@@ -340,7 +365,7 @@ namespace DBInfo.DBExtractors {
       return ds;
     }
 
-    public DataSet getProcedures() {
+    public void GetProcedures(Database db) {
       SqlCommand qry = new SqlCommand(
         "select  " +
         "  routine_name  " +
@@ -355,19 +380,27 @@ namespace DBInfo.DBExtractors {
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+
+      foreach (DataRow r in ds.Tables[0].Rows) {
+        Procedure p = new Procedure();
+        p.Name = (string)r[0];        
+        db.Procedures.Add(p);
+      }
     }
 
-    public DataSet getProcedureText(string AProcedure) {
-      SqlCommand qry = new SqlCommand("sp_helptext " + AProcedure, SqlConn);
+    public void GetProcedureText(Database db, Procedure p) {
+      SqlCommand qry = new SqlCommand("sp_helptext " + p.Name, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+
+      foreach (DataRow r2 in ds.Tables[0].Rows) {
+        p.Body += (string)r2[0];
+      }
     }
 
-    public DataSet getFunctions() {
+    public void GetFunctions(Database db) {
       SqlCommand qry = new SqlCommand(
         "select  " +
         "  routine_name  " +
@@ -382,19 +415,29 @@ namespace DBInfo.DBExtractors {
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+      
+      foreach(DataRow r in ds.Tables[0].Rows){
+        Function f = new Function();
+        f.Name = (string)r[0];
+        db.Functions.Add(f);
+      }
+      
     }
 
-    public DataSet getFunctionText(string AFunction) {
-      SqlCommand qry = new SqlCommand("sp_helptext " + AFunction, SqlConn);
+    public void GetFunctionText(Database db, Function f) {
+      SqlCommand qry = new SqlCommand("sp_helptext " + f.Name, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+                  
+      f.Body = "";
+      foreach (DataRow r2 in ds.Tables[0].Rows) {
+        f.Body += (string)r2[0];
+      }       
     }
 
-    public DataSet getTriggers(string ATabela) {
+    public void GetTriggers(Database db, Table t) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  name " +
@@ -405,21 +448,31 @@ namespace DBInfo.DBExtractors {
         "  uid = 1 and " +
         "  parent_obj = (select id from sysobjects where name = @TableName and uid = 1) " +
         "order by name ", SqlConn);
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar, 200).Value = ATabela;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar, 200).Value = t.TableName;
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
-      dat.Fill(ds);
-      return ds;
+      dat.Fill(ds);            
+
+      foreach (DataRow r in ds.Tables[0].Rows) {
+        Trigger tr = new Trigger();
+        tr.Name = (string)r[0];
+        tr.Table = t;        
+        t.Triggers.Add(tr);        
+      }
     }
 
-    public DataSet getTriggerText(string ATrigger) {
-      SqlCommand qry = new SqlCommand("sp_helptext " + ATrigger, SqlConn);
+    public void GetTriggerText(Database db, Table t, Trigger tr) {
+      SqlCommand qry = new SqlCommand("sp_helptext " + tr.Name, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
-      dat.Fill(ds);
-      return ds;
+      dat.Fill(ds);      
+      
+      tr.Body = "";      
+      foreach (DataRow r2 in ds.Tables[0].Rows) {
+        tr.Body += r2[0];
+      }
     }
 
     public DataSet getViews() {

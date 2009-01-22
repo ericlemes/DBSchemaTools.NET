@@ -12,8 +12,8 @@ namespace DBInfo.DBSync {
     public override void CompararDB(DBInfoExtractor BaseAtual, DBInfoExtractor NovaBase) {
       LimparScripts();
 
-      foreach (object tb in BaseAtual.Tables) {
-        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Tables);
+      foreach (object tb in BaseAtual.Database.Tables) {
+        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Database.Tables);
 
         if (tbdestino != null) {
           //TmpRelatorio += ScriptAlteracaoIdentity( (DBTable) tb, tbdestino);
@@ -29,9 +29,9 @@ namespace DBInfo.DBSync {
 
       }
 
-      foreach (object tb in NovaBase.Tables) {
+      foreach (object tb in NovaBase.Database.Tables) {
         string TmpRelatorio = string.Empty;
-        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Tables);
+        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Database.Tables);
 
         if (tbdorigem == null) {
           ScriptInclusaoTabela(((Table)tb));

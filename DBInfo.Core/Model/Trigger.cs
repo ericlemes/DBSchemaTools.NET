@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DBInfo.Core.Model {
   public class Trigger {
@@ -19,7 +20,7 @@ namespace DBInfo.Core.Model {
     public string Body{
       get { return _Body;}
       set { _Body = value;}
-    }
+    }   
 
   }
 }
