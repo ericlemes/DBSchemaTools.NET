@@ -34,9 +34,9 @@ namespace DBInfo.Core.Extractor {
     void GetFunctionText(Database db, Function f);
     void GetTriggers(Database db, Table table);
     void GetTriggerText(Database db, Table t, Trigger tr);
-    DataSet getViews();
-    DataSet getViewText(string AView);
-    DataSet getCheckConstraints(string ATabela);
-    DataSet getSequences();    
+    void GetViews(Database db);
+    void GetViewText(Database db, View v);
+    void GetCheckConstraints(Database db, Table t);
+    void GetSequences(Database db);    
   }
 }

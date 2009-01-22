@@ -60,28 +60,20 @@ namespace DBInfo.Core.Extractor {
       set { _Database = value;}
     }
 
-    public delegate void AntesLerDadosBancoHandler(DBObjectType ADados, string AObjeto);
-    public event AntesLerDadosBancoHandler EventoAntesLerDadosBanco;
-
-    private int GetInteger(object AValue) {
-      return AValue == DBNull.Value ? 0 : (int)AValue;
-    }
-
-    private bool GetBoolean(object AValue) {
-      return AValue == DBNull.Value ? false : (bool)AValue;
-    }
+    public delegate void BeforeExtractDataHandler(DBObjectType objectType, string objectName);
+    public event BeforeExtractDataHandler BeforeExtractData;
 
     private void ReadTables(Database db) {
       db.Tables = _Extractor.GetTables();
       if (db.Tables == null)
         throw new Exception("The IDBExtractor GetTables method mustn't return null");
 
-      if (EventoAntesLerDadosBanco != null)
-        EventoAntesLerDadosBanco(DBObjectType.Tables, "");      
+      if (BeforeExtractData != null)
+        BeforeExtractData(DBObjectType.Tables, "");      
 
       foreach (Table Table in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Columns, Table.TableName);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Columns, Table.TableName);
 
         Extractor.GetTableColumns(Table);                
       }
@@ -93,8 +85,8 @@ namespace DBInfo.Core.Extractor {
 
     private void ReadPrimaryKeys(Database db) {
       foreach (Table Table in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.PrimaryKey, Table.TableName);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.PrimaryKey, Table.TableName);
         
         Extractor.GetPrimaryKey(Table);                
         Extractor.GetPrimaryKeyColumns(Table);
@@ -103,30 +95,17 @@ namespace DBInfo.Core.Extractor {
 
     private void ReadCheckConstraints(Database db) {
       foreach (Table Table in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.CheckConstraints, Table.TableName);
-
-        DataSet CheckDataset;
-        CheckDataset = Extractor.getCheckConstraints(Table.TableName);
-
-        if (CheckDataset == null)
-          return;
-
-        if (CheckDataset.Tables[0].Rows.Count > 0) {
-          foreach (DataRow r in CheckDataset.Tables[0].Rows) {
-            CheckConstraint ch = new CheckConstraint();
-            ch.Name = (string)r[0];
-            ch.Expression = (string)r[1];
-            Table.CheckConstraints.Add(ch);
-          }
-        }
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.CheckConstraints, Table.TableName);
+        
+        Extractor.GetCheckConstraints(db, Table);                
       }
     }
 
     private void ReadIndexes(Database db) {
       foreach (Table t in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Indexes, t.TableName);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Indexes, t.TableName);
         
         Extractor.GetIndexes(t);        
 
@@ -138,8 +117,8 @@ namespace DBInfo.Core.Extractor {
 
     private void ReadForeignKeys(Database db) {
       foreach (Table Table in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.ForeignKeys, Table.TableName);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.ForeignKeys, Table.TableName);
 
         Extractor.GetForeignKeys(Table);
         
@@ -151,8 +130,8 @@ namespace DBInfo.Core.Extractor {
 
     private void ReadTableData(Database db) {
       foreach (string s in db.TableNames) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.TableData, s);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.TableData, s);
         DataSet dsDados = Extractor.GetTableData(s);
         db.TableData.Add(dsDados);
       }
@@ -161,8 +140,8 @@ namespace DBInfo.Core.Extractor {
     private void ReadProcedures(Database db) {
       Extractor.GetProcedures(db);
       foreach(Procedure p in db.Procedures){
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Procedures, p.Name);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Procedures, p.Name);
 
         Extractor.GetProcedureText(db, p);        
       }      
@@ -172,8 +151,8 @@ namespace DBInfo.Core.Extractor {
       _Extractor.GetFunctions(db);
       
       foreach(Function f in db.Functions){      
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Functions, f.Name);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Functions, f.Name);
           
         _Extractor.GetFunctionText(db, f);
       }
@@ -182,8 +161,8 @@ namespace DBInfo.Core.Extractor {
 
     private void ReadTriggers(Database db) {
       foreach (Table t in db.Tables) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Triggers, t.TableName);
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Triggers, t.TableName);
 
         _Extractor.GetTriggers(db, t);
         
@@ -194,47 +173,18 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void ReadViews(Database db) {
-      DataSet dsViews = _Extractor.getViews();
+      _Extractor.GetViews(db);      
 
-      if (dsViews == null)
-        return;
-
-      foreach (DataRow dr in dsViews.Tables[0].Rows) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Views, (string)dr[0]);
-
-        View v = new View();
-        v.Name = (string)dr[0];
-        v.Body = "";
-        DataSet dsViewBody = _Extractor.getViewText(v.Name);
-        if (dsViewBody.Tables.Count > 0) {
-          foreach (DataRow r2 in dsViewBody.Tables[0].Rows) {
-            v.Body += (string)r2[0];
-          }
-        }
-        db.Views.Add(v);
+      foreach (View v in db.Views) {
+        if (BeforeExtractData != null)
+          BeforeExtractData(DBObjectType.Views, v.Name);        
+          
+        _Extractor.GetViewText(db, v);
       }
     }
 
     private void ReadSequences(Database db) {
-      DataSet dsSequences = _Extractor.getSequences();
-
-      if (dsSequences == null)
-        return;
-
-      foreach (DataRow dr in dsSequences.Tables[0].Rows) {
-        if (EventoAntesLerDadosBanco != null)
-          EventoAntesLerDadosBanco(DBObjectType.Sequences, (string)dr[0]);
-
-        Sequence s = new Sequence();
-        s.SequenceName = GetString(dr[0]);
-        s.Initial = GetInteger(dr[1]);
-        s.MinValue = GetInteger(dr[2]);
-        s.MaxValue = dr[3] == DBNull.Value ? -1 : (int)dr[3];
-        s.Increment = GetInteger(dr[4]);
-        s.CycleOnLimit = GetBoolean(dr[5]);
-        db.Sequences.Add(s);
-      }
+      _Extractor.GetSequences(db);      
     }
 
     public void Extract(List<DBObjectType> dataToExtract) {

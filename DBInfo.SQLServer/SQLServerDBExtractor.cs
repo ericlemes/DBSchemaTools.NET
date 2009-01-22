@@ -475,7 +475,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet getViews() {
+    public void GetViews(Database db) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  table_name " +
@@ -489,19 +489,29 @@ namespace DBInfo.DBExtractors {
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+      
+      foreach (DataRow dr in ds.Tables[0].Rows){
+        View v = new View();
+        v.Name = (string)dr[0];
+        db.Views.Add(v);
+      }                  
     }
 
-    public DataSet getViewText(string AView) {
-      SqlCommand qry = new SqlCommand("sp_helptext " + AView, SqlConn);
+    public void GetViewText(Database db, View v) {
+      SqlCommand qry = new SqlCommand("sp_helptext " + v.Name, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
-      dat.Fill(ds);
-      return ds;
+      dat.Fill(ds);      
+
+      v.Body = "";
+            
+      foreach (DataRow r2 in ds.Tables[0].Rows) {
+        v.Body += (string)r2[0];
+      }      
     }
 
-    public DataSet getCheckConstraints(string ATabela) {
+    public void GetCheckConstraints(Database db, Table t) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  o.name, " +
@@ -518,14 +528,20 @@ namespace DBInfo.DBExtractors {
         "  o.name ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
-      qry.Parameters.Add("@TableName", SqlDbType.VarChar, 200).Value = ATabela;
+      qry.Parameters.Add("@TableName", SqlDbType.VarChar, 200).Value = t.TableName;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+
+      foreach (DataRow r in ds.Tables[0].Rows) {
+        CheckConstraint ch = new CheckConstraint();
+        ch.Name = (string)r[0];
+        ch.Expression = (string)r[1];
+        t.CheckConstraints.Add(ch);      
+      }
     }
 
-    public DataSet getSequences() {
-      return null;
+    public void GetSequences(Database db) {
+      
     }
 
     public DataSet getTableTriggers(string ATabela) {
