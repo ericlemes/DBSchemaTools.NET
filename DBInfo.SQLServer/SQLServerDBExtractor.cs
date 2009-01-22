@@ -75,7 +75,7 @@ namespace DBInfo.DBExtractors {
       return result;
     }
 
-    public void GetTableColumns(Table table) {
+    public void GetTableColumns(Database db, Table table) {
       SqlCommand qry = new SqlCommand(
           "select " +
           "  c.name, " +
@@ -156,7 +156,7 @@ namespace DBInfo.DBExtractors {
       }      
     }
 
-    public void GetForeignKeys(Table table) {
+    public void GetForeignKeys(Database db, Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  const.name, " +
@@ -238,7 +238,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public void GetPrimaryKey(Table table) {
+    public void GetPrimaryKey(Database db, Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  constraint_name " +
@@ -258,7 +258,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public void GetPrimaryKeyColumns(Table table) {
+    public void GetPrimaryKeyColumns(Database db, Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  column_name " +
@@ -285,7 +285,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public void GetIndexes(Table table) {
+    public void GetIndexes(Database db, Table table) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  i.name, " +
@@ -317,7 +317,7 @@ namespace DBInfo.DBExtractors {
       }                  
     }
 
-    public void GetIndexColumns(Table table, Index index) {
+    public void GetIndexColumns(Database db, Table table, Index index) {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  c.name, " +
@@ -355,7 +355,7 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet GetTableData(string ATabela) {
+    public DataSet GetTableData(Database db, string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select * from " + ATabela, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();

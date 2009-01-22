@@ -75,7 +75,7 @@ namespace DBInfo.Core.Extractor {
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.Columns, Table.TableName);
 
-        Extractor.GetTableColumns(Table);                
+        Extractor.GetTableColumns(db, Table);                
       }
     }
 
@@ -88,8 +88,8 @@ namespace DBInfo.Core.Extractor {
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.PrimaryKey, Table.TableName);
         
-        Extractor.GetPrimaryKey(Table);                
-        Extractor.GetPrimaryKeyColumns(Table);
+        Extractor.GetPrimaryKey(db, Table);                
+        Extractor.GetPrimaryKeyColumns(db, Table);
       }
     }
 
@@ -107,10 +107,10 @@ namespace DBInfo.Core.Extractor {
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.Indexes, t.TableName);
         
-        Extractor.GetIndexes(t);        
+        Extractor.GetIndexes(db, t);        
 
         foreach (Index i in t.Indexes) {
-          Extractor.GetIndexColumns(t, i);          
+          Extractor.GetIndexColumns(db, t, i);          
         }
       }
     }    
@@ -120,7 +120,7 @@ namespace DBInfo.Core.Extractor {
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.ForeignKeys, Table.TableName);
 
-        Extractor.GetForeignKeys(Table);
+        Extractor.GetForeignKeys(db, Table);
         
         foreach(ForeignKey fk in Table.ForeignKeys){
           Extractor.GetForeignKeyColumns(db, Table, fk);          
@@ -132,7 +132,7 @@ namespace DBInfo.Core.Extractor {
       foreach (string s in db.TableNames) {
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.TableData, s);
-        DataSet dsDados = Extractor.GetTableData(s);
+        DataSet dsDados = Extractor.GetTableData(db, s);
         db.TableData.Add(dsDados);
       }
     }
