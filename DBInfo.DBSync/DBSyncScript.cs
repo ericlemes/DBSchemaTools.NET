@@ -53,7 +53,7 @@ namespace DBInfo.DBSync {
     }
 
 
-    public void CompararDadosIniciais(DBInfoExtractor Base, string[] DadosIniciais, string CaminhoCargaInicial, string OrigemComparacao) {
+    public void CompararDadosIniciais(Database Base, string[] DadosIniciais, string CaminhoCargaInicial, string OrigemComparacao) {
       Table tabela = new Table();
       SQLServerOutputGenerator sg = new SQLServerOutputGenerator();
       string script = string.Empty;
@@ -61,9 +61,9 @@ namespace DBInfo.DBSync {
       foreach (string s in DadosIniciais) {
         bool HasChanges = false;
 
-        tabela = Base.Database.FindTable(s, true);
+        tabela = Base.FindTable(s, true);
         if (tabela != null) {
-          DataSet DatasetDados = (DataSet)Base.Database.TableData[Base.Database.TableNames.IndexOf(s)];
+          DataSet DatasetDados = (DataSet)Base.TableData[Base.TableNames.IndexOf(s)];
           DataSet dsImportado = new DataSet();
           dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
           script += sg.GenerateTableDataStartOutput(tabela);
@@ -100,12 +100,12 @@ namespace DBInfo.DBSync {
     }
 
 
-    public override void CompararDB(DBInfoExtractor BaseAtual, DBInfoExtractor NovaBase) {
+    public override void CompararDB(Database BaseAtual, Database NovaBase) {
       LimparScripts();
 
-      foreach (object tb in BaseAtual.Database.Tables) {
+      foreach (object tb in BaseAtual.Tables) {
 
-        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Database.Tables);
+        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Tables);
 
         if (tbdestino != null) {
           ScriptAlteracaoColumns((Table)tb, tbdestino);
@@ -121,8 +121,8 @@ namespace DBInfo.DBSync {
 
       }
 
-      foreach (object tb in NovaBase.Database.Tables) {
-        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Database.Tables);
+      foreach (object tb in NovaBase.Tables) {
+        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Tables);
 
         if (tbdorigem == null) {
           ScriptInclusaoTabela(((Table)tb));

@@ -22,7 +22,7 @@ namespace DBInfo.DBSync {
     protected ArrayList lstScriptExclusaoFK = new ArrayList();
     protected ArrayList lstScriptRelatorio = new ArrayList();
 
-    public virtual void CompararDB(DBInfoExtractor BaseAtual, DBInfoExtractor NovaBase) {
+    public virtual void CompararDB(Database BaseAtual, Database NovaBase) {
     }
 
     public virtual void GerarScriptOrdenado(string caminho) {

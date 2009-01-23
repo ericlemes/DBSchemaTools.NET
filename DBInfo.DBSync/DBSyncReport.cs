@@ -9,11 +9,11 @@ using System.Collections.Generic;
 
 namespace DBInfo.DBSync {
   public class DBSyncReport : DBSync {
-    public override void CompararDB(DBInfoExtractor BaseAtual, DBInfoExtractor NovaBase) {
+    public override void CompararDB(Database BaseAtual, Database NovaBase) {
       LimparScripts();
 
-      foreach (object tb in BaseAtual.Database.Tables) {
-        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Database.Tables);
+      foreach (object tb in BaseAtual.Tables) {
+        Table tbdestino = PegarTabela(((Table)tb).TableName, NovaBase.Tables);
 
         if (tbdestino != null) {
           //TmpRelatorio += ScriptAlteracaoIdentity( (DBTable) tb, tbdestino);
@@ -29,9 +29,9 @@ namespace DBInfo.DBSync {
 
       }
 
-      foreach (object tb in NovaBase.Database.Tables) {
+      foreach (object tb in NovaBase.Tables) {
         string TmpRelatorio = string.Empty;
-        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Database.Tables);
+        Table tbdorigem = PegarTabela(((Table)tb).TableName, BaseAtual.Tables);
 
         if (tbdorigem == null) {
           ScriptInclusaoTabela(((Table)tb));

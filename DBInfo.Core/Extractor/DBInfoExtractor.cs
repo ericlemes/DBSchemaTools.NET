@@ -52,13 +52,7 @@ namespace DBInfo.Core.Extractor {
     public IDBInfoExtractor Extractor{
       get { return _Extractor;}
       set {_Extractor = value;}
-    }
-    
-    private Database _Database;
-    public Database Database {
-      get { return _Database;}
-      set { _Database = value;}
-    }
+    }   
 
     public delegate void BeforeExtractDataHandler(DBObjectType objectType, string objectName);
     public event BeforeExtractDataHandler BeforeExtractData;
@@ -89,7 +83,8 @@ namespace DBInfo.Core.Extractor {
           BeforeExtractData(DBObjectType.PrimaryKey, Table.TableName);
         
         Extractor.GetPrimaryKey(db, Table);                
-        Extractor.GetPrimaryKeyColumns(db, Table);
+        if (!String.IsNullOrEmpty(Table.PrimaryKeyName))
+          Extractor.GetPrimaryKeyColumns(db, Table);
       }
     }
 
@@ -187,8 +182,8 @@ namespace DBInfo.Core.Extractor {
       _Extractor.GetSequences(db);      
     }
 
-    public void Extract(List<DBObjectType> dataToExtract) {
-      Database db = new Database();
+    public Database Extract(List<DBObjectType> dataToExtract) {
+      Database db = new Database();      
     
       if (_InputType == InputOutputType.File && !Directory.Exists(_InputDir))
         throw new Exception(String.Format("The input directory don't exists: {0}", _InputDir));
@@ -223,10 +218,12 @@ namespace DBInfo.Core.Extractor {
         if (dataToExtract.Contains(DBObjectType.Views))
           ReadViews(db);
         if (dataToExtract.Contains(DBObjectType.Sequences))
-          ReadSequences(db);
+          ReadSequences(db);          
       } finally {
         _Extractor.Close();
       }
+      
+      return db;
     }
   }
 }

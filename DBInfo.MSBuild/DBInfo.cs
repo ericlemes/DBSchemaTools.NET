@@ -8,6 +8,7 @@ using System.IO;
 using DBInfo.Core.Extractor;
 using DBInfo.Core.OutputGenerators;
 using System.Reflection;
+using DBInfo.Core.Model;
 
 namespace DBInfo.MSBuild {
   public class DBInfo:Task {    
@@ -49,8 +50,9 @@ namespace DBInfo.MSBuild {
       get { return _OutputConnectionString;}
       set { _OutputConnectionString = value;}
     }
-    
+        
     private string _OutputType;
+    [Required]
     public string OutputType {
       get { return _OutputType;}
       set { _OutputType = value;}
@@ -108,19 +110,7 @@ namespace DBInfo.MSBuild {
       return l;
     }
 
-    public override bool Execute() {
-      /*if (_InputType == InputOutputType.File && !Directory.Exists(_InputDir))
-        throw new Exception(String.Format("The input directory don't exists: {0}", _InputDir));
-        
-      if (_InputType == InputOutputType.Database && !Directory.Exists(_InputConnectionString))
-        throw new Exception(String.Format("The input connection string don't exists: {0}", _InputConnectionString));        
-    
-      if (_OutputType == InputOutputType.File && !Directory.Exists(_OutputDir))
-        throw new Exception(String.Format("The output directory not exists: {0}", _OutputDir));
-        
-      if (_OutputType == InputOutputType.Database && !Directory.Exists(_OutputConnectionString))
-        throw new Exception(String.Format("The output connection string not exists: {0}", _OutputConnectionString));        */
-        
+    public override bool Execute() {              
       List<DBObjectType> dataToExtract = GetDataToExtractEnum();
       List<DBObjectType> dataToGenerateOutput = GetDataToGenerateOutputEnum();
         
@@ -140,7 +130,7 @@ namespace DBInfo.MSBuild {
         throw new Exception(String.Format("Invalid input type: {0}.", InputType));      
       dbe.InputConnectionString = _InputConnectionString;
       dbe.InputDir = _InputDir;
-      dbe.Extract(dataToExtract);
+      Database db = dbe.Extract(dataToExtract);
       
       Type generatorClass = Type.GetType(_OutputGeneratorClass);
       if (generatorClass == null)
@@ -148,8 +138,15 @@ namespace DBInfo.MSBuild {
       IScriptsOutputGenerator generator = (IScriptsOutputGenerator)Activator.CreateInstance(generatorClass);           
       
       ScriptOutputGenerator gen = new ScriptOutputGenerator();
-      gen.OutputGen = generator;      
-      gen.GenerateOutput(dbe.Database, dataToGenerateOutput);
+      gen.OutputGen = generator;
+      if (OutputType == "database")
+        gen.OutputType = InputOutputType.Database;
+      else if (OutputType == "file")
+        gen.OutputType = InputOutputType.File;
+      else
+        throw new Exception(String.Format("Invalid output type: {0}.", OutputType));            
+      gen.OutputDir = OutputDir;
+      gen.GenerateOutput(db, dataToGenerateOutput);
       
       return true;
     }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{7FCB4DC2-43A8-439B-930B-DB7071A7BA5B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{26BF680B-DA1A-4EA1-BEA6-C583063BD04C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{26BF680B-DA1A-4EA1-BEA6-C583063BD04C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBInfo.Core", "DBInfo.Core\DBInfo.Core.csproj", "{4C3C4618-A3D3-49F9-BD96-95054A36F511}"
 EndProject

@@ -211,7 +211,7 @@ namespace DBInfo.Core.OutputGenerators {
     private void saveScriptBatch(List<DatabaseScript> scripts, string dir){
       if (!Directory.Exists(dir))
         Directory.CreateDirectory(dir);
-      foreach (DatabaseScript ds in TableDataScripts) {
+      foreach (DatabaseScript ds in scripts) {
         if (ds.ScriptContent.Trim() != String.Empty) {
           StreamWriter sw = new StreamWriter(dir + "\\" + ds.ScriptName, false, System.Text.Encoding.Default);
           sw.Write(ds.ScriptContent);
@@ -224,14 +224,14 @@ namespace DBInfo.Core.OutputGenerators {
       if (!Directory.Exists(OutputDir))
         throw new Exception(String.Format("Output Dir don't exists: {0}", OutputDir));
 
-      saveScriptBatch(TableScripts, OutputDir + "Tables");
-      saveScriptBatch(ForeignKeyScripts, OutputDir + "ForeignKeys");
-      saveScriptBatch(TableDataScripts, OutputDir + "DadosIniciais");
-      saveScriptBatch(ProcedureScripts, OutputDir + "Procedures");
-      saveScriptBatch(FunctionScripts, OutputDir + "Functions");
-      saveScriptBatch(TriggerScripts, OutputDir + "Triggers");
-      saveScriptBatch(ViewScripts, OutputDir + "Views");
-      saveScriptBatch(SequenceScripts, OutputDir + "Sequences");                
+      saveScriptBatch(TableScripts, OutputDir + "\\Tables");
+      saveScriptBatch(ForeignKeyScripts, OutputDir + "\\ForeignKeys");
+      saveScriptBatch(TableDataScripts, OutputDir + "\\DadosIniciais");
+      saveScriptBatch(ProcedureScripts, OutputDir + "\\Procedures");
+      saveScriptBatch(FunctionScripts, OutputDir + "\\Functions");
+      saveScriptBatch(TriggerScripts, OutputDir + "\\Triggers");
+      saveScriptBatch(ViewScripts, OutputDir + "\\Views");
+      saveScriptBatch(SequenceScripts, OutputDir + "\\Sequences");                
     }
     
 
