@@ -146,6 +146,7 @@ namespace DBInfo.MSBuild {
       else
         throw new Exception(String.Format("Invalid output type: {0}.", OutputType));            
       gen.OutputDir = OutputDir;
+      gen.OutputConnectionString = OutputConnectionString;
       gen.GenerateOutput(db, dataToGenerateOutput);
       
       return true;

@@ -3,9 +3,14 @@ using System.Collections;
 using System.Data;
 using DBInfo.Core.Model;
 using DBInfo.Core.OutputGenerators;
+using System.Data.SqlClient;
 
 namespace DBInfo.OutputGenerators {
   public class SQLServerOutputGenerator : IScriptsOutputGenerator {
+
+    public string ScriptTerminator {
+      get { return "go"; }
+    }
 
     private bool IsPK(string colName, Table tb) {
       bool retorno = false;
@@ -17,7 +22,7 @@ namespace DBInfo.OutputGenerators {
 
       return retorno;
     }
-    private string PegarTipoSQL(Column Coluna) {
+    private string GetSQLType(Column Coluna) {
       switch (Coluna.Type) {
         case Column.DBColumnType.DBInteger: return "int";
         case Column.DBColumnType.DBVarchar: return "varchar(" + Coluna.Size.ToString() + ")";
@@ -63,30 +68,32 @@ namespace DBInfo.OutputGenerators {
         return " default " + AColumn.DefaultValue + " ";
     }
 
-    public DatabaseScript GenerateTableOutput(Table table) {
-      DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = table.TableName + ".Tabela.sql";
+    public string GenerateTableScript(Table table) {
       string TmpScript = "";
       TmpScript = "create table " + table.TableName + "(" + Environment.NewLine;
       foreach (Column c in table.Columns) {
-        TmpScript += "  " + c.Name + " " + PegarTipoSQL(c) + PegarIdentity(table, c) + PegarDefault(table, c) + PegarIsNull(c.IsNull);
+        TmpScript += "  " + c.Name + " " + GetSQLType(c) + PegarIdentity(table, c) + PegarDefault(table, c) + PegarIsNull(c.IsNull);
         if (table.Columns.IndexOf(c) == (table.Columns.Count - 1))
           TmpScript += Environment.NewLine;
         else
           TmpScript += "," + Environment.NewLine;
       }
-      TmpScript += ")" + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      foreach (CheckConstraint c in table.CheckConstraints) {
-        TmpScript += "alter table " + table.TableName + Environment.NewLine;
-        TmpScript += "  add constraint " + c.Name + Environment.NewLine;
-        TmpScript += "  check " + c.Expression + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      }
-      ds.ScriptContent = TmpScript;
-
-      return ds;
+      TmpScript += ")";
+      return TmpScript;
     }
 
-    public string GeneratePrimaryKeyOutput(Table ATable) {
+    public string GenerateCheckConstraintScript(Table table, CheckConstraint check) {      
+      string ScriptContent = "";
+
+      ScriptContent += "alter table " + table.TableName + Environment.NewLine;
+      ScriptContent += "  add constraint " + check.Name + Environment.NewLine;
+      ScriptContent += "  check " + check.Expression +
+        Environment.NewLine + Environment.NewLine;
+
+      return ScriptContent;
+    }
+
+    public string GeneratePrimaryKeyScript(Table ATable) {
       string TmpScript = "";
       if (ATable.PrimaryKeyName != String.Empty) {
         TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
@@ -110,17 +117,16 @@ namespace DBInfo.OutputGenerators {
         return "";
     }
 
-    public string GenerateIndexesOutput(Table ATable) {
+    public string GenerateIndexScript(Table table, Index index) {
       string TmpScript = "";
-      foreach (Index i in ATable.Indexes) {
-        TmpScript += "create " + PegarUnique(i.Unique) + "index " + i.IndexName + " on " + ATable.TableName + " (" + Environment.NewLine;
-        foreach (IndexColumn c in i.Columns) {
-          TmpScript += "  " + c.Column.Name;
-          if (i.Columns.IndexOf(c) != (i.Columns.Count - 1))
-            TmpScript += "," + Environment.NewLine;
-          else
-            TmpScript += Environment.NewLine + ")" + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-        }
+
+      TmpScript += "create " + PegarUnique(index.Unique) + "index " + index.IndexName + " on " + table.TableName + " (" + Environment.NewLine;
+      foreach (IndexColumn c in index.Columns) {
+        TmpScript += "  " + c.Column.Name;
+        if (index.Columns.IndexOf(c) != (index.Columns.Count - 1))
+          TmpScript += "," + Environment.NewLine;
+        else
+          TmpScript += Environment.NewLine + ")" + Environment.NewLine;
       }
       return TmpScript;
     }
@@ -134,34 +140,28 @@ namespace DBInfo.OutputGenerators {
       return Tmp;
     }
 
-    public DatabaseScript GenerateForeignKeysOutput(Table table) {
-      DatabaseScript ds = new DatabaseScript();
-    
-      ds.ScriptName = table.TableName + ".ForeignKeys.sql";          
-    
+    public string GenerateForeignKeysScript(Table table, ForeignKey fk) {
       string TmpScript = "";
-      foreach (ForeignKey fk in table.ForeignKeys) {
-        TmpScript += "alter table " + table.TableName + Environment.NewLine;
-        TmpScript += "  add constraint \"" + fk.ForeignKeyName + "\" foreign key (" + Environment.NewLine;
-        foreach (ForeignKeyColumn fkcol in fk.Columns) {
-          TmpScript += "    " + fkcol.Column.Name;
-          if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
-            TmpScript += "," + Environment.NewLine;
-          else
-            TmpScript += Environment.NewLine + "  )" + Environment.NewLine;
-        }
-        TmpScript += "  references " + fk.RefTableName + " (" + Environment.NewLine;
-        foreach (ForeignKeyColumn fkcol in fk.Columns) {
-          TmpScript += "    " + fkcol.RefColumn.Name;
-          if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
-            TmpScript += "," + Environment.NewLine;
-          else
-            TmpScript += Environment.NewLine + "  ) " + PegarUpdateDeleteCascade(fk) + Environment.NewLine + Environment.NewLine;
-        }
+
+      TmpScript += "alter table " + table.TableName + Environment.NewLine;
+      TmpScript += "  add constraint \"" + fk.ForeignKeyName + "\" foreign key (" + Environment.NewLine;
+      foreach (ForeignKeyColumn fkcol in fk.Columns) {
+        TmpScript += "    " + fkcol.Column.Name;
+        if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
+          TmpScript += "," + Environment.NewLine;
+        else
+          TmpScript += Environment.NewLine + "  )" + Environment.NewLine;
       }
-      
-      ds.ScriptContent = TmpScript;
-      return ds;
+      TmpScript += "  references " + fk.RefTableName + " (" + Environment.NewLine;
+      foreach (ForeignKeyColumn fkcol in fk.Columns) {
+        TmpScript += "    " + fkcol.RefColumn.Name;
+        if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
+          TmpScript += "," + Environment.NewLine;
+        else
+          TmpScript += Environment.NewLine + "  ) " + PegarUpdateDeleteCascade(fk) + Environment.NewLine + Environment.NewLine;
+      }
+
+      return TmpScript;
     }
 
     private string PegarValorPara(Column.DBColumnType ADBColumnType, object AValue) {
@@ -207,21 +207,21 @@ namespace DBInfo.OutputGenerators {
       return s;
     }
 
-    public string GenerateTableDataStartOutput(Table ATable) {
+    public string GenerateTableDataStartScript(Table ATable) {
       if (ATable.HasIdentity)
         return "set IDENTITY_INSERT dbo." + ATable.TableName + " on" + Environment.NewLine + Environment.NewLine;
       else
         return "";
     }
 
-    public string GenerateTableDataEndOutput(Table ATable) {
+    public string GenerateTableDataEndScript(Table ATable) {
       if (ATable.HasIdentity)
         return "set IDENTITY_INSERT dbo." + ATable.TableName + " off" + Environment.NewLine + Environment.NewLine;
       else
         return "";
     }
 
-    public string GenerateTableDataRowOutput(Table ATable, DataRow ARow) {
+    public string GenerateTableDataRowScript(Table ATable, DataRow ARow) {
       string s = "";
       if (ATable.PrimaryKeyName != String.Empty)
         s += "if not exists(select 1 from " + ATable.TableName + MontarWherePK(ATable, ARow) + ")" + Environment.NewLine;
@@ -269,72 +269,89 @@ namespace DBInfo.OutputGenerators {
     }
 
 
-    public DatabaseScript GenerateProcedureOutput(Procedure procedure) {
+    public DatabaseScript GenerateProcedureScript(Procedure procedure) {
       DatabaseScript ds = new DatabaseScript();
       ds.ScriptName = procedure.Name + ".prc";
-    
+
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + procedure.Name + "')" + Environment.NewLine;
       Tmp += "  drop procedure dbo." + procedure.Name + Environment.NewLine;
       Tmp += "go" + Environment.NewLine + Environment.NewLine;
       Tmp += procedure.Body;
       Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      
+
       ds.ScriptContent = Tmp;
-      
-      return ds;            
+
+      return ds;
     }
 
-    public DatabaseScript GenerateFunctionOutput(Function function) {
+    public DatabaseScript GenerateFunctionScript(Function function) {
       DatabaseScript ds = new DatabaseScript();
       ds.ScriptName = function.Name + ".udf";
-    
+
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + function.Name + "')" + Environment.NewLine;
       Tmp += "  drop function dbo." + function.Name + Environment.NewLine;
       Tmp += "go" + Environment.NewLine + Environment.NewLine;
       Tmp += function.Body;
       Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      
+
       ds.ScriptContent = Tmp;
-      
+
       return ds;
     }
 
-    public DatabaseScript GenerateTriggerOutput(Table table, Trigger trigger) {
+    public DatabaseScript GenerateTriggerScript(Table table, Trigger trigger) {
       DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = table.TableName + "." + trigger.Name + ".trg";          
-    
+      ds.ScriptName = table.TableName + "." + trigger.Name + ".trg";
+
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + trigger.Name + "')" + Environment.NewLine;
       Tmp += "  drop trigger dbo." + trigger.Name + Environment.NewLine;
       Tmp += "go" + Environment.NewLine + Environment.NewLine;
       Tmp += trigger.Body;
       Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      
+
       ds.ScriptContent = Tmp;
-      
+
       return ds;
     }
 
-    public DatabaseScript GenerateViewOutput(View view) { 
+    public DatabaseScript GenerateViewScript(View view) {
       DatabaseScript ds = new DatabaseScript();
       ds.ScriptName = view.Name + ".viw";
-    
+
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + view.Name + "')" + Environment.NewLine;
       Tmp += "  drop view dbo." + view.Name + Environment.NewLine;
       Tmp += "go" + Environment.NewLine + Environment.NewLine;
       Tmp += view.Body;
       Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
-      
+
       ds.ScriptContent = Tmp;
-      
+
       return ds;
     }
 
-    public DatabaseScript GenerateSequenceOutput(Sequence seq) {      
+    public DatabaseScript GenerateSequenceScript(Sequence seq) {
       return null;
+    }
+
+    private SqlConnection _conn;
+
+    public void OpenOutputDatabaseConnection(string connString) {
+      _conn = new SqlConnection();
+      _conn.ConnectionString = connString;
+      _conn.Open();
+    }
+
+    public void ExecuteOuputDatabaseScript(string script) {
+      SqlCommand cmd = new SqlCommand(script, _conn);
+      cmd.ExecuteNonQuery();
+    }
+
+    public void CloseOutputDatabaseConnection() {
+      _conn.Close();
     }
 
   }

@@ -69,6 +69,18 @@ namespace DBInfo.Core.Model {
       get { return _Triggers; }
       set { _Triggers = value; }
     }
+    
+    private string _TableScript;
+    public string TableScript{
+      get { return _TableScript;}
+      set {_TableScript = value;}
+    }
+    
+    private string _PrimaryKeyScript;
+    public string PrimaryKeyScript{
+      get { return _PrimaryKeyScript;}
+      set { _PrimaryKeyScript = value;}
+    }
 
     public Column FindColumn(string AColumnName) {
       Column TmpColumn = null;

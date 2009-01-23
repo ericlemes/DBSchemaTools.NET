@@ -289,20 +289,18 @@ namespace DBInfo.DBExtractors {
       SqlCommand qry = new SqlCommand(
         "select " +
         "  i.name, " +
-        "  case " +
-        "    when i.status & 2 = 2 then 1 " +
-        "    else 0 " +
-        "  end IsUnique " +
+        "  i.is_unique, " +        
+        "  i.type_desc " + 
         "from " +
-        "  sysindexes i " +
+        "  sys.indexes i " +
         "    inner join sysobjects o on " +
-        "      i.id = o.id " +
+        "      i.object_id = o.id " +
         "where " +
         "  o.uid = 1 and " +
         "  o.name = @TableName and " +
-        "  (i.status & 2048) = 0 and " + //Despreza índice de PK
-        "  i.indid between 2 and 254 " +
-        "order by indid ", SqlConn);
+        "  i.is_primary_key = 0 and " + //Despreza índice de PK        
+        "  i.name is not null " + //HEAP
+        "order by i.index_id ", SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       qry.Parameters.Add("@TableName", SqlDbType.VarChar).Value = table.TableName;
@@ -313,6 +311,7 @@ namespace DBInfo.DBExtractors {
         Index i = new Index();
         i.IndexName = (string)r[0];
         i.Unique = Convert.ToBoolean(r[1]);
+        i.IsClustered = ((string)r[2]).ToUpper() == "CLUSTERED";
         table.Indexes.Add(i);
       }                  
     }

@@ -208,16 +208,16 @@ namespace DBInfo.Core.Extractor {
             ReadCheckConstraints(db);
           if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Indexes))
             ReadIndexes(db);
-        }        
-        if (dataToExtract.Contains(DBObjectType.Functions))
+        }
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Functions))
           ReadFunctions(db);
-        if (dataToExtract.Contains(DBObjectType.Procedures))
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Procedures))
           ReadProcedures(db);
-        if (dataToExtract.Contains(DBObjectType.Triggers))
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Triggers))
           ReadTriggers(db);
-        if (dataToExtract.Contains(DBObjectType.Views))
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Views))
           ReadViews(db);
-        if (dataToExtract.Contains(DBObjectType.Sequences))
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Sequences))
           ReadSequences(db);          
       } finally {
         _Extractor.Close();

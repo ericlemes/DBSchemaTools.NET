@@ -33,6 +33,12 @@ namespace DBInfo.Core.Model {
       get { return _UpdateCascade;}
       set { _UpdateCascade = value;}
     }
+    
+    private string _Script;
+    public string Script{
+      get { return _Script;}
+      set { _Script = value;}
+    }
 
   }
 }

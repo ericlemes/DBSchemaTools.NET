@@ -14,5 +14,11 @@ namespace DBInfo.Core.Model {
       set { _Expression = value;}
     }
     
+    private string _Script;
+    public string Script{
+      get { return _Script;}
+      set { _Script = value;}
+    }
+    
   }
 }

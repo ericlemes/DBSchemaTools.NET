@@ -15,11 +15,23 @@ namespace DBInfo.Core.Model {
       get { return _Unique;}
       set { _Unique = value;}
     }    
+    
+    private bool _IsClustered;
+    public bool IsClustered{
+      get { return _IsClustered;}
+      set { _IsClustered = value;}
+    }
 
     private List<IndexColumn> _Columns = new List<IndexColumn>();
     public List<IndexColumn> Columns {
       get { return _Columns;}
       set {_Columns = value;}
+    }
+    
+    private string _Script;
+    public string Script{
+      get { return _Script;}
+      set { _Script = value;}
     }
 
   }

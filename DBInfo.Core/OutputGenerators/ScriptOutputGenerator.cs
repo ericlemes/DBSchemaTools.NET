@@ -14,6 +14,12 @@ namespace DBInfo.Core.OutputGenerators {
       get { return _TableScripts; }
       set { _TableScripts = value; }
     }
+    
+    private List<DatabaseScript> _CheckConstraintScripts = new List<DatabaseScript>();
+    public List<DatabaseScript> CheckConstraintScripts{
+      get { return _CheckConstraintScripts;}
+      set { _CheckConstraintScripts = value;}
+    }
 
     private List<DatabaseScript> _ForeignKeyScripts = new List<DatabaseScript>();
     public List<DatabaseScript> ForeignKeyScripts {
@@ -94,19 +100,31 @@ namespace DBInfo.Core.OutputGenerators {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Tables, table.TableName);
 
-        DatabaseScript ds = OutputGen.GenerateTableOutput(table);             
+        table.TableScript = OutputGen.GenerateTableScript(table);             
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey))
-          ds.ScriptContent += OutputGen.GeneratePrimaryKeyOutput(table);
+          table.PrimaryKeyScript = OutputGen.GeneratePrimaryKeyScript(table);
+          
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes))
-          ds.ScriptContent += OutputGen.GenerateIndexesOutput(table);
-        TableScripts.Add(ds);
+        foreach (Index index in table.Indexes){
+          index.Script = OutputGen.GenerateIndexScript(table, index);
+        }        
+
+        if (BeforeGenerateScript != null)
+          BeforeGenerateScript(DBObjectType.CheckConstraints, table.TableName);
+          
+        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
+          foreach (CheckConstraint check in table.CheckConstraints){
+            check.Script = OutputGen.GenerateCheckConstraintScript(table, check);
+          }
+        }
 
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.ForeignKeys, table.TableName);
 
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
-          DatabaseScript dsFK = OutputGen.GenerateForeignKeysOutput(table);          
-          ForeignKeyScripts.Add(dsFK);
+          foreach(ForeignKey fk in table.ForeignKeys){
+            fk.Script = OutputGen.GenerateForeignKeysScript(table, fk);
+          }          
         }
       }
     }
@@ -128,13 +146,13 @@ namespace DBInfo.Core.OutputGenerators {
         if (DatasetDados.Tables[0].Rows.Count > 0) {
           if (BeforeGenerateTableData != null)
             BeforeGenerateTableData(t, DatasetDados);
-          ds.ScriptContent += OutputGen.GenerateTableDataStartOutput(t);
+          ds.ScriptContent += OutputGen.GenerateTableDataStartScript(t);
           foreach (DataRow r in DatasetDados.Tables[0].Rows) {
             if (BeforeGenerateDataRow != null)
               BeforeGenerateDataRow(t, r);
-            ds.ScriptContent += OutputGen.GenerateTableDataRowOutput(t, r);
+            ds.ScriptContent += OutputGen.GenerateTableDataRowScript(t, r);
           }
-          ds.ScriptContent += OutputGen.GenerateTableDataEndOutput(t);
+          ds.ScriptContent += OutputGen.GenerateTableDataEndScript(t);
           TableDataScripts.Add(ds);
         }
       }
@@ -144,7 +162,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Procedure p in db.Procedures) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Procedures, p.Name);
-        DatabaseScript ds = OutputGen.GenerateProcedureOutput(p);                
+        DatabaseScript ds = OutputGen.GenerateProcedureScript(p);                
         ProcedureScripts.Add(ds);
       }
     }
@@ -153,7 +171,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Function f in db.Functions) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Functions, f.Name);
-        DatabaseScript ds = OutputGen.GenerateFunctionOutput(f);                
+        DatabaseScript ds = OutputGen.GenerateFunctionScript(f);                
         FunctionScripts.Add(ds);
       }
     }
@@ -163,7 +181,7 @@ namespace DBInfo.Core.OutputGenerators {
         foreach (Trigger t in table.Triggers) {
           if (BeforeGenerateScript != null)
             BeforeGenerateScript(DBObjectType.Triggers, t.Table.TableName + "." + t.Name);
-          DatabaseScript ds = OutputGen.GenerateTriggerOutput(table, t);          
+          DatabaseScript ds = OutputGen.GenerateTriggerScript(table, t);          
           TriggerScripts.Add(ds);
         }
       }
@@ -173,7 +191,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (View v in db.Views) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Views, v.Name);
-        DatabaseScript ds = OutputGen.GenerateViewOutput(v);               
+        DatabaseScript ds = OutputGen.GenerateViewScript(v);               
         ViewScripts.Add(ds);
       }
     }
@@ -182,7 +200,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Sequence s in db.Sequences) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Sequences, s.SequenceName);
-        DatabaseScript ds = OutputGen.GenerateSequenceOutput(s);                
+        DatabaseScript ds = OutputGen.GenerateSequenceScript(s);                
         if (ds!= null)
           SequenceScripts.Add(ds);
       }
@@ -206,9 +224,42 @@ namespace DBInfo.Core.OutputGenerators {
         
       if (OutputType == InputOutputType.File)
         SaveScripts();
+      else 
+        ApplyToDestinationDB(db);
     }
     
-    private void saveScriptBatch(List<DatabaseScript> scripts, string dir){
+    private void ApplyToDestinationDB(Database db){
+      if (String.IsNullOrEmpty(_OutputConnectionString))
+        throw new Exception("Output connection string is required.");
+    
+      OutputGen.OpenOutputDatabaseConnection(_OutputConnectionString);
+      foreach(Table t in db.Tables){
+        if (!String.IsNullOrEmpty(t.TableScript))
+          OutputGen.ExecuteOuputDatabaseScript(t.TableScript);
+        if (!String.IsNullOrEmpty(t.PrimaryKeyScript))
+          OutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);        
+        if (!String.IsNullOrEmpty(t.TableScript))
+          OutputGen.ExecuteOuputDatabaseScript(t.TableScript);
+        foreach(CheckConstraint check in t.CheckConstraints){
+          if (!String.IsNullOrEmpty(check.Script))
+            OutputGen.ExecuteOuputDatabaseScript(check.Script);
+        }
+      }
+      foreach(Table t in db.Tables){
+        foreach(ForeignKey fk in t.ForeignKeys){
+          if (!String.IsNullOrEmpty(fk.Script))
+            OutputGen.ExecuteOuputDatabaseScript(fk.Script);      
+        }
+      }      
+      /*ApplyScriptBatch(ProcedureScripts);
+      ApplyScriptBatch(FunctionScripts);
+      ApplyScriptBatch(TriggerScripts);
+      ApplyScriptBatch(ViewScripts);
+      ApplyScriptBatch(SequenceScripts);*/
+      OutputGen.CloseOutputDatabaseConnection();
+    }       
+    
+    private void SaveScriptBatch(List<DatabaseScript> scripts, string dir){
       if (!Directory.Exists(dir))
         Directory.CreateDirectory(dir);
       foreach (DatabaseScript ds in scripts) {
@@ -224,14 +275,14 @@ namespace DBInfo.Core.OutputGenerators {
       if (!Directory.Exists(OutputDir))
         throw new Exception(String.Format("Output Dir don't exists: {0}", OutputDir));
 
-      saveScriptBatch(TableScripts, OutputDir + "\\Tables");
-      saveScriptBatch(ForeignKeyScripts, OutputDir + "\\ForeignKeys");
-      saveScriptBatch(TableDataScripts, OutputDir + "\\DadosIniciais");
-      saveScriptBatch(ProcedureScripts, OutputDir + "\\Procedures");
-      saveScriptBatch(FunctionScripts, OutputDir + "\\Functions");
-      saveScriptBatch(TriggerScripts, OutputDir + "\\Triggers");
-      saveScriptBatch(ViewScripts, OutputDir + "\\Views");
-      saveScriptBatch(SequenceScripts, OutputDir + "\\Sequences");                
+      SaveScriptBatch(TableScripts, OutputDir + "\\Tables");
+      SaveScriptBatch(ForeignKeyScripts, OutputDir + "\\ForeignKeys");
+      SaveScriptBatch(TableDataScripts, OutputDir + "\\DadosIniciais");
+      SaveScriptBatch(ProcedureScripts, OutputDir + "\\Procedures");
+      SaveScriptBatch(FunctionScripts, OutputDir + "\\Functions");
+      SaveScriptBatch(TriggerScripts, OutputDir + "\\Triggers");
+      SaveScriptBatch(ViewScripts, OutputDir + "\\Views");
+      SaveScriptBatch(SequenceScripts, OutputDir + "\\Sequences");                
     }
     
 
