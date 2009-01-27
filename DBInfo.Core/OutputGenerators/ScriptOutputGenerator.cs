@@ -101,8 +101,10 @@ namespace DBInfo.Core.OutputGenerators {
           BeforeGenerateScript(DBObjectType.Tables, table.TableName);
 
         table.TableScript = OutputGen.GenerateTableScript(table);             
-        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey))
-          table.PrimaryKeyScript = OutputGen.GeneratePrimaryKeyScript(table);
+        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey)){        
+          if (!String.IsNullOrEmpty(table.PrimaryKeyName))
+            table.PrimaryKeyScript = OutputGen.GeneratePrimaryKeyScript(table);
+        }
           
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes))
         foreach (Index index in table.Indexes){
@@ -162,8 +164,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Procedure p in db.Procedures) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Procedures, p.Name);
-        DatabaseScript ds = OutputGen.GenerateProcedureScript(p);                
-        ProcedureScripts.Add(ds);
+        p.DropProcedureScript = OutputGen.GenerateDropProcedureScript(p);                        
+        p.CreateProcedureScript = OutputGen.GenerateCreateProcedureScript(p);                        
       }
     }
 
@@ -236,10 +238,13 @@ namespace DBInfo.Core.OutputGenerators {
       foreach(Table t in db.Tables){
         if (!String.IsNullOrEmpty(t.TableScript))
           OutputGen.ExecuteOuputDatabaseScript(t.TableScript);
+        foreach(Index i in t.Indexes){
+          if (!String.IsNullOrEmpty(i.Script)){
+            OutputGen.ExecuteOuputDatabaseScript(i.Script);
+          }
+        }
         if (!String.IsNullOrEmpty(t.PrimaryKeyScript))
-          OutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);        
-        if (!String.IsNullOrEmpty(t.TableScript))
-          OutputGen.ExecuteOuputDatabaseScript(t.TableScript);
+          OutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);                
         foreach(CheckConstraint check in t.CheckConstraints){
           if (!String.IsNullOrEmpty(check.Script))
             OutputGen.ExecuteOuputDatabaseScript(check.Script);
@@ -250,9 +255,15 @@ namespace DBInfo.Core.OutputGenerators {
           if (!String.IsNullOrEmpty(fk.Script))
             OutputGen.ExecuteOuputDatabaseScript(fk.Script);      
         }
-      }      
-      /*ApplyScriptBatch(ProcedureScripts);
-      ApplyScriptBatch(FunctionScripts);
+      }          
+      foreach(Procedure p in db.Procedures){
+        if (!String.IsNullOrEmpty(p.DropProcedureScript))
+          OutputGen.ExecuteOuputDatabaseScript(p.DropProcedureScript);
+        if (!String.IsNullOrEmpty(p.CreateProcedureScript))
+          OutputGen.ExecuteOuputDatabaseScript(p.CreateProcedureScript);
+      }  
+      
+      /*ApplyScriptBatch(FunctionScripts);
       ApplyScriptBatch(TriggerScripts);
       ApplyScriptBatch(ViewScripts);
       ApplyScriptBatch(SequenceScripts);*/

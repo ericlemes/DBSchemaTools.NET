@@ -14,5 +14,17 @@ namespace DBInfo.Core.Model {
       set {_Body = value;}
     }
 
+    private string _CreateProcedureScript;
+    public string CreateProcedureScript{
+      get { return _CreateProcedureScript; }
+      set { _CreateProcedureScript = value; }
+    }
+    
+    private string _DropProcedureScript;
+    public string DropProcedureScript {
+      get { return _DropProcedureScript; }
+      set { _DropProcedureScript = value; }
+    }
+
   }
 }

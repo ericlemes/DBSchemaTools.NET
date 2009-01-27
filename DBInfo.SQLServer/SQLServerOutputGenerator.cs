@@ -93,18 +93,18 @@ namespace DBInfo.OutputGenerators {
       return ScriptContent;
     }
 
-    public string GeneratePrimaryKeyScript(Table ATable) {
+    public string GeneratePrimaryKeyScript(Table table) {
       string TmpScript = "";
-      if (ATable.PrimaryKeyName != String.Empty) {
-        TmpScript += "alter table " + ATable.TableName + Environment.NewLine;
-        TmpScript += "  add constraint " + ATable.PrimaryKeyName + Environment.NewLine;
+      if (table.PrimaryKeyName != String.Empty) {
+        TmpScript += "alter table " + table.TableName + Environment.NewLine;
+        TmpScript += "  add constraint " + table.PrimaryKeyName + Environment.NewLine;
         TmpScript += "  primary key (" + Environment.NewLine;
-        foreach (Column c in ATable.PrimaryKeyColumns) {
+        foreach (Column c in table.PrimaryKeyColumns) {
           TmpScript += "    " + c.Name;
-          if (ATable.PrimaryKeyColumns.IndexOf(c) != ATable.PrimaryKeyColumns.Count - 1)
+          if (table.PrimaryKeyColumns.IndexOf(c) != table.PrimaryKeyColumns.Count - 1)
             TmpScript += "," + Environment.NewLine;
           else
-            TmpScript += Environment.NewLine + "  )" + Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+            TmpScript += Environment.NewLine + "  )" + Environment.NewLine;;
         }
       }
       return TmpScript;
@@ -267,22 +267,17 @@ namespace DBInfo.OutputGenerators {
       }
       return s;
     }
-
-
-    public DatabaseScript GenerateProcedureScript(Procedure procedure) {
-      DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = procedure.Name + ".prc";
-
+    
+    public string GenerateDropProcedureScript(Procedure procedure) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + procedure.Name + "')" + Environment.NewLine;
       Tmp += "  drop procedure dbo." + procedure.Name + Environment.NewLine;
-      Tmp += "go" + Environment.NewLine + Environment.NewLine;
-      Tmp += procedure.Body;
-      Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine;
+      return Tmp;
+    }
 
-      ds.ScriptContent = Tmp;
-
-      return ds;
+    public string GenerateCreateProcedureScript(Procedure procedure) {      
+      return procedure.Body;
     }
 
     public DatabaseScript GenerateFunctionScript(Function function) {
@@ -292,9 +287,9 @@ namespace DBInfo.OutputGenerators {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + function.Name + "')" + Environment.NewLine;
       Tmp += "  drop function dbo." + function.Name + Environment.NewLine;
-      Tmp += "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;
       Tmp += function.Body;
-      Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;
 
       ds.ScriptContent = Tmp;
 
@@ -308,9 +303,9 @@ namespace DBInfo.OutputGenerators {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + trigger.Name + "')" + Environment.NewLine;
       Tmp += "  drop trigger dbo." + trigger.Name + Environment.NewLine;
-      Tmp += "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;
       Tmp += trigger.Body;
-      Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
       ds.ScriptContent = Tmp;
 
@@ -324,9 +319,9 @@ namespace DBInfo.OutputGenerators {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + view.Name + "')" + Environment.NewLine;
       Tmp += "  drop view dbo." + view.Name + Environment.NewLine;
-      Tmp += "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;
       Tmp += view.Body;
-      Tmp += Environment.NewLine + "go" + Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;
 
       ds.ScriptContent = Tmp;
 
@@ -340,7 +335,7 @@ namespace DBInfo.OutputGenerators {
     private SqlConnection _conn;
 
     public void OpenOutputDatabaseConnection(string connString) {
-      _conn = new SqlConnection();
+      _conn = new SqlConnection();      
       _conn.ConnectionString = connString;
       _conn.Open();
     }

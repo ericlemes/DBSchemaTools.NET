@@ -18,7 +18,8 @@ namespace DBInfo.Core.OutputGenerators {
     string GenerateTableDataStartScript(Table ATable);
     string GenerateTableDataRowScript(Table ATable, DataRow ARow);
     string GenerateTableDataEndScript(Table ATable);
-    DatabaseScript GenerateProcedureScript(Procedure procedure);
+    string GenerateDropProcedureScript(Procedure procedure);
+    string GenerateCreateProcedureScript(Procedure procedure);
     DatabaseScript GenerateFunctionScript(Function function);
     DatabaseScript GenerateTriggerScript(Table table, Trigger trigger);
     DatabaseScript GenerateViewScript(View view);
