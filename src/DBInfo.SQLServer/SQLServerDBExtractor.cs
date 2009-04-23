@@ -354,14 +354,14 @@ namespace DBInfo.DBExtractors {
       }
     }
 
-    public DataSet GetTableData(Database db, string ATabela) {
+    public DataTable GetTableData(Database db, string ATabela) {
       SqlCommand qry = new SqlCommand(
         "select * from " + ATabela, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
       dat.Fill(ds);
-      return ds;
+      return ds.Tables[0];
     }
 
     public void GetProcedures(Database db) {

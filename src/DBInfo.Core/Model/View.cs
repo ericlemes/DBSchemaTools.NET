@@ -14,6 +14,17 @@ namespace DBInfo.Core.Model {
       set { _Body = value;}
     }
 
+    private string _DropViewScript;
+    public string DropViewScript{
+      get { return _DropViewScript;}
+      set { _DropViewScript = value;}
+    }
+    
+    private string _CreateViewScript;
+    public string CreateViewScript{
+      get { return _CreateViewScript;}
+      set { _CreateViewScript = value;}
+    }
 
   }
 }

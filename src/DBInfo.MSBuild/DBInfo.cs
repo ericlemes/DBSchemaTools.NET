@@ -77,6 +77,12 @@ namespace DBInfo.MSBuild {
       get { return _DataToGenerateOutput;}
       set { _DataToGenerateOutput = value;}
     }
+    
+    private string _TableNames;
+    public string TableNames{
+      get { return _TableNames;}
+      set { _TableNames = value;}
+    }
 
     private EnumType DescriptionToEnum<EnumType>(string description) where EnumType : new() {      
       //Case-insensitive search.
@@ -130,6 +136,12 @@ namespace DBInfo.MSBuild {
         throw new Exception(String.Format("Invalid input type: {0}.", InputType));      
       dbe.InputConnectionString = _InputConnectionString;
       dbe.InputDir = _InputDir;
+      if (!String.IsNullOrEmpty(_TableNames)){
+        string[] names = _TableNames.Split(';');
+        foreach(string s in names){
+          dbe.TableNames.Add(s);
+        }
+      }      
       Database db = dbe.Extract(dataToExtract);
       
       Type generatorClass = Type.GetType(_OutputGeneratorClass);

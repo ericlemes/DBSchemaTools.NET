@@ -20,10 +20,13 @@ namespace DBInfo.Core.OutputGenerators {
     string GenerateTableDataEndScript(Table ATable);
     string GenerateDropProcedureScript(Procedure procedure);
     string GenerateCreateProcedureScript(Procedure procedure);
-    DatabaseScript GenerateFunctionScript(Function function);
-    DatabaseScript GenerateTriggerScript(Table table, Trigger trigger);
-    DatabaseScript GenerateViewScript(View view);
-    DatabaseScript GenerateSequenceScript(Sequence seq);
+    string GenerateDropFunctionScript(Function function);
+    string GenerateCreateFunctionScript(Function function);
+    string GenerateDropTriggerScript(Table table, Trigger trigger);
+    string GenerateCreateTriggerScript(Table table, Trigger trigger);    
+    string GenerateDropViewScript(View v);
+    string GenerateCreateViewScript(View v);
+    string GenerateSequenceScript(Sequence seq);        
     void OpenOutputDatabaseConnection(string connString);
     void ExecuteOuputDatabaseScript(string script);
     void CloseOutputDatabaseConnection();

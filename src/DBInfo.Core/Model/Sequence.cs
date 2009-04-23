@@ -37,6 +37,12 @@ namespace DBInfo.Core.Model {
       get { return _CycleOnLimit;}
       set {_CycleOnLimit = value;}
     }
+    
+    private string _SequenceScript;
+    public string SequenceScript{
+      get { return _SequenceScript;}
+      set { _SequenceScript = value; }
+    }
 
   }
 }

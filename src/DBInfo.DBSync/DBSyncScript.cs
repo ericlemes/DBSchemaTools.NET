@@ -62,17 +62,16 @@ namespace DBInfo.DBSync {
         bool HasChanges = false;
 
         tabela = Base.FindTable(s, true);
-        if (tabela != null) {
-          DataSet DatasetDados = (DataSet)Base.TableData[Base.TableNames.IndexOf(s)];
+        if (tabela != null) {          
           DataSet dsImportado = new DataSet();
           dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
           script += sg.GenerateTableDataStartScript(tabela);
 
-          if (DatasetDados != null) {
+          if (tabela.TableData != null) {
             foreach (DataRow dr in dsImportado.Tables[0].Rows) {
               string criterio = CriarCriterio(tabela, dr);
 
-              DataRow[] dtrs = DatasetDados.Tables[0].Select(criterio);
+              DataRow[] dtrs = tabela.TableData.Select(criterio);
               if (dtrs.Length > 0) {
                 if (CompararDiferencaDados(dtrs[0], dr)) {
                   script += sg.AlterarScriptDadosIniciaisLinha(tabela, dr);

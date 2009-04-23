@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 
 namespace DBInfo.Core.Model {
   public class Table {
@@ -80,6 +81,18 @@ namespace DBInfo.Core.Model {
     public string PrimaryKeyScript{
       get { return _PrimaryKeyScript;}
       set { _PrimaryKeyScript = value;}
+    }
+    
+    private string _TableDataScript;
+    public string TableDataScript{
+      get { return _TableDataScript;}
+      set { _TableDataScript = value;}
+    }
+    
+    private DataTable _TableData;
+    public DataTable TableData{
+      get { return _TableData;}
+      set { _TableData = value;}
     }
 
     public Column FindColumn(string AColumnName) {

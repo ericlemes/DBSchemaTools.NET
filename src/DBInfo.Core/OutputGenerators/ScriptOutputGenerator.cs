@@ -9,64 +9,10 @@ using System.Collections.Generic;
 namespace DBInfo.Core.OutputGenerators {
   public class ScriptOutputGenerator {
 
-    private List<DatabaseScript> _TableScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> TableScripts {
-      get { return _TableScripts; }
-      set { _TableScripts = value; }
-    }
-    
-    private List<DatabaseScript> _CheckConstraintScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> CheckConstraintScripts{
-      get { return _CheckConstraintScripts;}
-      set { _CheckConstraintScripts = value;}
-    }
-
-    private List<DatabaseScript> _ForeignKeyScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> ForeignKeyScripts {
-      get { return _ForeignKeyScripts; }
-      set { _ForeignKeyScripts = value; }
-    }
-
-    private List<DatabaseScript> _TableDataScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> TableDataScripts {
-      get { return _TableDataScripts; }
-      set { _TableDataScripts = value; }
-    }
-
-    private List<DatabaseScript> _ProcedureScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> ProcedureScripts {
-      get { return _ProcedureScripts; }
-      set { _ProcedureScripts = value; }
-    }
-
-    private List<DatabaseScript> _FunctionScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> FunctionScripts {
-      get { return _FunctionScripts; }
-      set { _FunctionScripts = value; }
-    }
-
-    private List<DatabaseScript> _TriggerScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> TriggerScripts {
-      get { return _TriggerScripts; }
-      set { _TriggerScripts = value; }
-    }
-
-    private List<DatabaseScript> _ViewScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> ViewScripts {
-      get { return _ViewScripts; }
-      set { _ViewScripts = value; }
-    }
-
-    private List<DatabaseScript> _SequenceScripts = new List<DatabaseScript>();
-    public List<DatabaseScript> SequenceScripts {
-      get { return _SequenceScripts; }
-      set { _SequenceScripts = value; }
-    }    
-
     public delegate void BeforeGenerateScriptHandler(DBObjectType objectType, string objectName);
     public event BeforeGenerateScriptHandler BeforeGenerateScript;
 
-    public delegate void BeforeGenerateTableDataHandler(Table table, DataSet dataset);
+    public delegate void BeforeGenerateTableDataHandler(Table table, DataTable dataTable);
     public event BeforeGenerateTableDataHandler BeforeGenerateTableData;
     public delegate void BeforeGenerateDataRowHandler(Table table, DataRow row);
     public event BeforeGenerateDataRowHandler BeforeGenerateDataRow;
@@ -139,23 +85,20 @@ namespace DBInfo.Core.OutputGenerators {
         Table t = db.FindTable(s, true);
         if (t == null)
           throw new Exception("Não foi encontrada tabela " + s);
-
-        DatabaseScript ds = new DatabaseScript();
-        ds.ScriptName = t.TableName + ".DadosIniciais.sql";
-        ds.ScriptContent = "";
-
-        DataSet DatasetDados = db.TableData[db.TableNames.IndexOf(s)];
-        if (DatasetDados.Tables[0].Rows.Count > 0) {
+          
+        if (t.TableData == null)          
+          continue;
+                          
+        if (t.TableData.Rows.Count > 0) {
           if (BeforeGenerateTableData != null)
-            BeforeGenerateTableData(t, DatasetDados);
-          ds.ScriptContent += OutputGen.GenerateTableDataStartScript(t);
-          foreach (DataRow r in DatasetDados.Tables[0].Rows) {
+            BeforeGenerateTableData(t, t.TableData);
+          t.TableDataScript = OutputGen.GenerateTableDataStartScript(t);
+          foreach (DataRow r in t.TableData.Rows) {
             if (BeforeGenerateDataRow != null)
               BeforeGenerateDataRow(t, r);
-            ds.ScriptContent += OutputGen.GenerateTableDataRowScript(t, r);
+            t.TableDataScript += OutputGen.GenerateTableDataRowScript(t, r);
           }
-          ds.ScriptContent += OutputGen.GenerateTableDataEndScript(t);
-          TableDataScripts.Add(ds);
+          t.TableDataScript += OutputGen.GenerateTableDataEndScript(t);          
         }
       }
     }
@@ -173,8 +116,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Function f in db.Functions) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Functions, f.Name);
-        DatabaseScript ds = OutputGen.GenerateFunctionScript(f);                
-        FunctionScripts.Add(ds);
+        f.DropFunctionScript = OutputGen.GenerateDropFunctionScript(f);
+        f.CreateFunctionScript = OutputGen.GenerateCreateFunctionScript(f);                
       }
     }
 
@@ -183,8 +126,8 @@ namespace DBInfo.Core.OutputGenerators {
         foreach (Trigger t in table.Triggers) {
           if (BeforeGenerateScript != null)
             BeforeGenerateScript(DBObjectType.Triggers, t.Table.TableName + "." + t.Name);
-          DatabaseScript ds = OutputGen.GenerateTriggerScript(table, t);          
-          TriggerScripts.Add(ds);
+          t.DropTriggerScript = OutputGen.GenerateDropTriggerScript(table, t);
+          t.CreateTriggerScript = OutputGen.GenerateDropTriggerScript(table, t);          
         }
       }
     }
@@ -193,8 +136,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (View v in db.Views) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Views, v.Name);
-        DatabaseScript ds = OutputGen.GenerateViewScript(v);               
-        ViewScripts.Add(ds);
+        v.DropViewScript = OutputGen.GenerateDropViewScript(v);
+        v.CreateViewScript = OutputGen.GenerateCreateViewScript(v);
       }
     }
 
@@ -202,9 +145,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Sequence s in db.Sequences) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Sequences, s.SequenceName);
-        DatabaseScript ds = OutputGen.GenerateSequenceScript(s);                
-        if (ds!= null)
-          SequenceScripts.Add(ds);
+        s.SequenceScript = OutputGen.GenerateSequenceScript(s);        
       }
     }
 
@@ -286,14 +227,7 @@ namespace DBInfo.Core.OutputGenerators {
       if (!Directory.Exists(OutputDir))
         throw new Exception(String.Format("Output Dir don't exists: {0}", OutputDir));
 
-      SaveScriptBatch(TableScripts, OutputDir + "\\Tables");
-      SaveScriptBatch(ForeignKeyScripts, OutputDir + "\\ForeignKeys");
-      SaveScriptBatch(TableDataScripts, OutputDir + "\\DadosIniciais");
-      SaveScriptBatch(ProcedureScripts, OutputDir + "\\Procedures");
-      SaveScriptBatch(FunctionScripts, OutputDir + "\\Functions");
-      SaveScriptBatch(TriggerScripts, OutputDir + "\\Triggers");
-      SaveScriptBatch(ViewScripts, OutputDir + "\\Views");
-      SaveScriptBatch(SequenceScripts, OutputDir + "\\Sequences");                
+      
     }
     
 

@@ -27,7 +27,7 @@ namespace DBInfo.Core.Extractor {
     void GetPrimaryKeyColumns(Database db, Table table);
     void GetIndexes(Database db, Table table);
     void GetIndexColumns(Database db, Table table, Index index);
-    DataSet GetTableData(Database db, string tableName);
+    DataTable GetTableData(Database db, string tableName);
     void GetProcedures(Database db);
     void GetProcedureText(Database db, Procedure p);
     void GetFunctions(Database db);

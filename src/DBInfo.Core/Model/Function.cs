@@ -14,6 +14,18 @@ namespace DBInfo.Core.Model {
       get { return _Body;}
       set { _Body = value;}
     }
+    
+    private string _DropFunctionScript;
+    public string DropFunctionScript{
+      get { return _DropFunctionScript;}
+      set { _DropFunctionScript = value;}
+    }
+    
+    private string _CreateFunctionScript;
+    public string CreateFunctionScript{
+      get { return _CreateFunctionScript;}
+      set { _CreateFunctionScript = value;}
+    }
 
 
   }

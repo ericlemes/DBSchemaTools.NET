@@ -56,6 +56,12 @@ namespace DBInfo.Core.Extractor {
 
     public delegate void BeforeExtractDataHandler(DBObjectType objectType, string objectName);
     public event BeforeExtractDataHandler BeforeExtractData;
+    
+    private List<string> _TableNames = new List<string>();
+    public List<string> TableNames {
+      get { return _TableNames;}
+      set { _TableNames = value;}
+    }
 
     private void ReadTables(Database db) {
       db.Tables = _Extractor.GetTables();
@@ -124,11 +130,15 @@ namespace DBInfo.Core.Extractor {
     }
 
     private void ReadTableData(Database db) {
-      foreach (string s in db.TableNames) {
+      foreach (string s in db.TableNames) {        
+        Table t = db.FindTable(s, true);
+        if (t == null)
+          continue;
+          
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.TableData, s);
-        DataSet dsDados = Extractor.GetTableData(db, s);
-        db.TableData.Add(dsDados);
+          
+        t.TableData = Extractor.GetTableData(db, s);        
       }
     }
 
@@ -218,7 +228,10 @@ namespace DBInfo.Core.Extractor {
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Views))
           ReadViews(db);
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Sequences))
-          ReadSequences(db);          
+          ReadSequences(db);    
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.TableData)){
+          ReadTableData(db);
+        }      
       } finally {
         _Extractor.Close();
       }

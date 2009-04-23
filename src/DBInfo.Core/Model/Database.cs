@@ -18,12 +18,6 @@ namespace DBInfo.Core.Model {
       set { _TableNames = value; }
     }
 
-    private List<DataSet> _TableData = new List<DataSet>();
-    public List<DataSet> TableData {
-      get { return _TableData; }
-      set { _TableData = value; }
-    }
-
     private List<Procedure> _Procedures = new List<Procedure>();
     public List<Procedure> Procedures {
       get { return _Procedures; }

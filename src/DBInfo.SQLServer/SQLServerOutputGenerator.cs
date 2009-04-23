@@ -279,27 +279,31 @@ namespace DBInfo.OutputGenerators {
     public string GenerateCreateProcedureScript(Procedure procedure) {      
       return procedure.Body;
     }
+    
+    public string GenerateDropFunctionScript(Function function){
+      string Tmp =
+        "drop function dbo." + function.Name + Environment.NewLine;
+      return Tmp;
+    }
 
-    public DatabaseScript GenerateFunctionScript(Function function) {
-      DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = function.Name + ".udf";
-
+    public string GenerateCreateFunctionScript(Function function) {      
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + function.Name + "')" + Environment.NewLine;
       Tmp += "  drop function dbo." + function.Name + Environment.NewLine;
       Tmp += Environment.NewLine + Environment.NewLine;
       Tmp += function.Body;
-      Tmp += Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;      
 
-      ds.ScriptContent = Tmp;
-
-      return ds;
+      return Tmp;
+    }
+    
+    public string GenerateDropTriggerScript(Table table, Trigger trigger){
+      string tmp =
+        "drop trigger dbo." + trigger.Name + Environment.NewLine;
+      return tmp;
     }
 
-    public DatabaseScript GenerateTriggerScript(Table table, Trigger trigger) {
-      DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = table.TableName + "." + trigger.Name + ".trg";
-
+    public string GenerateCreateTriggerScript(Table table, Trigger trigger) {
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + trigger.Name + "')" + Environment.NewLine;
       Tmp += "  drop trigger dbo." + trigger.Name + Environment.NewLine;
@@ -307,28 +311,27 @@ namespace DBInfo.OutputGenerators {
       Tmp += trigger.Body;
       Tmp += Environment.NewLine + Environment.NewLine + Environment.NewLine;
 
-      ds.ScriptContent = Tmp;
-
-      return ds;
+      return Tmp;
+    }
+    
+    public string GenerateDropViewScript(View view){
+      string Tmp =
+        "drop view dbo." + view.Name + Environment.NewLine;
+      return Tmp;
     }
 
-    public DatabaseScript GenerateViewScript(View view) {
-      DatabaseScript ds = new DatabaseScript();
-      ds.ScriptName = view.Name + ".viw";
-
+    public string GenerateCreateViewScript(View view) {      
       string Tmp = "";
       Tmp += "if exists(select 1 from sysobjects where name = '" + view.Name + "')" + Environment.NewLine;
       Tmp += "  drop view dbo." + view.Name + Environment.NewLine;
       Tmp += Environment.NewLine + Environment.NewLine;
       Tmp += view.Body;
-      Tmp += Environment.NewLine + Environment.NewLine;
+      Tmp += Environment.NewLine + Environment.NewLine;      
 
-      ds.ScriptContent = Tmp;
-
-      return ds;
+      return Tmp;
     }
 
-    public DatabaseScript GenerateSequenceScript(Sequence seq) {
+    public string GenerateSequenceScript(Sequence seq) {
       return null;
     }
 
