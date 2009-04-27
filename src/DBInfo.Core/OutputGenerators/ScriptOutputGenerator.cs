@@ -17,8 +17,8 @@ namespace DBInfo.Core.OutputGenerators {
     public delegate void BeforeGenerateDataRowHandler(Table table, DataRow row);
     public event BeforeGenerateDataRowHandler BeforeGenerateDataRow;
 
-    private IScriptsOutputGenerator _OutputGen;
-    public IScriptsOutputGenerator OutputGen {
+    private IScriptOutputGenerator _OutputGen;
+    public IScriptOutputGenerator OutputGen {
       get { return _OutputGen; }
       set { _OutputGen = value; }
     }
@@ -39,6 +39,12 @@ namespace DBInfo.Core.OutputGenerators {
     public string OutputDir{
       get { return _OutputDir;}
       set { _OutputDir = value;}
+    }
+    
+    private IScriptFileOutputGenerator _ScriptFileOutputGenerator;
+    public IScriptFileOutputGenerator ScriptFileOutputGenerator{
+      get { return _ScriptFileOutputGenerator;}
+      set { _ScriptFileOutputGenerator = value;}
     }
 
     private void GenerateTables(Database db, List<DBObjectType> dataToGenerateOutput) {
@@ -127,7 +133,7 @@ namespace DBInfo.Core.OutputGenerators {
           if (BeforeGenerateScript != null)
             BeforeGenerateScript(DBObjectType.Triggers, t.Table.TableName + "." + t.Name);
           t.DropTriggerScript = OutputGen.GenerateDropTriggerScript(table, t);
-          t.CreateTriggerScript = OutputGen.GenerateDropTriggerScript(table, t);          
+          t.CreateTriggerScript = OutputGen.GenerateCreateTriggerScript(table, t);          
         }
       }
     }
@@ -166,7 +172,7 @@ namespace DBInfo.Core.OutputGenerators {
         GenerateSequences(db);
         
       if (OutputType == InputOutputType.File)
-        SaveScripts();
+        SaveScripts(db);
       else 
         ApplyToDestinationDB(db);
     }
@@ -223,11 +229,14 @@ namespace DBInfo.Core.OutputGenerators {
       }
     }
     
-    public void SaveScripts() {
+    public void SaveScripts(Database db) {      
       if (!Directory.Exists(OutputDir))
-        throw new Exception(String.Format("Output Dir don't exists: {0}", OutputDir));
-
-      
+        Directory.CreateDirectory(OutputDir);        
+        
+      if (_ScriptFileOutputGenerator == null)
+        throw new Exception("ScriptFileOutputGenerator is required");
+        
+      _ScriptFileOutputGenerator.GenerateFileOutput(OutputDir, db, _OutputGen); 
     }
     
 

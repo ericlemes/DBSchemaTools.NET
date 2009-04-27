@@ -83,6 +83,12 @@ namespace DBInfo.MSBuild {
       get { return _TableNames;}
       set { _TableNames = value;}
     }
+    
+    private string _ScriptFileOutputGenerator;
+    public string ScriptFileOutputGenerator{
+      get { return _ScriptFileOutputGenerator;}
+      set { _ScriptFileOutputGenerator = value;}
+    }
 
     private EnumType DescriptionToEnum<EnumType>(string description) where EnumType : new() {      
       //Case-insensitive search.
@@ -124,7 +130,7 @@ namespace DBInfo.MSBuild {
       if (extractorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
       IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);
-      IScriptsOutputGenerator outputGenerator = (IScriptsOutputGenerator)Activator.CreateInstance(Type.GetType(_OutputGeneratorClass));
+      IScriptOutputGenerator outputGenerator = (IScriptOutputGenerator)Activator.CreateInstance(Type.GetType(_OutputGeneratorClass));
       
       DBInfoExtractor dbe = new DBInfoExtractor();
       dbe.Extractor = extractor;
@@ -147,14 +153,21 @@ namespace DBInfo.MSBuild {
       Type generatorClass = Type.GetType(_OutputGeneratorClass);
       if (generatorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _OutputGeneratorClass));
-      IScriptsOutputGenerator generator = (IScriptsOutputGenerator)Activator.CreateInstance(generatorClass);           
+      IScriptOutputGenerator generator = (IScriptOutputGenerator)Activator.CreateInstance(generatorClass);           
       
       ScriptOutputGenerator gen = new ScriptOutputGenerator();
       gen.OutputGen = generator;
       if (OutputType == "database")
         gen.OutputType = InputOutputType.Database;
-      else if (OutputType == "file")
+      else if (OutputType == "file"){
         gen.OutputType = InputOutputType.File;
+        if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
+          throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
+        Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
+        if (scriptFileOutputGeneratorType == null)
+          throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
+        gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+      }
       else
         throw new Exception(String.Format("Invalid output type: {0}.", OutputType));            
       gen.OutputDir = OutputDir;

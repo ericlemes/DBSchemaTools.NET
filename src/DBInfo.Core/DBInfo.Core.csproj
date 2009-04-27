@@ -60,9 +60,12 @@
     <Compile Include="Model\Table.cs" />
     <Compile Include="Model\Trigger.cs" />
     <Compile Include="Model\View.cs" />
+    <Compile Include="OutputGenerators\ConsolidatedScriptFileOutputGenerator.cs" />
     <Compile Include="OutputGenerators\DatabaseScript.cs" />
+    <Compile Include="OutputGenerators\IScriptFileOutputGenerator.cs" />
     <Compile Include="OutputGenerators\IScriptOutputGenerator.cs" />
     <Compile Include="OutputGenerators\ScriptOutputGenerator.cs" />
+    <Compile Include="OutputGenerators\SplittedScriptFileOutputGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

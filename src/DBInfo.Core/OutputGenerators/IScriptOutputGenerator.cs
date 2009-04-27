@@ -6,7 +6,7 @@ using DBInfo.Core.Model;
 using System.Data;
 
 namespace DBInfo.Core.OutputGenerators {
-  public interface IScriptsOutputGenerator {
+  public interface IScriptOutputGenerator {
     string ScriptTerminator{
       get;
     }

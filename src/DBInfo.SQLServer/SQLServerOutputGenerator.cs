@@ -6,7 +6,7 @@ using DBInfo.Core.OutputGenerators;
 using System.Data.SqlClient;
 
 namespace DBInfo.OutputGenerators {
-  public class SQLServerOutputGenerator : IScriptsOutputGenerator {
+  public class SQLServerOutputGenerator : IScriptOutputGenerator {
 
     public string ScriptTerminator {
       get { return "go"; }
@@ -288,11 +288,7 @@ namespace DBInfo.OutputGenerators {
 
     public string GenerateCreateFunctionScript(Function function) {      
       string Tmp = "";
-      Tmp += "if exists(select 1 from sysobjects where name = '" + function.Name + "')" + Environment.NewLine;
-      Tmp += "  drop function dbo." + function.Name + Environment.NewLine;
-      Tmp += Environment.NewLine + Environment.NewLine;
-      Tmp += function.Body;
-      Tmp += Environment.NewLine + Environment.NewLine;      
+      Tmp += function.Body;      
 
       return Tmp;
     }
@@ -304,12 +300,8 @@ namespace DBInfo.OutputGenerators {
     }
 
     public string GenerateCreateTriggerScript(Table table, Trigger trigger) {
-      string Tmp = "";
-      Tmp += "if exists(select 1 from sysobjects where name = '" + trigger.Name + "')" + Environment.NewLine;
-      Tmp += "  drop trigger dbo." + trigger.Name + Environment.NewLine;
-      Tmp += Environment.NewLine + Environment.NewLine;
-      Tmp += trigger.Body;
-      Tmp += Environment.NewLine + Environment.NewLine + Environment.NewLine;
+      string Tmp = "";      
+      Tmp += trigger.Body;      
 
       return Tmp;
     }
@@ -321,12 +313,8 @@ namespace DBInfo.OutputGenerators {
     }
 
     public string GenerateCreateViewScript(View view) {      
-      string Tmp = "";
-      Tmp += "if exists(select 1 from sysobjects where name = '" + view.Name + "')" + Environment.NewLine;
-      Tmp += "  drop view dbo." + view.Name + Environment.NewLine;
-      Tmp += Environment.NewLine + Environment.NewLine;
-      Tmp += view.Body;
-      Tmp += Environment.NewLine + Environment.NewLine;      
+      string Tmp = "";      
+      Tmp += view.Body;      
 
       return Tmp;
     }
