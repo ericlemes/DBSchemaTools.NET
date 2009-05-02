@@ -103,7 +103,7 @@ namespace DBInfo.DBExtractors {
           "    else -1 " +
           "  end type, " +
           "  length, " +
-      "  c.xprec prec, " +
+          "  c.xprec prec, " +
           "  c.xscale scale, " +
           "  c.isnullable isnull, " +
           "  case " +
@@ -111,18 +111,16 @@ namespace DBInfo.DBExtractors {
           "    else 0 " +
           "  end IdentityColumn, " +
           "  case " +
-          "    when c.cdefault > 0 then d.text " +
+          "    when d.object_id is not null then d.definition " +
           "    else '' " +
           "  end DefaultValue, " +
-      "  isnull(df.name, '') ConstraintDefaultName " +
+          "  isnull(d.name, '') ConstraintDefaultName " +
           "from " +
           "  syscolumns c " +
           "    inner join sysobjects o on " +
           "      o.id = c.id " +
-          "    left outer join syscomments d on " +
-          "      d.id = c.cdefault " +
-      "    left join sysobjects df on " +
-      "      df.id = c.cdefault " +
+          "    left outer join sys.default_constraints d on " +
+          "      d.object_id = c.cdefault " +
           "where " +
           "  o.name = @Tabela and " +
           "  o.uid = 1 " +

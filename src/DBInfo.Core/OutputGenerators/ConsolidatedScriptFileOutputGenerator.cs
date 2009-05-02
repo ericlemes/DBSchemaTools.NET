@@ -21,44 +21,90 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Table t in db.Tables) {
         sw.WriteLine(t.TableScript);
         sw.WriteLine(OutputGenerator.ScriptTerminator);        
-        WriteConstraints(FullConstraintsDir + "\\" + t.TableName + ".constraints.sql", t, OutputGenerator);
-        WriteFKs(FullFKDir + "\\" + t.TableName + ".fk.sql", t, OutputGenerator);
-        WriteIndexes(FullIndexesDir + "\\" + t.TableName + ".indexes.sql", t, OutputGenerator);
-        foreach (Trigger tr in t.Triggers) {
-          WriteTrigger(FullTriggersDir + "\\" + t.TableName + "." + tr.Name + ".trigger.sql", tr, OutputGenerator);
-        }
+        WriteConstraints(sw, t, OutputGenerator);
+        WriteIndexes(sw, t, OutputGenerator);
+      }
+      
+      foreach(Table t in db.Tables){
+        WriteFKs(sw, t, OutputGenerator);        
       }
 
       foreach (Function f in db.Functions) {
-        WriteFunction(FullFunctionsDir + "\\" + f.Name + ".function.sql", f, OutputGenerator);
+        WriteFunction(sw, f, OutputGenerator);
       }
 
       foreach (Procedure p in db.Procedures) {
-        WriteProcedure(FullProceduresDir + "\\" + p.Name + ".procedure.sql", p, OutputGenerator);
+        WriteProcedure(sw, p, OutputGenerator);
       }
 
       foreach (Sequence s in db.Sequences) {
-        WriteScript(FullSequencesDir + "\\" + s.SequenceName + ".sequence.sql", s.SequenceScript);
+        sw.WriteLine(s.SequenceScript);
+        sw.WriteLine(OutputGenerator.ScriptTerminator);        
       }
 
       foreach (View v in db.Views) {
-        WriteView(FullViewsDir + "\\" + v.Name + ".view.sql", v, OutputGenerator);
+        WriteView(sw, v, OutputGenerator);
       }
-    }
 
-    private void WriteFKs(string FileName, Table t, IScriptOutputGenerator OutputGen) {
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      foreach (ForeignKey fk in t.ForeignKeys) {
-        sw.WriteLine(fk.Script);
-        sw.WriteLine(OutputGen.ScriptTerminator);
-        sw.WriteLine("");
+      foreach (Table t in db.Tables){
+        foreach (Trigger tr in t.Triggers) {
+          WriteTrigger(sw, tr, OutputGenerator);
+        }      
       }
       sw.Flush();
       sw.Close();
       fs.Close();
     }
 
+    private void WriteConstraints(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+      sw.WriteLine(t.PrimaryKeyScript);
+      sw.WriteLine(OutputGen.ScriptTerminator);
+      sw.WriteLine("");
+      foreach (CheckConstraint cc in t.CheckConstraints) {
+        sw.WriteLine(cc.Script);
+        sw.WriteLine(OutputGen.ScriptTerminator);
+        sw.WriteLine("");
+      }      
+    }    
+
+    private void WriteFKs(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+      foreach (ForeignKey fk in t.ForeignKeys) {
+        sw.WriteLine(fk.Script);
+        sw.WriteLine(OutputGen.ScriptTerminator);
+        sw.WriteLine("");
+      }   
+    }
+
+    private void WriteIndexes(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+      foreach (Index i in t.Indexes) {
+        sw.WriteLine(i.Script);
+        sw.WriteLine(OutputGen.ScriptTerminator);
+        sw.WriteLine("");
+      }
+    }
+
+    private void WriteFunction(StreamWriter sw, Function f, IScriptOutputGenerator OutputGen) {
+      sw.WriteLine(f.CreateFunctionScript);
+      sw.WriteLine(OutputGen.ScriptTerminator);
+      sw.WriteLine("");      
+    }
+
+    private void WriteProcedure(StreamWriter sw, Procedure p, IScriptOutputGenerator OutputGen) {
+      sw.WriteLine(p.CreateProcedureScript);
+      sw.WriteLine(OutputGen.ScriptTerminator);
+      sw.WriteLine("");
+    }
+
+    private void WriteView(StreamWriter sw, View v, IScriptOutputGenerator OutputGen) {
+      sw.WriteLine(v.CreateViewScript);
+      sw.WriteLine(OutputGen.ScriptTerminator);      
+    }
+
+    private void WriteTrigger(StreamWriter sw, Trigger t, IScriptOutputGenerator OutputGen) {
+      sw.WriteLine(t.CreateTriggerScript);
+      sw.WriteLine(OutputGen.ScriptTerminator);      
+    }
+    
 
     #endregion
   }
