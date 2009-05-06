@@ -1,6 +1,19 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<db:DBInfo xmlns:db="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd">
-	<Tables>
-		<Table />
-	</Tables>
+<?xml version="1.0" encoding="utf-8"?>
+<db:DBInfo 
+  xmlns:db="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd C:\SandBoxes\dbinfo\src\DBInfo.Core\DBInfo.xsd"  
+  >
+	<db:Tables>
+		<db:Table>
+			<db:TableName>Teste</db:TableName>
+			<db:PrimaryKeyName>PK_Teste</db:PrimaryKeyName>
+			<db:HasIdentity>false</db:HasIdentity>
+		</db:Table>
+		<db:Table>
+			<db:TableName>Teste2</db:TableName>
+			<db:PrimaryKeyName>PK_Teste2</db:PrimaryKeyName>
+			<db:HasIdentity>false</db:HasIdentity>
+		</db:Table>		
+	</db:Tables>
 </db:DBInfo>
