@@ -22,57 +22,35 @@ namespace DBInfo.XMLDatabase {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
     [System.Xml.Serialization.XmlRootAttribute("DBInfo", Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd", IsNullable=false)]
-    public partial class Database {
+    public partial class StatementCollection {
         
-        private CreateTable[] tableField;
-        
-        private Procedure procedureField;
-        
-        private ArrayOfConstraint constraintsField;
-        
-        private CreateForeignKey[] foreignKeyField;
+        private Statement[] statementField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute("Table", IsNullable=false)]
-        public CreateTable[] Table {
+        [System.Xml.Serialization.XmlElementAttribute("Statement")]
+        public Statement[] Statement {
             get {
-                return this.tableField;
+                return this.statementField;
             }
             set {
-                this.tableField = value;
+                this.statementField = value;
             }
         }
-        
-        /// <remarks/>
-        public Procedure Procedure {
-            get {
-                return this.procedureField;
-            }
-            set {
-                this.procedureField = value;
-            }
-        }
-        
-        /// <remarks/>
-        public ArrayOfConstraint Constraints {
-            get {
-                return this.constraintsField;
-            }
-            set {
-                this.constraintsField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
-        public CreateForeignKey[] ForeignKey {
-            get {
-                return this.foreignKeyField;
-            }
-            set {
-                this.foreignKeyField = value;
-            }
-        }
+    }
+    
+    /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreatePrimaryKey))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateProcedure))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateCheckConstraint))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateIndex))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateForeignKey))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateTable))]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class Statement {
     }
     
     /// <remarks/>
@@ -81,81 +59,75 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class CreateTable {
+    public partial class IndexColumn {
         
-        private string tableNameField;
+        private string nameField;
         
-        private Column[] columnsField;
-        
-        private bool hasIdentityField;
-        
-        private bool hasIdentityFieldSpecified;
-        
-        private string identitySeedField;
-        
-        private string identityIncrementField;
+        private SortOrder orderField;
         
         /// <remarks/>
-        public string TableName {
+        public string Name {
             get {
-                return this.tableNameField;
+                return this.nameField;
             }
             set {
-                this.tableNameField = value;
+                this.nameField = value;
             }
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
-        public Column[] Columns {
+        public SortOrder Order {
             get {
-                return this.columnsField;
+                return this.orderField;
             }
             set {
-                this.columnsField = value;
+                this.orderField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public enum SortOrder {
+        
+        /// <remarks/>
+        Ascending,
+        
+        /// <remarks/>
+        Descending,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class ForeignKeyColumn {
+        
+        private string columnNameField;
+        
+        private string refColumnNameField;
+        
+        /// <remarks/>
+        public string ColumnName {
+            get {
+                return this.columnNameField;
+            }
+            set {
+                this.columnNameField = value;
             }
         }
         
         /// <remarks/>
-        public bool HasIdentity {
+        public string RefColumnName {
             get {
-                return this.hasIdentityField;
+                return this.refColumnNameField;
             }
             set {
-                this.hasIdentityField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool HasIdentitySpecified {
-            get {
-                return this.hasIdentityFieldSpecified;
-            }
-            set {
-                this.hasIdentityFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
-        public string IdentitySeed {
-            get {
-                return this.identitySeedField;
-            }
-            set {
-                this.identitySeedField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
-        public string IdentityIncrement {
-            get {
-                return this.identityIncrementField;
-            }
-            set {
-                this.identityIncrementField = value;
+                this.refColumnNameField = value;
             }
         }
     }
@@ -379,29 +351,30 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class ForeignKeyColumn {
+    public partial class CreatePrimaryKey : Statement {
         
-        private string columnNameField;
+        private string nameField;
         
-        private string refColumnNameField;
+        private string[] columnsField;
         
         /// <remarks/>
-        public string ColumnName {
+        public string Name {
             get {
-                return this.columnNameField;
+                return this.nameField;
             }
             set {
-                this.columnNameField = value;
+                this.nameField = value;
             }
         }
         
         /// <remarks/>
-        public string RefColumnName {
+        [System.Xml.Serialization.XmlArrayItemAttribute("Value", IsNullable=false)]
+        public string[] Columns {
             get {
-                return this.refColumnNameField;
+                return this.columnsField;
             }
             set {
-                this.refColumnNameField = value;
+                this.columnsField = value;
             }
         }
     }
@@ -412,7 +385,169 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class CreateForeignKey {
+    public partial class CreateProcedure : Statement {
+        
+        private string nameField;
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateCheckConstraint : Statement {
+        
+        private string nameField;
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateIndex : Statement {
+        
+        private string tableNameField;
+        
+        private string indexNameField;
+        
+        private bool uniqueField;
+        
+        private bool uniqueFieldSpecified;
+        
+        private bool clusteredField;
+        
+        private bool clusteredFieldSpecified;
+        
+        private IndexColumn[] columnsField;
+        
+        /// <remarks/>
+        public string TableName {
+            get {
+                return this.tableNameField;
+            }
+            set {
+                this.tableNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string IndexName {
+            get {
+                return this.indexNameField;
+            }
+            set {
+                this.indexNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public bool Unique {
+            get {
+                return this.uniqueField;
+            }
+            set {
+                this.uniqueField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool UniqueSpecified {
+            get {
+                return this.uniqueFieldSpecified;
+            }
+            set {
+                this.uniqueFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        public bool Clustered {
+            get {
+                return this.clusteredField;
+            }
+            set {
+                this.clusteredField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ClusteredSpecified {
+            get {
+                return this.clusteredFieldSpecified;
+            }
+            set {
+                this.clusteredFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public IndexColumn[] Columns {
+            get {
+                return this.columnsField;
+            }
+            set {
+                this.columnsField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateForeignKey : Statement {
         
         private string tableNameField;
         
@@ -520,58 +655,33 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class CreateCheckConstraint {
+    public partial class CreateTable : Statement {
         
-        private string nameField;
+        private string tableNameField;
         
-        private string sourceCodeField;
+        private Column[] columnsField;
+        
+        private bool hasIdentityField;
+        
+        private bool hasIdentityFieldSpecified;
+        
+        private string identitySeedField;
+        
+        private string identityIncrementField;
         
         /// <remarks/>
-        public string Name {
+        public string TableName {
             get {
-                return this.nameField;
+                return this.tableNameField;
             }
             set {
-                this.nameField = value;
+                this.tableNameField = value;
             }
         }
         
         /// <remarks/>
-        public string SourceCode {
-            get {
-                return this.sourceCodeField;
-            }
-            set {
-                this.sourceCodeField = value;
-            }
-        }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class CreatePrimaryKey {
-        
-        private string nameField;
-        
-        private string[] columnsField;
-        
-        /// <remarks/>
-        public string Name {
-            get {
-                return this.nameField;
-            }
-            set {
-                this.nameField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute("Value", IsNullable=false)]
-        public string[] Columns {
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public Column[] Columns {
             get {
                 return this.columnsField;
             }
@@ -579,72 +689,47 @@ namespace DBInfo.XMLDatabase {
                 this.columnsField = value;
             }
         }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class ArrayOfConstraint {
-        
-        private CreatePrimaryKey[] createPrimaryKeyField;
-        
-        private CreateCheckConstraint[] createCheckConstraintField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("CreatePrimaryKey")]
-        public CreatePrimaryKey[] CreatePrimaryKey {
+        public bool HasIdentity {
             get {
-                return this.createPrimaryKeyField;
+                return this.hasIdentityField;
             }
             set {
-                this.createPrimaryKeyField = value;
+                this.hasIdentityField = value;
             }
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("CreateCheckConstraint")]
-        public CreateCheckConstraint[] CreateCheckConstraint {
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool HasIdentitySpecified {
             get {
-                return this.createCheckConstraintField;
+                return this.hasIdentityFieldSpecified;
             }
             set {
-                this.createCheckConstraintField = value;
-            }
-        }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public partial class Procedure {
-        
-        private string nameField;
-        
-        private string sourceCodeField;
-        
-        /// <remarks/>
-        public string Name {
-            get {
-                return this.nameField;
-            }
-            set {
-                this.nameField = value;
+                this.hasIdentityFieldSpecified = value;
             }
         }
         
         /// <remarks/>
-        public string SourceCode {
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string IdentitySeed {
             get {
-                return this.sourceCodeField;
+                return this.identitySeedField;
             }
             set {
-                this.sourceCodeField = value;
+                this.identitySeedField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string IdentityIncrement {
+            get {
+                return this.identityIncrementField;
+            }
+            set {
+                this.identityIncrementField = value;
             }
         }
     }

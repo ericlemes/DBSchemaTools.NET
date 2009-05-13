@@ -117,10 +117,13 @@ namespace DBInfo.XMLDatabase {
       }
       if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
         GenerateForeignKeys(db);
-      }            
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes)) {
+        GenerateIndexes(db);
+      }                  
       if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures)) {
         GenerateProcedures(db);
-      }      
+      }
     }
     
     private ColumnType getColumnType(M.Column.DBColumnType type){
@@ -195,10 +198,10 @@ namespace DBInfo.XMLDatabase {
           xmlTable.Columns[t.Columns.IndexOf(c)] = xmlCol;
         }
 
-        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
-        xmlDB.Table = new CreateTable[1];
-        xmlDB.Table[0] = xmlTable;
-        generateXMLOutput(xmlDB, OutputDir + "\\" + TablesDir + "\\" + t.TableName + ".table.xml", true);
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[1];
+        stCol.Statement[0] = xmlTable;
+        generateXMLOutput(stCol, OutputDir + "\\" + TablesDir + "\\" + t.TableName + ".table.xml", true);
       }
     }
 
@@ -215,20 +218,18 @@ namespace DBInfo.XMLDatabase {
           xmlPK.Columns[t.PrimaryKeyColumns.IndexOf(c)] = c.Name;
         }
 
-        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
-        xmlDB.Constraints = new ArrayOfConstraint();
-        xmlDB.Constraints.CreatePrimaryKey = new CreatePrimaryKey[1];
-        xmlDB.Constraints.CreatePrimaryKey[0] = xmlPK;
-        xmlDB.Constraints.CreateCheckConstraint = new CreateCheckConstraint[t.CheckConstraints.Count];
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[t.CheckConstraints.Count + 1];                
+        stCol.Statement[0] = xmlPK;        
 
         foreach (DBInfo.Core.Model.CheckConstraint ck in t.CheckConstraints) {
           CreateCheckConstraint xmlCK = new CreateCheckConstraint();
           xmlCK.Name = ck.Name;
           xmlCK.SourceCode = ck.Expression;
-          xmlDB.Constraints.CreateCheckConstraint[t.CheckConstraints.IndexOf(ck)] = xmlCK;
+          stCol.Statement[t.CheckConstraints.IndexOf(ck) + 1] = xmlCK;
         }
 
-        generateXMLOutput(xmlDB, OutputDir + "\\" + ConstraintsDir + "\\" + t.TableName + ".constraints.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + ConstraintsDir + "\\" + t.TableName + ".constraints.xml", true);
       }
     }
     
@@ -237,8 +238,8 @@ namespace DBInfo.XMLDatabase {
         Directory.CreateDirectory(OutputDir + "\\" + ForeignKeysDir);
       
       foreach(DBInfo.Core.Model.Table t in db.Tables){
-        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
-        xmlDB.ForeignKey = new CreateForeignKey[t.ForeignKeys.Count];
+        StatementCollection xmlDB = new StatementCollection();
+        xmlDB.Statement = new Statement[t.ForeignKeys.Count];
       
         foreach(DBInfo.Core.Model.ForeignKey fk in t.ForeignKeys){
           CreateForeignKey xmlFK = new CreateForeignKey();          
@@ -254,36 +255,65 @@ namespace DBInfo.XMLDatabase {
             xmlFKCol.RefColumnName = c.RefColumn.Name;
             xmlFK.Columns[fk.Columns.IndexOf(c)] = xmlFKCol;
           }
-          xmlDB.ForeignKey[t.ForeignKeys.IndexOf(fk)] = xmlFK;
+          xmlDB.Statement[t.ForeignKeys.IndexOf(fk)] = xmlFK;
         }        
         
         generateXMLOutput(xmlDB, OutputDir + "\\" + ForeignKeysDir + "\\" + t.TableName + ".fk.xml", true);
       }
     }
+    
+    private void GenerateIndexes(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + IndexesDir))
+        Directory.CreateDirectory(OutputDir + "\\" + IndexesDir);
         
+      foreach(DBInfo.Core.Model.Table t in db.Tables){
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[t.Indexes.Count];        
+      
+        foreach(DBInfo.Core.Model.Index i in t.Indexes){
+          CreateIndex xmlIdx = new CreateIndex();
+          xmlIdx.TableName = t.TableName;
+          xmlIdx.IndexName = i.IndexName;
+          xmlIdx.Unique = i.Unique;
+          xmlIdx.Clustered = i.IsClustered;
+          xmlIdx.Columns = new IndexColumn[i.Columns.Count];
+          
+          foreach(DBInfo.Core.Model.IndexColumn icol in i.Columns){
+            IndexColumn xmlIC = new IndexColumn();
+            xmlIC.Order = icol.Order == DBInfo.Core.Model.IndexColumn.EnumOrder.Ascending ? SortOrder.Ascending : SortOrder.Descending;
+            xmlIC.Name = icol.Column.Name;
+            xmlIdx.Columns[i.Columns.IndexOf(icol)] = xmlIC;
+          }        
+          stCol.Statement[t.Indexes.IndexOf(i)] = xmlIdx;
+        }
+        
+        generateXMLOutput(stCol, OutputDir + "\\" + IndexesDir + "\\" + t.TableName + ".indexes.xml", true);
+      }
+    }        
     
     private void GenerateProcedures(DBInfo.Core.Model.Database db){
       if (!Directory.Exists(OutputDir + "\\" + ProceduresDir))
         Directory.CreateDirectory(OutputDir + "\\" + ProceduresDir);    
     
       foreach(DBInfo.Core.Model.Procedure p in db.Procedures){
-        DBInfo.XMLDatabase.Procedure xmlProc = new DBInfo.XMLDatabase.Procedure();
+        DBInfo.XMLDatabase.CreateProcedure xmlProc = new DBInfo.XMLDatabase.CreateProcedure();
         xmlProc.Name = p.Name;
         xmlProc.SourceCode = p.Body;
 
-        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
-        xmlDB.Procedure = xmlProc;
-        generateXMLOutput(xmlDB, OutputDir + "\\" + ProceduresDir + "\\" + p.Name + ".proc.xml", true);
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[1];
+        stCol.Statement[0] = xmlProc;
+        generateXMLOutput(stCol, OutputDir + "\\" + ProceduresDir + "\\" + p.Name + ".proc.xml", true);
       }
     }
 
-    private void generateXMLOutput(DBInfo.XMLDatabase.Database xmlDB, string FileName, bool generateCDATAForSourceCode) {
+    private void generateXMLOutput(StatementCollection col, string FileName, bool generateCDATAForSourceCode) {
       MemoryStream ms = new MemoryStream();
       
       if (generateCDATAForSourceCode){      
         //Change the contents of all nodes named "SourceCode" to CDATA. There's no option to do this automatticaly in XMLSerializer
-        XmlSerializer ser = new XmlSerializer(typeof(DBInfo.XMLDatabase.Database), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
-        ser.Serialize(ms, xmlDB);
+        XmlSerializer ser = new XmlSerializer(typeof(StatementCollection), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
+        ser.Serialize(ms, col);
 
         FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite);
         fixSourceCodeNode(ms, fs);
@@ -291,9 +321,9 @@ namespace DBInfo.XMLDatabase {
         ms.Close();
         fs.Close();        
       }else {
-        FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite);            
-        XmlSerializer ser = new XmlSerializer(typeof(DBInfo.XMLDatabase.Database), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
-        ser.Serialize(fs, xmlDB);
+        FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite);
+        XmlSerializer ser = new XmlSerializer(typeof(StatementCollection), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
+        ser.Serialize(fs, col);
         fs.Close();              
       }
     }
