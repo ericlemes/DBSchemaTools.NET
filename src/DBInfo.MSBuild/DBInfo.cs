@@ -19,11 +19,17 @@ namespace DBInfo.MSBuild {
       set {_DBExtractorClass = value;}
     }
     
-    private string _OutputGeneratorClass;
+    private string _OutputGeneratorClass = "";
     [Required]
     public string OutputGeneratorClass{
       get { return _OutputGeneratorClass; }
       set { _OutputGeneratorClass = value; }
+    }
+    
+    private string _ScriptOutputGeneratorClass = "";
+    public string ScriptOutputGeneratorClass{
+      get { return _ScriptOutputGeneratorClass; }
+      set { _ScriptOutputGeneratorClass = value; }
     }
     
     private string _InputType;
@@ -129,8 +135,7 @@ namespace DBInfo.MSBuild {
       Type extractorClass = Type.GetType(_DBExtractorClass);
       if (extractorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
-      IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);
-      IScriptOutputGenerator outputGenerator = (IScriptOutputGenerator)Activator.CreateInstance(Type.GetType(_OutputGeneratorClass));
+      IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);      
       
       DBInfoExtractor dbe = new DBInfoExtractor();
       dbe.Extractor = extractor;
@@ -148,28 +153,36 @@ namespace DBInfo.MSBuild {
           dbe.TableNames.Add(s);
         }
       }      
-      Database db = dbe.Extract(dataToExtract);
       
-      Type generatorClass = Type.GetType(_OutputGeneratorClass);
-      if (generatorClass == null)
+      Type outputGenClass = Type.GetType(_OutputGeneratorClass);
+      if (outputGenClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _OutputGeneratorClass));
-      IScriptOutputGenerator generator = (IScriptOutputGenerator)Activator.CreateInstance(generatorClass);           
+      IOutputGenerator gen = (IOutputGenerator)Activator.CreateInstance(outputGenClass);
+            
+      if (gen.Type == GeneratorType.Script){
+        Type scriptOutputGenClass = Type.GetType(_ScriptOutputGeneratorClass);      
       
-      ScriptOutputGenerator gen = new ScriptOutputGenerator();
-      gen.OutputGen = generator;
-      if (OutputType == "database")
-        gen.OutputType = InputOutputType.Database;
-      else if (OutputType == "file"){
-        gen.OutputType = InputOutputType.File;
-        if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
-          throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
-        Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
-        if (scriptFileOutputGeneratorType == null)
-          throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
-        gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+        if (scriptOutputGenClass == null)
+          throw new Exception(String.Format("Couldn't create instance for type {0}", _ScriptOutputGeneratorClass));
+        IScriptOutputGenerator scriptOutputGen = (IScriptOutputGenerator)Activator.CreateInstance(scriptOutputGenClass);
+        gen.ScriptOutputGen = scriptOutputGen;
+
+        if (OutputType == "database")
+          gen.OutputType = InputOutputType.Database;
+        else if (OutputType == "file") {
+          gen.OutputType = InputOutputType.File;
+          if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
+            throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
+          Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
+          if (scriptFileOutputGeneratorType == null)
+            throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
+          gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+        } else
+          throw new Exception(String.Format("Invalid output type: {0}.", OutputType));                    
       }
-      else
-        throw new Exception(String.Format("Invalid output type: {0}.", OutputType));            
+
+      Database db = dbe.Extract(dataToExtract);
+
       gen.OutputDir = OutputDir;
       gen.OutputConnectionString = OutputConnectionString;
       gen.GenerateOutput(db, dataToGenerateOutput);

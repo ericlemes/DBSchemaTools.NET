@@ -7,7 +7,7 @@ using DBInfo.Core.Model;
 using System.Collections.Generic;
 
 namespace DBInfo.Core.OutputGenerators {
-  public class ScriptOutputGenerator {
+  public class ScriptOutputGenerator : IOutputGenerator {
 
     public delegate void BeforeGenerateScriptHandler(DBObjectType objectType, string objectName);
     public event BeforeGenerateScriptHandler BeforeGenerateScript;
@@ -16,11 +16,15 @@ namespace DBInfo.Core.OutputGenerators {
     public event BeforeGenerateTableDataHandler BeforeGenerateTableData;
     public delegate void BeforeGenerateDataRowHandler(Table table, DataRow row);
     public event BeforeGenerateDataRowHandler BeforeGenerateDataRow;
+    
+    public GeneratorType Type{
+      get { return GeneratorType.Script;}
+    }
 
-    private IScriptOutputGenerator _OutputGen;
-    public IScriptOutputGenerator OutputGen {
-      get { return _OutputGen; }
-      set { _OutputGen = value; }
+    private IScriptOutputGenerator _ScriptOutputGen;
+    public IScriptOutputGenerator ScriptOutputGen {
+      get { return _ScriptOutputGen; }
+      set { _ScriptOutputGen = value; }
     }
     
     private InputOutputType _OutputType;
@@ -52,15 +56,15 @@ namespace DBInfo.Core.OutputGenerators {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Tables, table.TableName);
 
-        table.TableScript = OutputGen.GenerateTableScript(table);             
+        table.TableScript = ScriptOutputGen.GenerateTableScript(table);             
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey)){        
           if (!String.IsNullOrEmpty(table.PrimaryKeyName))
-            table.PrimaryKeyScript = OutputGen.GeneratePrimaryKeyScript(table);
+            table.PrimaryKeyScript = ScriptOutputGen.GeneratePrimaryKeyScript(table);
         }
           
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes))
         foreach (Index index in table.Indexes){
-          index.Script = OutputGen.GenerateIndexScript(table, index);
+          index.Script = ScriptOutputGen.GenerateIndexScript(table, index);
         }        
 
         if (BeforeGenerateScript != null)
@@ -68,7 +72,7 @@ namespace DBInfo.Core.OutputGenerators {
           
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
           foreach (CheckConstraint check in table.CheckConstraints){
-            check.Script = OutputGen.GenerateCheckConstraintScript(table, check);
+            check.Script = ScriptOutputGen.GenerateCheckConstraintScript(table, check);
           }
         }
 
@@ -77,7 +81,7 @@ namespace DBInfo.Core.OutputGenerators {
 
         if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
           foreach(ForeignKey fk in table.ForeignKeys){
-            fk.Script = OutputGen.GenerateForeignKeysScript(table, fk);
+            fk.Script = ScriptOutputGen.GenerateForeignKeysScript(table, fk);
           }          
         }
       }
@@ -98,13 +102,13 @@ namespace DBInfo.Core.OutputGenerators {
         if (t.TableData.Rows.Count > 0) {
           if (BeforeGenerateTableData != null)
             BeforeGenerateTableData(t, t.TableData);
-          t.TableDataScript = OutputGen.GenerateTableDataStartScript(t);
+          t.TableDataScript = ScriptOutputGen.GenerateTableDataStartScript(t);
           foreach (DataRow r in t.TableData.Rows) {
             if (BeforeGenerateDataRow != null)
               BeforeGenerateDataRow(t, r);
-            t.TableDataScript += OutputGen.GenerateTableDataRowScript(t, r);
+            t.TableDataScript += ScriptOutputGen.GenerateTableDataRowScript(t, r);
           }
-          t.TableDataScript += OutputGen.GenerateTableDataEndScript(t);          
+          t.TableDataScript += ScriptOutputGen.GenerateTableDataEndScript(t);          
         }
       }
     }
@@ -113,8 +117,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Procedure p in db.Procedures) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Procedures, p.Name);
-        p.DropProcedureScript = OutputGen.GenerateDropProcedureScript(p);                        
-        p.CreateProcedureScript = OutputGen.GenerateCreateProcedureScript(p);                        
+        p.DropProcedureScript = ScriptOutputGen.GenerateDropProcedureScript(p);
+        p.CreateProcedureScript = ScriptOutputGen.GenerateCreateProcedureScript(p);                        
       }
     }
 
@@ -122,8 +126,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Function f in db.Functions) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Functions, f.Name);
-        f.DropFunctionScript = OutputGen.GenerateDropFunctionScript(f);
-        f.CreateFunctionScript = OutputGen.GenerateCreateFunctionScript(f);                
+        f.DropFunctionScript = ScriptOutputGen.GenerateDropFunctionScript(f);
+        f.CreateFunctionScript = ScriptOutputGen.GenerateCreateFunctionScript(f);                
       }
     }
 
@@ -132,8 +136,8 @@ namespace DBInfo.Core.OutputGenerators {
         foreach (Trigger t in table.Triggers) {
           if (BeforeGenerateScript != null)
             BeforeGenerateScript(DBObjectType.Triggers, t.Table.TableName + "." + t.Name);
-          t.DropTriggerScript = OutputGen.GenerateDropTriggerScript(table, t);
-          t.CreateTriggerScript = OutputGen.GenerateCreateTriggerScript(table, t);          
+          t.DropTriggerScript = ScriptOutputGen.GenerateDropTriggerScript(table, t);
+          t.CreateTriggerScript = ScriptOutputGen.GenerateCreateTriggerScript(table, t);          
         }
       }
     }
@@ -142,8 +146,8 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (View v in db.Views) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Views, v.Name);
-        v.DropViewScript = OutputGen.GenerateDropViewScript(v);
-        v.CreateViewScript = OutputGen.GenerateCreateViewScript(v);
+        v.DropViewScript = ScriptOutputGen.GenerateDropViewScript(v);
+        v.CreateViewScript = ScriptOutputGen.GenerateCreateViewScript(v);
       }
     }
 
@@ -151,7 +155,7 @@ namespace DBInfo.Core.OutputGenerators {
       foreach (Sequence s in db.Sequences) {
         if (BeforeGenerateScript != null)
           BeforeGenerateScript(DBObjectType.Sequences, s.SequenceName);
-        s.SequenceScript = OutputGen.GenerateSequenceScript(s);        
+        s.SequenceScript = ScriptOutputGen.GenerateSequenceScript(s);        
       }
     }
 
@@ -180,41 +184,41 @@ namespace DBInfo.Core.OutputGenerators {
     private void ApplyToDestinationDB(Database db){
       if (String.IsNullOrEmpty(_OutputConnectionString))
         throw new Exception("Output connection string is required.");
-    
-      OutputGen.OpenOutputDatabaseConnection(_OutputConnectionString);
+
+      ScriptOutputGen.OpenOutputDatabaseConnection(_OutputConnectionString);
       foreach(Table t in db.Tables){
         if (!String.IsNullOrEmpty(t.TableScript))
-          OutputGen.ExecuteOuputDatabaseScript(t.TableScript);
+          ScriptOutputGen.ExecuteOuputDatabaseScript(t.TableScript);
         foreach(Index i in t.Indexes){
           if (!String.IsNullOrEmpty(i.Script)){
-            OutputGen.ExecuteOuputDatabaseScript(i.Script);
+            ScriptOutputGen.ExecuteOuputDatabaseScript(i.Script);
           }
         }
         if (!String.IsNullOrEmpty(t.PrimaryKeyScript))
-          OutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);                
+          ScriptOutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);                
         foreach(CheckConstraint check in t.CheckConstraints){
           if (!String.IsNullOrEmpty(check.Script))
-            OutputGen.ExecuteOuputDatabaseScript(check.Script);
+            ScriptOutputGen.ExecuteOuputDatabaseScript(check.Script);
         }
       }
       foreach(Table t in db.Tables){
         foreach(ForeignKey fk in t.ForeignKeys){
           if (!String.IsNullOrEmpty(fk.Script))
-            OutputGen.ExecuteOuputDatabaseScript(fk.Script);      
+            ScriptOutputGen.ExecuteOuputDatabaseScript(fk.Script);      
         }
       }          
       foreach(Procedure p in db.Procedures){
         if (!String.IsNullOrEmpty(p.DropProcedureScript))
-          OutputGen.ExecuteOuputDatabaseScript(p.DropProcedureScript);
+          ScriptOutputGen.ExecuteOuputDatabaseScript(p.DropProcedureScript);
         if (!String.IsNullOrEmpty(p.CreateProcedureScript))
-          OutputGen.ExecuteOuputDatabaseScript(p.CreateProcedureScript);
+          ScriptOutputGen.ExecuteOuputDatabaseScript(p.CreateProcedureScript);
       }  
       
       /*ApplyScriptBatch(FunctionScripts);
       ApplyScriptBatch(TriggerScripts);
       ApplyScriptBatch(ViewScripts);
       ApplyScriptBatch(SequenceScripts);*/
-      OutputGen.CloseOutputDatabaseConnection();
+      ScriptOutputGen.CloseOutputDatabaseConnection();
     }       
     
     private void SaveScriptBatch(List<DatabaseScript> scripts, string dir){
@@ -235,8 +239,8 @@ namespace DBInfo.Core.OutputGenerators {
         
       if (_ScriptFileOutputGenerator == null)
         throw new Exception("ScriptFileOutputGenerator is required");
-        
-      _ScriptFileOutputGenerator.GenerateFileOutput(OutputDir, db, _OutputGen); 
+
+      _ScriptFileOutputGenerator.GenerateFileOutput(OutputDir, db, ScriptOutputGen); 
     }
     
 

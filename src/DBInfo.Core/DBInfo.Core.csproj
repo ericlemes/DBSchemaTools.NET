@@ -62,6 +62,7 @@
     <Compile Include="Model\View.cs" />
     <Compile Include="OutputGenerators\ConsolidatedScriptFileOutputGenerator.cs" />
     <Compile Include="OutputGenerators\DatabaseScript.cs" />
+    <Compile Include="OutputGenerators\IOutputGenerator.cs" />
     <Compile Include="OutputGenerators\IScriptFileOutputGenerator.cs" />
     <Compile Include="OutputGenerators\IScriptOutputGenerator.cs" />
     <Compile Include="OutputGenerators\ScriptOutputGenerator.cs" />
