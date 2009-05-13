@@ -49,9 +49,16 @@
       <DependentUpon>DBInfo.xsd</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XMLDatabaseOutputGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DBInfo.xsd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DBInfo.Core\DBInfo.Core.csproj">
+      <Project>{4C3C4618-A3D3-49F9-BD96-95054A36F511}</Project>
+      <Name>DBInfo.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

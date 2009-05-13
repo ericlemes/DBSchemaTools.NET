@@ -1,0 +1,326 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using DBInfo.Core.OutputGenerators;
+using DBInfo.Core.Extractor;
+using System.Xml.Serialization;
+using System.IO;
+using System.Xml;
+using M=DBInfo.Core.Model;
+
+namespace DBInfo.XMLDatabase {
+  public class XMLDatabaseOutputGenerator : IOutputGenerator {
+
+    private string _TablesDir = "Tables";
+    public string TablesDir {
+      get { return _TablesDir; }
+      set { _TablesDir = value; }
+    }
+
+    private string _ForeignKeysDir = "ForeignKeys";
+    public string ForeignKeysDir {
+      get { return _ForeignKeysDir; }
+      set { _ForeignKeysDir = value; }
+    }
+
+    private string _ConstraintsDir = "Constraints";
+    public string ConstraintsDir {
+      get { return _ConstraintsDir; }
+      set { _ConstraintsDir = value; }
+    }
+
+    private string _FunctionsDir = "Functions";
+    public string FunctionsDir {
+      get { return _FunctionsDir; }
+      set { _FunctionsDir = value; }
+    }
+
+    private string _IndexesDir = "Indexes";
+    public string IndexesDir {
+      get { return _IndexesDir; }
+      set { _IndexesDir = value; }
+    }
+
+    private string _ProceduresDir = "Procedures";
+    public string ProceduresDir {
+      get { return _ProceduresDir; }
+      set { _ProceduresDir = value; }
+    }
+
+    private string _SequencesDir = "Sequences";
+    public string SequencesDir {
+      get { return _SequencesDir; }
+      set { _SequencesDir = value; }
+    }
+
+    private string _TriggersDir = "Triggers";
+    public string TriggersDir {
+      get { return _TriggersDir; }
+      set { _TriggersDir = value; }
+    }
+
+    private string _ViewsDir = "Views";
+    public string ViewsDir {
+      get { return _ViewsDir; }
+      set { _ViewsDir = value; }
+    }  
+  
+    #region IOutputGenerator Members
+
+    public GeneratorType Type {
+      get { return GeneratorType.Generic; }
+    }
+
+    public IScriptOutputGenerator ScriptOutputGen {
+      get {
+        throw new NotImplementedException();
+      }
+      set {
+        throw new NotImplementedException();
+      }
+    }
+
+    public InputOutputType OutputType {
+      get { return InputOutputType.File;}
+      set { }
+    }
+
+    public IScriptFileOutputGenerator ScriptFileOutputGenerator {
+      get { 
+        throw new NotImplementedException();
+      }
+      set {
+        throw new NotImplementedException();
+      }
+    }
+    
+    private string _OutputDir;
+
+    public string OutputDir {
+      get { return _OutputDir;}
+      set { _OutputDir = value;}        
+    }
+
+    private string _OutputConnectionString;
+    public string OutputConnectionString {
+      get { return _OutputConnectionString; }
+      set { _OutputConnectionString = value; }
+    }
+
+    public void GenerateOutput(DBInfo.Core.Model.Database db, List<DBObjectType> dataToGenerateOutput) {
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Tables)) {
+        GenerateTables(db);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
+        GenerateConstraints(db);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
+        GenerateForeignKeys(db);
+      }            
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures)) {
+        GenerateProcedures(db);
+      }      
+    }
+    
+    private ColumnType getColumnType(M.Column.DBColumnType type){
+      if (type == M.Column.DBColumnType.DBBigInt)
+        return ColumnType.BigInt;
+      else if (type == M.Column.DBColumnType.DBBinary)
+        return ColumnType.Binary;
+      else if (type == M.Column.DBColumnType.DBBit)
+        return ColumnType.Bit;
+      else if (type == M.Column.DBColumnType.DBBlob)
+        return ColumnType.Blob;
+      else if (type == M.Column.DBColumnType.DBChar)
+        return ColumnType.Char;
+      else if (type == M.Column.DBColumnType.DBDateTime)
+        return ColumnType.DateTime;
+      else if (type == M.Column.DBColumnType.DBDecimal)
+        return ColumnType.Decimal;
+      else if (type == M.Column.DBColumnType.DBFloat)
+        return ColumnType.Float;
+      else if (type == M.Column.DBColumnType.DBGUID)
+        return ColumnType.GUID;
+      else if (type == M.Column.DBColumnType.DBInteger)
+        return ColumnType.Integer;
+      else if (type == M.Column.DBColumnType.DBMemo)
+        return ColumnType.Memo;
+      else if (type == M.Column.DBColumnType.DBMoney)
+        return ColumnType.Money;
+      else if (type == M.Column.DBColumnType.DBNumeric)
+        return ColumnType.Numeric;
+      else if (type == M.Column.DBColumnType.DBNVarchar)
+        return ColumnType.NVarchar;
+      else if (type == M.Column.DBColumnType.DBRowID)
+        return ColumnType.RowID;
+      else if (type == M.Column.DBColumnType.DBSmallDateTime)
+        return ColumnType.SmallDateTime;
+      else if (type == M.Column.DBColumnType.DBSmallInt)
+        return ColumnType.SmallInt;
+      else if (type == M.Column.DBColumnType.DBTimeStamp)
+        return ColumnType.TimeStamp;
+      else if (type == M.Column.DBColumnType.DBTinyInt)
+        return ColumnType.TinyInt;
+      else if (type == M.Column.DBColumnType.DBVarchar)
+        return ColumnType.Varchar;
+      else 
+        throw new Exception(String.Format("Type not supported by XMLDatabase: {0}", type.ToString()));
+    }
+
+    private void GenerateTables(DBInfo.Core.Model.Database db) {
+      if (!Directory.Exists(OutputDir + "\\" + TablesDir))
+        Directory.CreateDirectory(OutputDir + "\\" + TablesDir);
+
+      foreach (DBInfo.Core.Model.Table t in db.Tables) {
+        DBInfo.XMLDatabase.CreateTable xmlTable = new DBInfo.XMLDatabase.CreateTable();
+        xmlTable.TableName = t.TableName;
+        xmlTable.HasIdentity = t.HasIdentity;
+        xmlTable.IdentitySeed = t.IdentitySeed.ToString();
+        xmlTable.IdentityIncrement = t.IdentityIncrement.ToString();
+        xmlTable.Columns = new Column[t.Columns.Count];
+
+        foreach (DBInfo.Core.Model.Column c in t.Columns) {
+          DBInfo.XMLDatabase.Column xmlCol = new DBInfo.XMLDatabase.Column();
+          xmlCol.Name = c.Name;
+          xmlCol.Type = getColumnType(c.Type);
+          xmlCol.Size = c.Size.ToString();
+          xmlCol.Precision = c.Precision.ToString();
+          xmlCol.Scale = c.Scale.ToString();
+          xmlCol.Nullable = c.IsNull;
+          xmlCol.Identity = c.IdentityColumn;
+          xmlCol.DefaultValue = c.DefaultValue;
+          xmlCol.ConstraintDefaultName = c.ConstraintDefaultName;
+
+          xmlTable.Columns[t.Columns.IndexOf(c)] = xmlCol;
+        }
+
+        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
+        xmlDB.Table = new CreateTable[1];
+        xmlDB.Table[0] = xmlTable;
+        generateXMLOutput(xmlDB, OutputDir + "\\" + TablesDir + "\\" + t.TableName + ".table.xml", true);
+      }
+    }
+
+    private void GenerateConstraints(DBInfo.Core.Model.Database db) {
+      if (!Directory.Exists(OutputDir + "\\" + ConstraintsDir))
+        Directory.CreateDirectory(OutputDir + "\\" + ConstraintsDir);
+
+      foreach (DBInfo.Core.Model.Table t in db.Tables) {
+        DBInfo.XMLDatabase.CreatePrimaryKey xmlPK = new DBInfo.XMLDatabase.CreatePrimaryKey();
+        xmlPK.Name = t.PrimaryKeyName;
+        xmlPK.Columns = new string[t.PrimaryKeyColumns.Count];
+
+        foreach (DBInfo.Core.Model.Column c in t.PrimaryKeyColumns) {
+          xmlPK.Columns[t.PrimaryKeyColumns.IndexOf(c)] = c.Name;
+        }
+
+        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
+        xmlDB.Constraints = new ArrayOfConstraint();
+        xmlDB.Constraints.CreatePrimaryKey = new CreatePrimaryKey[1];
+        xmlDB.Constraints.CreatePrimaryKey[0] = xmlPK;
+        xmlDB.Constraints.CreateCheckConstraint = new CreateCheckConstraint[t.CheckConstraints.Count];
+
+        foreach (DBInfo.Core.Model.CheckConstraint ck in t.CheckConstraints) {
+          CreateCheckConstraint xmlCK = new CreateCheckConstraint();
+          xmlCK.Name = ck.Name;
+          xmlCK.SourceCode = ck.Expression;
+          xmlDB.Constraints.CreateCheckConstraint[t.CheckConstraints.IndexOf(ck)] = xmlCK;
+        }
+
+        generateXMLOutput(xmlDB, OutputDir + "\\" + ConstraintsDir + "\\" + t.TableName + ".constraints.xml", true);
+      }
+    }
+    
+    private void GenerateForeignKeys(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + ForeignKeysDir))
+        Directory.CreateDirectory(OutputDir + "\\" + ForeignKeysDir);
+      
+      foreach(DBInfo.Core.Model.Table t in db.Tables){
+        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
+        xmlDB.ForeignKey = new CreateForeignKey[t.ForeignKeys.Count];
+      
+        foreach(DBInfo.Core.Model.ForeignKey fk in t.ForeignKeys){
+          CreateForeignKey xmlFK = new CreateForeignKey();          
+          xmlFK.TableName = t.TableName;
+          xmlFK.ForeignKeyName = fk.ForeignKeyName;
+          xmlFK.RefTableName = fk.RefTableName;
+          xmlFK.DeleteCascade = fk.DeleteCascade;
+          xmlFK.UpdateCascade = fk.UpdateCascade;
+          xmlFK.Columns = new ForeignKeyColumn[fk.Columns.Count];
+          foreach(DBInfo.Core.Model.ForeignKeyColumn c in fk.Columns){
+            ForeignKeyColumn xmlFKCol = new ForeignKeyColumn();
+            xmlFKCol.ColumnName = c.Column.Name;
+            xmlFKCol.RefColumnName = c.RefColumn.Name;
+            xmlFK.Columns[fk.Columns.IndexOf(c)] = xmlFKCol;
+          }
+          xmlDB.ForeignKey[t.ForeignKeys.IndexOf(fk)] = xmlFK;
+        }        
+        
+        generateXMLOutput(xmlDB, OutputDir + "\\" + ForeignKeysDir + "\\" + t.TableName + ".fk.xml", true);
+      }
+    }
+        
+    
+    private void GenerateProcedures(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + ProceduresDir))
+        Directory.CreateDirectory(OutputDir + "\\" + ProceduresDir);    
+    
+      foreach(DBInfo.Core.Model.Procedure p in db.Procedures){
+        DBInfo.XMLDatabase.Procedure xmlProc = new DBInfo.XMLDatabase.Procedure();
+        xmlProc.Name = p.Name;
+        xmlProc.SourceCode = p.Body;
+
+        DBInfo.XMLDatabase.Database xmlDB = new DBInfo.XMLDatabase.Database();
+        xmlDB.Procedure = xmlProc;
+        generateXMLOutput(xmlDB, OutputDir + "\\" + ProceduresDir + "\\" + p.Name + ".proc.xml", true);
+      }
+    }
+
+    private void generateXMLOutput(DBInfo.XMLDatabase.Database xmlDB, string FileName, bool generateCDATAForSourceCode) {
+      MemoryStream ms = new MemoryStream();
+      
+      if (generateCDATAForSourceCode){      
+        //Change the contents of all nodes named "SourceCode" to CDATA. There's no option to do this automatticaly in XMLSerializer
+        XmlSerializer ser = new XmlSerializer(typeof(DBInfo.XMLDatabase.Database), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
+        ser.Serialize(ms, xmlDB);
+
+        FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite);
+        fixSourceCodeNode(ms, fs);
+
+        ms.Close();
+        fs.Close();        
+      }else {
+        FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite);            
+        XmlSerializer ser = new XmlSerializer(typeof(DBInfo.XMLDatabase.Database), "http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd");
+        ser.Serialize(fs, xmlDB);
+        fs.Close();              
+      }
+    }
+    
+    private void findSourceCodeNodes(List<XmlNode> SourceCodeNodes, XmlNode searchNode){
+      if (searchNode.Name == "SourceCode")
+        SourceCodeNodes.Add(searchNode);
+      foreach(XmlNode childNode in searchNode.ChildNodes){
+        findSourceCodeNodes(SourceCodeNodes, childNode);
+      }
+    }
+    
+    private void fixSourceCodeNode(Stream inputStream, Stream outputStream){
+      inputStream.Seek(0, SeekOrigin.Begin);
+      XmlDocument xml = new XmlDocument();
+      xml.Load(inputStream); 
+      List<XmlNode> SourceCodeNodes = new List<XmlNode>();
+      findSourceCodeNodes(SourceCodeNodes, xml.DocumentElement);      
+      
+      foreach(XmlNode SourceCodeNode in SourceCodeNodes){            
+        XmlNode newNode = xml.CreateCDataSection(SourceCodeNode.ChildNodes[0].Value);
+        SourceCodeNode.RemoveAll();
+        SourceCodeNode.AppendChild(newNode);            
+      }
+      xml.Save(outputStream);      
+    }
+
+    #endregion
+  }
+}

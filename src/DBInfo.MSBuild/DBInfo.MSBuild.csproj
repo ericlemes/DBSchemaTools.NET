@@ -59,6 +59,10 @@
       <Project>{D4536008-17B8-4BB6-B83F-2FC937CA1B8C}</Project>
       <Name>DBInfo.SQLServer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DBInfo.XMLDatabase\DBInfo.XMLDatabase.csproj">
+      <Project>{DE882E3C-63A2-4C0D-A157-D00F8CA2E548}</Project>
+      <Name>DBInfo.XMLDatabase</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

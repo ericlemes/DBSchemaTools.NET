@@ -1,33 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsd:schema 
-	xmlns:db="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	targetNamespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd" 
-	elementFormDefault="qualified">
+<xsd:schema xmlns:db="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd" elementFormDefault="qualified">
 	<xsd:element name="DBInfo" type="db:Database"/>
 	<xsd:complexType name="Database">
 		<xsd:sequence>
-			<xsd:element name="Tables" type="db:ArrayOfTable" minOccurs="0"/>
+			<xsd:element name="Table" type="db:ArrayOfTable" minOccurs="0" maxOccurs="1" />			
+			<xsd:element name="Procedure" type="db:Procedure" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="Constraints" type="db:ArrayOfConstraint" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="ForeignKey" type="db:ArrayOfForeignKey" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="ArrayOfTable">
 		<xsd:sequence>
-			<xsd:element name="Table" type="db:Table" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="Table" type="db:CreateTable" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>
-	<xsd:complexType name="Table">
+	</xsd:complexType>	
+	<xsd:complexType name="CreateTable">
 		<xsd:sequence>
-			<xsd:element name="TableName" type="xsd:string" maxOccurs="1" minOccurs="1"/>
-			<xsd:element name="Columns" type="db:ArrayOfColumn" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="ForeignKeys" type="db:ArrayOfForeignKey" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="PrimaryKeyName" type="xsd:string" minOccurs="0"/>
-			<xsd:element name="PrimaryKeyColumns" type="db:ArrayOfString" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Indexes" type="db:ArrayOfIndex" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="HasIdentity" type="xsd:boolean" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="IdentitySeed" type="xsd:integer" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="IdentityIncrement" type="xsd:integer" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="CheckConstraints" type="db:ArrayOfCheckConstraint" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Triggers" type="db:ArrayOfTrigger" maxOccurs="1" minOccurs="0" />
+			<xsd:element name="TableName" type="xsd:string"/>
+			<xsd:element name="Columns" type="db:ArrayOfColumn"/>
+			<xsd:element name="HasIdentity" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="IdentitySeed" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="IdentityIncrement" type="xsd:integer" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="ArrayOfColumn">
@@ -37,94 +30,135 @@
 	</xsd:complexType>
 	<xsd:simpleType name="ColumnType">
 		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="Integer" />
-			<xsd:enumeration value="Varchar" />			
-			<xsd:enumeration value="Char" />			
-			<xsd:enumeration value="Decimal" />			
-			<xsd:enumeration value="Float" />			
-			<xsd:enumeration value="Memo" />			
-			<xsd:enumeration value="Blob" />			
-			<xsd:enumeration value="DateTime" />			
-			<xsd:enumeration value="Bit" />			
-			<xsd:enumeration value="SmallDateTime" />			
-			<xsd:enumeration value="Money" />			
-			<xsd:enumeration value="SmallInt" />					
-			<xsd:enumeration value="Numeric" />								
-			<xsd:enumeration value="GUID" />								
-			<xsd:enumeration value="BigInt" />								
-			<xsd:enumeration value="TinyInt" />								
-			<xsd:enumeration value="Binary" />								
-			<xsd:enumeration value="NVarchar" />								
-			<xsd:enumeration value="RowID" />								
-			<xsd:enumeration value="TimeStamp" />								
+			<xsd:enumeration value="Integer"/>
+			<xsd:enumeration value="Varchar"/>
+			<xsd:enumeration value="Char"/>
+			<xsd:enumeration value="Decimal"/>
+			<xsd:enumeration value="Float"/>
+			<xsd:enumeration value="Memo"/>
+			<xsd:enumeration value="Blob"/>
+			<xsd:enumeration value="DateTime"/>
+			<xsd:enumeration value="Bit"/>
+			<xsd:enumeration value="SmallDateTime"/>
+			<xsd:enumeration value="Money"/>
+			<xsd:enumeration value="SmallInt"/>
+			<xsd:enumeration value="Numeric"/>
+			<xsd:enumeration value="GUID"/>
+			<xsd:enumeration value="BigInt"/>
+			<xsd:enumeration value="TinyInt"/>
+			<xsd:enumeration value="Binary"/>
+			<xsd:enumeration value="NVarchar"/>
+			<xsd:enumeration value="RowID"/>
+			<xsd:enumeration value="TimeStamp"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 	<xsd:complexType name="Column">
 		<xsd:sequence>
-			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="Type" type="db:ColumnType" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="Size" type="xsd:integer" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Precision" type="xsd:integer" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Scale" type="xsd:integer" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Nullable" type="xsd:boolean" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Identity" type="xsd:boolean" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="DefaultValue" type="xsd:string" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="ConstraintDefaultName" type="xsd:string" maxOccurs="1" minOccurs="0" />
+			<xsd:element name="Name" type="xsd:string"/>
+			<xsd:element name="Type" type="db:ColumnType"/>
+			<xsd:element name="Size" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Precision" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Scale" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Nullable" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="Identity" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="DefaultValue" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="ConstraintDefaultName" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
-	</xsd:complexType>	
+	</xsd:complexType>
 	<xsd:complexType name="ArrayOfForeignKey">
 		<xsd:sequence>
-			<xsd:element name="ForeignKey" type="db:ForeignKey" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="CreateForeignKey" type="db:CreateForeignKey" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>	
-	<xsd:complexType name="ForeignKey">
+	</xsd:complexType>
+	<xsd:complexType name="CreateForeignKey">
 		<xsd:sequence>
-			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="RefTableName" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="Columns" type="db:ArrayOfString" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="DeleteCascade" type="xsd:boolean" maxOccurs="1" minOccurs="0" />			
-			<xsd:element name="UpdateCascade" type="xsd:boolean" maxOccurs="1" minOccurs="0" />						
+			<xsd:element name="TableName" type="xsd:string" />
+			<xsd:element name="ForeignKeyName" type="xsd:string"/>
+			<xsd:element name="RefTableName" type="xsd:string"/>
+			<xsd:element name="Columns" type="db:ArrayOfForeignKeyColumn"/>
+			<xsd:element name="DeleteCascade" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="UpdateCascade" type="xsd:boolean" minOccurs="0"/>
 		</xsd:sequence>
-	</xsd:complexType>	
+	</xsd:complexType>
+	<xsd:complexType name="ArrayOfForeignKeyColumn">
+		<xsd:sequence>
+			<xsd:element name="ForeignKeyColumn" type="db:ForeignKeyColumn" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ForeignKeyColumn">
+		<xsd:sequence>
+			<xsd:element name="ColumnName" type="xsd:string" />
+			<xsd:element name="RefColumnName" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
 	<xsd:complexType name="ArrayOfString">
 		<xsd:sequence>
 			<xsd:element name="Value" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>	
+	</xsd:complexType>
 	<xsd:complexType name="ArrayOfIndex">
 		<xsd:sequence>
 			<xsd:element name="Index" type="db:Index" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>	
+	</xsd:complexType>
 	<xsd:complexType name="Index">
 		<xsd:sequence>
-			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="Unique" type="xsd:boolean" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Clustered" type="xsd:boolean" maxOccurs="1" minOccurs="0" />
-			<xsd:element name="Columns" type="db:ArrayOfString" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="Name" type="xsd:string"/>
+			<xsd:element name="Unique" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="Clustered" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="Columns" type="db:ArrayOfString"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="ArrayOfCheckConstraint">
 		<xsd:sequence>
 			<xsd:element name="CheckConstraint" type="db:CheckConstraint" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>		
+	</xsd:complexType>
 	<xsd:complexType name="CheckConstraint">
 		<xsd:sequence>
-			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="Expression" type="xsd:string" maxOccurs="1" minOccurs="1" />			
+			<xsd:element name="Name" type="xsd:string"/>
+			<xsd:element name="Expression" type="xsd:string"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="ArrayOfTrigger">
 		<xsd:sequence>
 			<xsd:element name="Trigger" type="db:Trigger" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-	</xsd:complexType>			
+	</xsd:complexType>
 	<xsd:complexType name="Trigger">
 		<xsd:sequence>
-			<xsd:element name="TableName" type="xsd:string" maxOccurs="1" minOccurs="1" />
-			<xsd:element name="TriggerName" type="xsd:string" maxOccurs="1" minOccurs="1" />			
-			<xsd:element name="Body" type="xsd:string" maxOccurs="1" minOccurs="1" />						
+			<xsd:element name="TableName" type="xsd:string"/>
+			<xsd:element name="TriggerName" type="xsd:string"/>
+			<xsd:element name="SourceCode" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ArrayOfProcedure">
+		<xsd:sequence>
+			<xsd:element name="Procedure" type="db:Procedure" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
 	</xsd:complexType>	
+	<xsd:complexType name="Procedure">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" />
+			<xsd:element name="SourceCode" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ArrayOfConstraint">
+		<xsd:sequence>
+			<xsd:element name="CreatePrimaryKey" type="db:CreatePrimaryKey" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="CreateCheckConstraint" type="db:CreateCheckConstraint" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CreatePrimaryKey">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" />
+			<xsd:element name="Columns" type="db:ArrayOfString" />
+		</xsd:sequence>
+	</xsd:complexType>	
+	<xsd:complexType name="CreateCheckConstraint">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" />
+			<xsd:element name="SourceCode" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>		
 </xsd:schema>
