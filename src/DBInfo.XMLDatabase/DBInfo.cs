@@ -39,8 +39,12 @@ namespace DBInfo.XMLDatabase {
     }
     
     /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateView))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateSequence))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateFunction))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreatePrimaryKey))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateProcedure))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateTrigger))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateCheckConstraint))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateIndex))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateForeignKey))]
@@ -351,6 +355,170 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateView : Statement {
+        
+        private string nameField;
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateSequence : Statement {
+        
+        private string nameField;
+        
+        private string initialField;
+        
+        private string minValueField;
+        
+        private string maxValueField;
+        
+        private string incrementField;
+        
+        private bool cycleOnLimitField;
+        
+        private bool cycleOnLimitFieldSpecified;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string Initial {
+            get {
+                return this.initialField;
+            }
+            set {
+                this.initialField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string MinValue {
+            get {
+                return this.minValueField;
+            }
+            set {
+                this.minValueField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string MaxValue {
+            get {
+                return this.maxValueField;
+            }
+            set {
+                this.maxValueField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string Increment {
+            get {
+                return this.incrementField;
+            }
+            set {
+                this.incrementField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public bool CycleOnLimit {
+            get {
+                return this.cycleOnLimitField;
+            }
+            set {
+                this.cycleOnLimitField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool CycleOnLimitSpecified {
+            get {
+                return this.cycleOnLimitFieldSpecified;
+            }
+            set {
+                this.cycleOnLimitFieldSpecified = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateFunction : Statement {
+        
+        private string nameField;
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
     public partial class CreatePrimaryKey : Statement {
         
         private string nameField;
@@ -398,6 +566,51 @@ namespace DBInfo.XMLDatabase {
             }
             set {
                 this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class CreateTrigger : Statement {
+        
+        private string tableNameField;
+        
+        private string triggerNameField;
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string TableName {
+            get {
+                return this.tableNameField;
+            }
+            set {
+                this.tableNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string TriggerName {
+            get {
+                return this.triggerNameField;
+            }
+            set {
+                this.triggerNameField = value;
             }
         }
         

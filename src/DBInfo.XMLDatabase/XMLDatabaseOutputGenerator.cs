@@ -120,10 +120,22 @@ namespace DBInfo.XMLDatabase {
       }
       if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes)) {
         GenerateIndexes(db);
-      }                  
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Triggers)) {
+        GenerateTriggers(db);
+      }                        
       if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures)) {
         GenerateProcedures(db);
       }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Functions)) {
+        GenerateFunctions(db);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Sequences)) {
+        GenerateSequences(db);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Views)) {
+        GenerateViews(db);
+      }                        
     }
     
     private ColumnType getColumnType(M.Column.DBColumnType type){
@@ -291,6 +303,26 @@ namespace DBInfo.XMLDatabase {
       }
     }        
     
+    private void GenerateTriggers(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + TriggersDir))
+        Directory.CreateDirectory(OutputDir + "\\" + TriggersDir);
+        
+      foreach(DBInfo.Core.Model.Table t in db.Tables){
+        foreach(DBInfo.Core.Model.Trigger tr in t.Triggers){
+          CreateTrigger xmlTrigger = new CreateTrigger();
+          xmlTrigger.TableName = t.TableName;
+          xmlTrigger.TriggerName = tr.Name;
+          xmlTrigger.SourceCode = tr.Body;
+          
+          StatementCollection stCol = new StatementCollection();
+          stCol.Statement = new Statement[1];
+          stCol.Statement[0] = xmlTrigger;
+          
+          generateXMLOutput(stCol, OutputDir + "\\" + TriggersDir + "\\" + t.TableName + "." + tr.Name + ".trigger.xml", true);
+        }
+      }
+    }
+    
     private void GenerateProcedures(DBInfo.Core.Model.Database db){
       if (!Directory.Exists(OutputDir + "\\" + ProceduresDir))
         Directory.CreateDirectory(OutputDir + "\\" + ProceduresDir);    
@@ -304,6 +336,58 @@ namespace DBInfo.XMLDatabase {
         stCol.Statement = new Statement[1];
         stCol.Statement[0] = xmlProc;
         generateXMLOutput(stCol, OutputDir + "\\" + ProceduresDir + "\\" + p.Name + ".proc.xml", true);
+      }
+    }
+    
+    private void GenerateFunctions(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + FunctionsDir))
+        Directory.CreateDirectory(OutputDir + "\\" + FunctionsDir);
+      
+      foreach(DBInfo.Core.Model.Function f in db.Functions){
+        CreateFunction xmlFunction = new CreateFunction();
+        xmlFunction.Name = f.Name;
+        xmlFunction.SourceCode = f.Body;
+        
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[1];
+        stCol.Statement[0] = xmlFunction;
+        generateXMLOutput(stCol, OutputDir + "\\" + FunctionsDir + "\\" + f.Name + ".function.xml", true); 
+      }
+    }
+    
+    private void GenerateSequences(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + SequencesDir))
+        Directory.CreateDirectory(OutputDir + "\\" + SequencesDir);
+        
+      foreach(DBInfo.Core.Model.Sequence s in db.Sequences){
+        CreateSequence xmlSequence = new CreateSequence();
+        xmlSequence.Name = s.SequenceName;
+        xmlSequence.Initial = s.Initial.ToString();
+        xmlSequence.MinValue = s.MinValue.ToString();
+        xmlSequence.MaxValue = s.MaxValue.ToString();
+        xmlSequence.Increment = s.Increment.ToString();
+        xmlSequence.CycleOnLimit = s.CycleOnLimit;
+        
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[1];
+        stCol.Statement[0] = xmlSequence;
+        generateXMLOutput(stCol, OutputDir + "\\" + SequencesDir + "\\" + s.SequenceName + ".sequence.xml", false);
+      }
+    }
+    
+    private void GenerateViews(DBInfo.Core.Model.Database db){
+      if (!Directory.Exists(OutputDir + "\\" + ViewsDir))
+        Directory.CreateDirectory(OutputDir + "\\" + ViewsDir);
+        
+      foreach ( DBInfo.Core.Model.View v in db.Views){
+        CreateView xmlView = new CreateView();
+        xmlView.Name = v.Name;
+        xmlView.SourceCode = v.Body;
+        
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[1];
+        stCol.Statement[0] = xmlView;
+        generateXMLOutput(stCol, OutputDir + "\\" + ViewsDir + "\\" + v.Name + ".view.xml", true);
       }
     }
 
