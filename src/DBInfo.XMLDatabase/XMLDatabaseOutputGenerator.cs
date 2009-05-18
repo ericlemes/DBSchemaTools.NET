@@ -223,7 +223,8 @@ namespace DBInfo.XMLDatabase {
 
       foreach (DBInfo.Core.Model.Table t in db.Tables) {
         DBInfo.XMLDatabase.CreatePrimaryKey xmlPK = new DBInfo.XMLDatabase.CreatePrimaryKey();
-        xmlPK.Name = t.PrimaryKeyName;
+        xmlPK.TableName = t.TableName;
+        xmlPK.PrimaryKeyName = t.PrimaryKeyName;
         xmlPK.Columns = new string[t.PrimaryKeyColumns.Count];
 
         foreach (DBInfo.Core.Model.Column c in t.PrimaryKeyColumns) {
@@ -236,7 +237,8 @@ namespace DBInfo.XMLDatabase {
 
         foreach (DBInfo.Core.Model.CheckConstraint ck in t.CheckConstraints) {
           CreateCheckConstraint xmlCK = new CreateCheckConstraint();
-          xmlCK.Name = ck.Name;
+          xmlCK.TableName = t.TableName;
+          xmlCK.CheckConstraintName = ck.Name;
           xmlCK.SourceCode = ck.Expression;
           stCol.Statement[t.CheckConstraints.IndexOf(ck) + 1] = xmlCK;
         }

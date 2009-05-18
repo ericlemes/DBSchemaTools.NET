@@ -521,17 +521,29 @@ namespace DBInfo.XMLDatabase {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
     public partial class CreatePrimaryKey : Statement {
         
-        private string nameField;
+        private string tableNameField;
+        
+        private string primaryKeyNameField;
         
         private string[] columnsField;
         
         /// <remarks/>
-        public string Name {
+        public string TableName {
             get {
-                return this.nameField;
+                return this.tableNameField;
             }
             set {
-                this.nameField = value;
+                this.tableNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string PrimaryKeyName {
+            get {
+                return this.primaryKeyNameField;
+            }
+            set {
+                this.primaryKeyNameField = value;
             }
         }
         
@@ -633,17 +645,29 @@ namespace DBInfo.XMLDatabase {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
     public partial class CreateCheckConstraint : Statement {
         
-        private string nameField;
+        private string tableNameField;
+        
+        private string checkConstraintNameField;
         
         private string sourceCodeField;
         
         /// <remarks/>
-        public string Name {
+        public string TableName {
             get {
-                return this.nameField;
+                return this.tableNameField;
             }
             set {
-                this.nameField = value;
+                this.tableNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public string CheckConstraintName {
+            get {
+                return this.checkConstraintNameField;
+            }
+            set {
+                this.checkConstraintNameField = value;
             }
         }
         

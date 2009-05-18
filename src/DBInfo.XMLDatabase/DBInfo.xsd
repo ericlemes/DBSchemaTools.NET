@@ -126,7 +126,8 @@
 		<xsd:complexContent>
 			<xsd:extension base="db:Statement">
 				<xsd:sequence>
-					<xsd:element name="Name" type="xsd:string"/>
+					<xsd:element name="TableName" type="xsd:string"/>
+					<xsd:element name="CheckConstraintName" type="xsd:string"/>
 					<xsd:element name="SourceCode" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:extension>
@@ -157,7 +158,8 @@
 		<xsd:complexContent>
 			<xsd:extension base="db:Statement">
 				<xsd:sequence>
-					<xsd:element name="Name" type="xsd:string"/>
+					<xsd:element name="TableName" type="xsd:string"/>
+					<xsd:element name="PrimaryKeyName" type="xsd:string"/>
 					<xsd:element name="Columns" type="db:ArrayOfString"/>
 				</xsd:sequence>
 			</xsd:extension>
@@ -178,15 +180,15 @@
 			<xsd:extension base="db:Statement">
 				<xsd:sequence>
 					<xsd:element name="Name" type="xsd:string"/>
-					<xsd:element name="Initial" type="xsd:integer" minOccurs="1" maxOccurs="1"/>
-					<xsd:element name="MinValue" type="xsd:integer" minOccurs="0" maxOccurs="1"/>
-					<xsd:element name="MaxValue" type="xsd:integer" minOccurs="0" maxOccurs="1"/>
-					<xsd:element name="Increment" type="xsd:integer" minOccurs="1" maxOccurs="1"/>
-					<xsd:element name="CycleOnLimit" type="xsd:boolean" minOccurs="0" maxOccurs="1"/>					
+					<xsd:element name="Initial" type="xsd:integer"/>
+					<xsd:element name="MinValue" type="xsd:integer" minOccurs="0"/>
+					<xsd:element name="MaxValue" type="xsd:integer" minOccurs="0"/>
+					<xsd:element name="Increment" type="xsd:integer"/>
+					<xsd:element name="CycleOnLimit" type="xsd:boolean" minOccurs="0"/>
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
-	</xsd:complexType>	
+	</xsd:complexType>
 	<xsd:complexType name="CreateView">
 		<xsd:complexContent>
 			<xsd:extension base="db:Statement">
@@ -196,5 +198,5 @@
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
-	</xsd:complexType>	
+	</xsd:complexType>
 </xsd:schema>

@@ -49,6 +49,7 @@
       <DependentUpon>DBInfo.xsd</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XMLDatabaseExtractor.cs" />
     <Compile Include="XMLDatabaseOutputGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
