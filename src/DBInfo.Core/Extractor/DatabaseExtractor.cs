@@ -29,7 +29,7 @@ namespace DBInfo.Core.Extractor {
     Sequences    
   };
 
-  public class DBInfoExtractor {
+  public class DatabaseExtractor {
     private InputOutputType _InputType;
     public InputOutputType InputType{
       get { return _InputType;}
@@ -48,8 +48,8 @@ namespace DBInfo.Core.Extractor {
       set { _InputDir = value;}
     }  
   
-    private IDBInfoExtractor _Extractor;
-    public IDBInfoExtractor Extractor{
+    private IDatabaseExtractor _Extractor;
+    public IDatabaseExtractor Extractor{
       get { return _Extractor;}
       set {_Extractor = value;}
     }   

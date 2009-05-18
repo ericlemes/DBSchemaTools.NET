@@ -4,7 +4,7 @@ using DBInfo.Core.Model;
 using System.Collections.Generic;
 
 namespace DBInfo.Core.Extractor {
-  public interface IDBInfoExtractor {
+  public interface IDatabaseExtractor {
     InputOutputType InputType{
       get;
       set;

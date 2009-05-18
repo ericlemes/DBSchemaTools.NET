@@ -7,7 +7,7 @@ using DBInfo.Core.Model;
 using System.Collections.Generic;
 
 namespace DBInfo.DBExtractors {
-  public class SQLServerDBExtractor : IDBInfoExtractor {
+  public class SQLServerDBExtractor : IDatabaseExtractor {
     private InputOutputType _InputType;
     public InputOutputType InputType {
       get { return _InputType; }

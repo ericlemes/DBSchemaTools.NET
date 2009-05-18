@@ -135,9 +135,9 @@ namespace DBInfo.MSBuild {
       Type extractorClass = Type.GetType(_DBExtractorClass);
       if (extractorClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
-      IDBInfoExtractor extractor = (IDBInfoExtractor)Activator.CreateInstance(extractorClass);      
+      IDatabaseExtractor extractor = (IDatabaseExtractor)Activator.CreateInstance(extractorClass);      
       
-      DBInfoExtractor dbe = new DBInfoExtractor();
+      DatabaseExtractor dbe = new DatabaseExtractor();
       dbe.Extractor = extractor;
       if (InputType == "database")
         dbe.InputType = InputOutputType.Database;
