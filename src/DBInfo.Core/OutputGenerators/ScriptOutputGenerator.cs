@@ -25,19 +25,7 @@ namespace DBInfo.Core.OutputGenerators {
     public IScriptOutputGenerator ScriptOutputGen {
       get { return _ScriptOutputGen; }
       set { _ScriptOutputGen = value; }
-    }
-    
-    private InputOutputType _OutputType;
-    public InputOutputType OutputType{
-      get { return _OutputType;}
-      set { _OutputType = value;}
-    }
-    
-    private string _OutputConnectionString;
-    public string OutputConnectionString{
-      get { return _OutputConnectionString;}
-      set { _OutputConnectionString = value;}
-    }
+    }        
     
     private string _OutputDir;
     public string OutputDir{
@@ -175,51 +163,8 @@ namespace DBInfo.Core.OutputGenerators {
       if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Sequences))
         GenerateSequences(db);
         
-      if (OutputType == InputOutputType.File)
-        SaveScripts(db);
-      else 
-        ApplyToDestinationDB(db);
-    }
-    
-    private void ApplyToDestinationDB(Database db){
-      if (String.IsNullOrEmpty(_OutputConnectionString))
-        throw new Exception("Output connection string is required.");
-
-      ScriptOutputGen.OpenOutputDatabaseConnection(_OutputConnectionString);
-      foreach(Table t in db.Tables){
-        if (!String.IsNullOrEmpty(t.TableScript))
-          ScriptOutputGen.ExecuteOuputDatabaseScript(t.TableScript);
-        foreach(Index i in t.Indexes){
-          if (!String.IsNullOrEmpty(i.Script)){
-            ScriptOutputGen.ExecuteOuputDatabaseScript(i.Script);
-          }
-        }
-        if (!String.IsNullOrEmpty(t.PrimaryKeyScript))
-          ScriptOutputGen.ExecuteOuputDatabaseScript(t.PrimaryKeyScript);                
-        foreach(CheckConstraint check in t.CheckConstraints){
-          if (!String.IsNullOrEmpty(check.Script))
-            ScriptOutputGen.ExecuteOuputDatabaseScript(check.Script);
-        }
-      }
-      foreach(Table t in db.Tables){
-        foreach(ForeignKey fk in t.ForeignKeys){
-          if (!String.IsNullOrEmpty(fk.Script))
-            ScriptOutputGen.ExecuteOuputDatabaseScript(fk.Script);      
-        }
-      }          
-      foreach(Procedure p in db.Procedures){
-        if (!String.IsNullOrEmpty(p.DropProcedureScript))
-          ScriptOutputGen.ExecuteOuputDatabaseScript(p.DropProcedureScript);
-        if (!String.IsNullOrEmpty(p.CreateProcedureScript))
-          ScriptOutputGen.ExecuteOuputDatabaseScript(p.CreateProcedureScript);
-      }  
-      
-      /*ApplyScriptBatch(FunctionScripts);
-      ApplyScriptBatch(TriggerScripts);
-      ApplyScriptBatch(ViewScripts);
-      ApplyScriptBatch(SequenceScripts);*/
-      ScriptOutputGen.CloseOutputDatabaseConnection();
-    }       
+      SaveScripts(db);
+    }    
     
     private void SaveScriptBatch(List<DatabaseScript> scripts, string dir){
       if (!Directory.Exists(dir))

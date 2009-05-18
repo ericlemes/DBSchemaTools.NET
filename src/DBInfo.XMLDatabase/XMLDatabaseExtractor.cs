@@ -7,7 +7,33 @@ using System.IO;
 using System.Xml.Serialization;
 
 namespace DBInfo.XMLDatabase {
-  public class XMLDatabaseExtractor  {   
+  public class XMLDatabaseExtractor : IExtractor  {   
+    public ExtractorType Type {
+      get { return ExtractorType.Generic;}
+    }
+    
+    private string _InputDir;
+    public string InputDir{
+      get { return _InputDir;}
+      set { _InputDir = value;}
+    }
+    
+    private string _InputConnectionString;
+    public string InputConnectionString{
+      get { return _InputConnectionString;}
+      set { _InputConnectionString = value;}
+    }    
+    
+    private IDatabaseExtractor _Extractor;
+    public IDatabaseExtractor Extractor{
+      get { return _Extractor;}
+      set { _Extractor = value;}
+    }
+    
+    private List<string> _InputFiles = new List<string>();
+    public List<string> InputFiles{
+      get { return _InputFiles;}
+    }
     
     public DBInfo.Core.Model.Database ExtractXMLDatabase(List<string> XMLFiles){
       DBInfo.Core.Model.Database db = new DBInfo.Core.Model.Database();
@@ -27,6 +53,9 @@ namespace DBInfo.XMLDatabase {
       XmlSerializer xs = new XmlSerializer(typeof(StatementCollection));
       StatementCollection sc = (StatementCollection)xs.Deserialize(fs);
       fs.Close();
+      
+      if (sc.Statement == null)
+        return;
       
       foreach(Statement s in sc.Statement){
         if (Step == 1){
@@ -249,6 +278,10 @@ namespace DBInfo.XMLDatabase {
       v.Body = xmlView.SourceCode;
       
       return v;
+    }
+    
+    public DBInfo.Core.Model.Database Extract(List<DBObjectType> dataToExtract){
+      return ExtractXMLDatabase(_InputFiles);
     }
     
   }

@@ -12,8 +12,14 @@ using DBInfo.Core.Model;
 
 namespace DBInfo.MSBuild {
   public class DBInfo:Task {    
-    private string _DBExtractorClass;
-    [Required]
+    private string _ExtractorClass;
+    [Required]    
+    public string ExtractorClass{
+      get { return _ExtractorClass;}
+      set { _ExtractorClass = value;}
+    }
+  
+    private string _DBExtractorClass;    
     public string dbextractorclass{
       get {return _DBExtractorClass;}
       set {_DBExtractorClass = value;}
@@ -31,20 +37,7 @@ namespace DBInfo.MSBuild {
       get { return _ScriptOutputGeneratorClass; }
       set { _ScriptOutputGeneratorClass = value; }
     }
-    
-    private string _InputType;
-    [Required]
-    public string InputType{
-      get { return _InputType;}
-      set {_InputType = value;}
-    }
-    
-    private string _InputDir;
-    public string InputDir{
-      get { return _InputDir;}
-      set { _InputDir = value;}
-    }
-    
+       
     private string _InputConnectionString;
     public string InputConnectionString {
       get { return _InputConnectionString;}
@@ -55,14 +48,7 @@ namespace DBInfo.MSBuild {
     public string OutputConnectionString {
       get { return _OutputConnectionString;}
       set { _OutputConnectionString = value;}
-    }
-        
-    private string _OutputType;
-    [Required]
-    public string OutputType {
-      get { return _OutputType;}
-      set { _OutputType = value;}
-    }
+    }        
     
     private string _OutputDir;
     public string OutputDir{
@@ -94,6 +80,12 @@ namespace DBInfo.MSBuild {
     public string ScriptFileOutputGenerator{
       get { return _ScriptFileOutputGenerator;}
       set { _ScriptFileOutputGenerator = value;}
+    }
+
+    private ITaskItem[] _InputFiles;    
+    public ITaskItem[] InputFiles{
+      get { return _InputFiles; }
+      set { _InputFiles = value; }
     }
 
     private EnumType DescriptionToEnum<EnumType>(string description) where EnumType : new() {      
@@ -131,28 +123,36 @@ namespace DBInfo.MSBuild {
     public override bool Execute() {              
       List<DBObjectType> dataToExtract = GetDataToExtractEnum();
       List<DBObjectType> dataToGenerateOutput = GetDataToGenerateOutputEnum();
-        
-      Type extractorClass = Type.GetType(_DBExtractorClass);
-      if (extractorClass == null)
-        throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
-      IDatabaseExtractor extractor = (IDatabaseExtractor)Activator.CreateInstance(extractorClass);      
       
-      DatabaseExtractor dbe = new DatabaseExtractor();
-      dbe.Extractor = extractor;
-      if (InputType == "database")
-        dbe.InputType = InputOutputType.Database;
-      else if (InputType == "file")
-        dbe.InputType = InputOutputType.File;
-      else
-        throw new Exception(String.Format("Invalid input type: {0}.", InputType));      
-      dbe.InputConnectionString = _InputConnectionString;
-      dbe.InputDir = _InputDir;
-      if (!String.IsNullOrEmpty(_TableNames)){
-        string[] names = _TableNames.Split(';');
-        foreach(string s in names){
-          dbe.TableNames.Add(s);
+      Type extractorClass = Type.GetType(_ExtractorClass);
+      if (extractorClass == null)
+        throw new Exception(String.Format("Couldn't create instance for type {0}", _ExtractorClass));
+      IExtractor extractor = (IExtractor)Activator.CreateInstance(extractorClass);
+      
+      if (extractor.Type == ExtractorType.Database){        
+        Type dbExtractorClass = Type.GetType(_DBExtractorClass);
+        if (dbExtractorClass == null)
+          throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
+        IDatabaseExtractor dbExtractor = (IDatabaseExtractor)Activator.CreateInstance(dbExtractorClass);      
+        
+        //DatabaseExtractor dbe = new DatabaseExtractor();
+        
+        extractor.Extractor = dbExtractor;
+        extractor.InputConnectionString = _InputConnectionString;       
+        /*if (!String.IsNullOrEmpty(_TableNames)){
+          string[] names = _TableNames.Split(';');
+          foreach(string s in names){
+            dbe.TableNames.Add(s);
+          }
+        }*/
+      }
+      else {
+        if (_InputFiles == null)
+          throw new Exception("InputFiles must be specified.");
+        foreach (ITaskItem file in _InputFiles) {
+          extractor.InputFiles.Add(file.ItemSpec);
         }
-      }      
+      }
       
       Type outputGenClass = Type.GetType(_OutputGeneratorClass);
       if (outputGenClass == null)
@@ -167,24 +167,17 @@ namespace DBInfo.MSBuild {
         IScriptOutputGenerator scriptOutputGen = (IScriptOutputGenerator)Activator.CreateInstance(scriptOutputGenClass);
         gen.ScriptOutputGen = scriptOutputGen;
 
-        if (OutputType == "database")
-          gen.OutputType = InputOutputType.Database;
-        else if (OutputType == "file") {
-          gen.OutputType = InputOutputType.File;
-          if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
-            throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
-          Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
-          if (scriptFileOutputGeneratorType == null)
-            throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
-          gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
-        } else
-          throw new Exception(String.Format("Invalid output type: {0}.", OutputType));                    
+        if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
+          throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
+        Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
+        if (scriptFileOutputGeneratorType == null)
+          throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
+        gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
       }
 
-      Database db = dbe.Extract(dataToExtract);
+      Database db = extractor.Extract(dataToExtract);
 
-      gen.OutputDir = OutputDir;
-      gen.OutputConnectionString = OutputConnectionString;
+      gen.OutputDir = OutputDir;      
       gen.GenerateOutput(db, dataToGenerateOutput);
       
       return true;

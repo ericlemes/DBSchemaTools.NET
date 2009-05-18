@@ -5,18 +5,10 @@ using System.Collections.Generic;
 
 namespace DBInfo.Core.Extractor {
   public interface IDatabaseExtractor {
-    InputOutputType InputType{
-      get;
-      set;
-    }
     string InputConnectionString{
       get;
       set;
-    }
-    string InputDir{
-      get;
-      set;
-    }
+    }    
     void Open();
     void Close();
     List<Table> GetTables();

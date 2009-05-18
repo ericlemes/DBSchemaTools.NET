@@ -19,12 +19,7 @@ namespace DBInfo.Core.OutputGenerators {
     IScriptOutputGenerator ScriptOutputGen{
       get;
       set;
-    }
-    
-    InputOutputType OutputType{
-      get;
-      set;
-    }
+    }   
     
     IScriptFileOutputGenerator ScriptFileOutputGenerator{
       get;
@@ -35,12 +30,7 @@ namespace DBInfo.Core.OutputGenerators {
       get;
       set;
     }
-    
-    string OutputConnectionString{
-      get;
-      set;
-    }
-    
+   
     void GenerateOutput(Database db, List<DBObjectType> dataToGenerateOutput);
   }
 }

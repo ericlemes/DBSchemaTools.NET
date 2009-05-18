@@ -8,10 +8,10 @@ using System.IO;
 using System.Collections.Generic;
 
 namespace DBInfo.Core.Extractor {
-  public enum InputOutputType{
+/*  public enum InputOutputType{
     File,
     Database
-  }
+  }*/
 
   public enum DBObjectType {
     All,
@@ -29,13 +29,11 @@ namespace DBInfo.Core.Extractor {
     Sequences    
   };
 
-  public class DatabaseExtractor {
-    private InputOutputType _InputType;
-    public InputOutputType InputType{
-      get { return _InputType;}
-      set { _InputType = value;}
+  public class DatabaseExtractor : IExtractor {
+    public ExtractorType Type{
+      get { return ExtractorType.Database; }
     }
-    
+      
     private string _InputConnectionString;
     public string InputConnectionString {
       get { return _InputConnectionString;}
@@ -53,6 +51,10 @@ namespace DBInfo.Core.Extractor {
       get { return _Extractor;}
       set {_Extractor = value;}
     }   
+    
+    public List<string> InputFiles{
+      get { return null;}
+    }
 
     public delegate void BeforeExtractDataHandler(DBObjectType objectType, string objectName);
     public event BeforeExtractDataHandler BeforeExtractData;
@@ -194,19 +196,13 @@ namespace DBInfo.Core.Extractor {
 
     public Database Extract(List<DBObjectType> dataToExtract) {
       Database db = new Database();      
-    
-      if (_InputType == InputOutputType.File && !Directory.Exists(_InputDir))
-        throw new Exception(String.Format("The input directory don't exists: {0}", _InputDir));
-
-      if (_InputType == InputOutputType.Database && String.IsNullOrEmpty(_InputConnectionString))
+          
+      if (String.IsNullOrEmpty(_InputConnectionString))
         throw new Exception(String.Format("The input connection string don't exists: {0}", _InputConnectionString));        
       
-      _Extractor.InputType = _InputType;
-      _Extractor.InputConnectionString = _InputConnectionString;
-      _Extractor.InputDir = _InputDir;
-      
-    
+      _Extractor.InputConnectionString = _InputConnectionString;         
       _Extractor.Open();
+      
       try {
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Tables)){
           ReadTables(db);

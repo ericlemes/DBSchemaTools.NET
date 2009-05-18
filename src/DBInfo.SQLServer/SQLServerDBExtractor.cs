@@ -7,24 +7,13 @@ using DBInfo.Core.Model;
 using System.Collections.Generic;
 
 namespace DBInfo.DBExtractors {
-  public class SQLServerDBExtractor : IDatabaseExtractor {
-    private InputOutputType _InputType;
-    public InputOutputType InputType {
-      get { return _InputType; }
-      set { _InputType = value; }
-    }
+  public class SQLServerDBExtractor : IDatabaseExtractor {    
 
     private string _InputConnectionString;
     public string InputConnectionString {
       get { return _InputConnectionString; }
       set { _InputConnectionString = value; }
-    }
-
-    private string _InputDir;
-    public string InputDir {
-      get { return _InputDir; }
-      set { _InputDir = value; }
-    }
+    }    
 
     public SqlConnection SqlConn;
 
@@ -33,8 +22,6 @@ namespace DBInfo.DBExtractors {
     }
 
     public void Open() {
-      if (_InputType == InputOutputType.File)
-        throw new Exception(String.Format("The class {0} don't support file extraction", this.GetType().FullName));
       SqlConn.ConnectionString = InputConnectionString;
       SqlConn.Open();
     }

@@ -81,11 +81,6 @@ namespace DBInfo.XMLDatabase {
       }
     }
 
-    public InputOutputType OutputType {
-      get { return InputOutputType.File;}
-      set { }
-    }
-
     public IScriptFileOutputGenerator ScriptFileOutputGenerator {
       get { 
         throw new NotImplementedException();
