@@ -164,15 +164,15 @@ namespace DBInfo.MSBuild {
       
         if (scriptOutputGenClass == null)
           throw new Exception(String.Format("Couldn't create instance for type {0}", _ScriptOutputGeneratorClass));
-        IScriptOutputGenerator scriptOutputGen = (IScriptOutputGenerator)Activator.CreateInstance(scriptOutputGenClass);
-        gen.ScriptOutputGen = scriptOutputGen;
+        IScriptOutputHandler scriptOutputGen = (IScriptOutputHandler)Activator.CreateInstance(scriptOutputGenClass);
+        ((IScriptOutputGenerator)gen).ScriptOutputGen = scriptOutputGen;
 
         if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
           throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
         Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
         if (scriptFileOutputGeneratorType == null)
           throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
-        gen.ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+        ((IScriptOutputGenerator)gen).ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
       }
 
       Database db = extractor.Extract(dataToExtract);

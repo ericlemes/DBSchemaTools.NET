@@ -51,6 +51,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DBInfo.CodeGen\DBInfo.CodeGen.csproj">
+      <Project>{E89BCB1E-3884-41D4-A009-59DD499419D9}</Project>
+      <Name>DBInfo.CodeGen</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DBInfo.Core\DBInfo.Core.csproj">
       <Project>{4C3C4618-A3D3-49F9-BD96-95054A36F511}</Project>
       <Name>DBInfo.Core</Name>

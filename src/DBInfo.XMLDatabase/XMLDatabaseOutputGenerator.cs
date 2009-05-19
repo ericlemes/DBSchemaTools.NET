@@ -71,24 +71,6 @@ namespace DBInfo.XMLDatabase {
     public GeneratorType Type {
       get { return GeneratorType.Generic; }
     }
-
-    public IScriptOutputGenerator ScriptOutputGen {
-      get {
-        throw new NotImplementedException();
-      }
-      set {
-        throw new NotImplementedException();
-      }
-    }
-
-    public IScriptFileOutputGenerator ScriptFileOutputGenerator {
-      get { 
-        throw new NotImplementedException();
-      }
-      set {
-        throw new NotImplementedException();
-      }
-    }
     
     private string _OutputDir;
 
@@ -133,46 +115,46 @@ namespace DBInfo.XMLDatabase {
       }                        
     }
     
-    private ColumnType getColumnType(M.Column.DBColumnType type){
-      if (type == M.Column.DBColumnType.DBBigInt)
+    private ColumnType getColumnType(M.DBColumnType type){
+      if (type == M.DBColumnType.DBBigInt)
         return ColumnType.BigInt;
-      else if (type == M.Column.DBColumnType.DBBinary)
+      else if (type == M.DBColumnType.DBBinary)
         return ColumnType.Binary;
-      else if (type == M.Column.DBColumnType.DBBit)
+      else if (type == M.DBColumnType.DBBit)
         return ColumnType.Bit;
-      else if (type == M.Column.DBColumnType.DBBlob)
+      else if (type == M.DBColumnType.DBBlob)
         return ColumnType.Blob;
-      else if (type == M.Column.DBColumnType.DBChar)
+      else if (type == M.DBColumnType.DBChar)
         return ColumnType.Char;
-      else if (type == M.Column.DBColumnType.DBDateTime)
+      else if (type == M.DBColumnType.DBDateTime)
         return ColumnType.DateTime;
-      else if (type == M.Column.DBColumnType.DBDecimal)
+      else if (type == M.DBColumnType.DBDecimal)
         return ColumnType.Decimal;
-      else if (type == M.Column.DBColumnType.DBFloat)
+      else if (type == M.DBColumnType.DBFloat)
         return ColumnType.Float;
-      else if (type == M.Column.DBColumnType.DBGUID)
+      else if (type == M.DBColumnType.DBGUID)
         return ColumnType.GUID;
-      else if (type == M.Column.DBColumnType.DBInteger)
+      else if (type == M.DBColumnType.DBInteger)
         return ColumnType.Integer;
-      else if (type == M.Column.DBColumnType.DBMemo)
+      else if (type == M.DBColumnType.DBMemo)
         return ColumnType.Memo;
-      else if (type == M.Column.DBColumnType.DBMoney)
+      else if (type == M.DBColumnType.DBMoney)
         return ColumnType.Money;
-      else if (type == M.Column.DBColumnType.DBNumeric)
+      else if (type == M.DBColumnType.DBNumeric)
         return ColumnType.Numeric;
-      else if (type == M.Column.DBColumnType.DBNVarchar)
+      else if (type == M.DBColumnType.DBNVarchar)
         return ColumnType.NVarchar;
-      else if (type == M.Column.DBColumnType.DBRowID)
+      else if (type == M.DBColumnType.DBRowID)
         return ColumnType.RowID;
-      else if (type == M.Column.DBColumnType.DBSmallDateTime)
+      else if (type == M.DBColumnType.DBSmallDateTime)
         return ColumnType.SmallDateTime;
-      else if (type == M.Column.DBColumnType.DBSmallInt)
+      else if (type == M.DBColumnType.DBSmallInt)
         return ColumnType.SmallInt;
-      else if (type == M.Column.DBColumnType.DBTimeStamp)
+      else if (type == M.DBColumnType.DBTimeStamp)
         return ColumnType.TimeStamp;
-      else if (type == M.Column.DBColumnType.DBTinyInt)
+      else if (type == M.DBColumnType.DBTinyInt)
         return ColumnType.TinyInt;
-      else if (type == M.Column.DBColumnType.DBVarchar)
+      else if (type == M.DBColumnType.DBVarchar)
         return ColumnType.Varchar;
       else 
         throw new Exception(String.Format("Type not supported by XMLDatabase: {0}", type.ToString()));

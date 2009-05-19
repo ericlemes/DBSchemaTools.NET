@@ -85,47 +85,47 @@ namespace DBInfo.XMLDatabase {
       }
     }
     
-    private DBInfo.Core.Model.Column.DBColumnType GetDBColumnType(ColumnType ct){
+    private DBInfo.Core.Model.DBColumnType GetDBColumnType(ColumnType ct){
       if (ct == ColumnType.BigInt)
-        return DBInfo.Core.Model.Column.DBColumnType.DBBigInt;
+        return DBInfo.Core.Model.DBColumnType.DBBigInt;
       else if (ct == ColumnType.Binary)
-        return DBInfo.Core.Model.Column.DBColumnType.DBBinary;
+        return DBInfo.Core.Model.DBColumnType.DBBinary;
       else if (ct == ColumnType.Bit)
-        return DBInfo.Core.Model.Column.DBColumnType.DBBit;
+        return DBInfo.Core.Model.DBColumnType.DBBit;
       else if (ct == ColumnType.Blob)
-        return DBInfo.Core.Model.Column.DBColumnType.DBBlob;
+        return DBInfo.Core.Model.DBColumnType.DBBlob;
       else if (ct == ColumnType.Char)
-        return DBInfo.Core.Model.Column.DBColumnType.DBChar;
+        return DBInfo.Core.Model.DBColumnType.DBChar;
       else if (ct == ColumnType.DateTime)
-        return DBInfo.Core.Model.Column.DBColumnType.DBDateTime;
+        return DBInfo.Core.Model.DBColumnType.DBDateTime;
       else if (ct == ColumnType.Decimal)
-        return DBInfo.Core.Model.Column.DBColumnType.DBDecimal;
+        return DBInfo.Core.Model.DBColumnType.DBDecimal;
       else if (ct == ColumnType.Float)
-        return DBInfo.Core.Model.Column.DBColumnType.DBFloat;
+        return DBInfo.Core.Model.DBColumnType.DBFloat;
       else if (ct == ColumnType.GUID)
-        return DBInfo.Core.Model.Column.DBColumnType.DBGUID;
+        return DBInfo.Core.Model.DBColumnType.DBGUID;
       else if (ct == ColumnType.Integer)
-        return DBInfo.Core.Model.Column.DBColumnType.DBInteger;
+        return DBInfo.Core.Model.DBColumnType.DBInteger;
       else if (ct == ColumnType.Memo)
-        return DBInfo.Core.Model.Column.DBColumnType.DBMemo;
+        return DBInfo.Core.Model.DBColumnType.DBMemo;
       else if (ct == ColumnType.Money)
-        return DBInfo.Core.Model.Column.DBColumnType.DBMoney;
+        return DBInfo.Core.Model.DBColumnType.DBMoney;
       else if (ct == ColumnType.Numeric)
-        return DBInfo.Core.Model.Column.DBColumnType.DBNumeric;
+        return DBInfo.Core.Model.DBColumnType.DBNumeric;
       else if (ct == ColumnType.NVarchar)
-        return DBInfo.Core.Model.Column.DBColumnType.DBNVarchar;
+        return DBInfo.Core.Model.DBColumnType.DBNVarchar;
       else if (ct == ColumnType.RowID)
-        return DBInfo.Core.Model.Column.DBColumnType.DBRowID;
+        return DBInfo.Core.Model.DBColumnType.DBRowID;
       else if (ct == ColumnType.SmallDateTime)
-        return DBInfo.Core.Model.Column.DBColumnType.DBSmallDateTime;
+        return DBInfo.Core.Model.DBColumnType.DBSmallDateTime;
       else if (ct == ColumnType.SmallInt)
-        return DBInfo.Core.Model.Column.DBColumnType.DBSmallInt;
+        return DBInfo.Core.Model.DBColumnType.DBSmallInt;
       else if (ct == ColumnType.TimeStamp)
-        return DBInfo.Core.Model.Column.DBColumnType.DBTimeStamp;
+        return DBInfo.Core.Model.DBColumnType.DBTimeStamp;
       else if (ct == ColumnType.TinyInt)
-        return DBInfo.Core.Model.Column.DBColumnType.DBTinyInt;
+        return DBInfo.Core.Model.DBColumnType.DBTinyInt;
       else if (ct == ColumnType.Varchar)
-        return DBInfo.Core.Model.Column.DBColumnType.DBVarchar;
+        return DBInfo.Core.Model.DBColumnType.DBVarchar;
       else
         throw new Exception(String.Format("Type not supported: {0}", ct.ToString()));      
     }

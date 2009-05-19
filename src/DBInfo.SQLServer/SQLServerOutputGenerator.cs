@@ -6,7 +6,7 @@ using DBInfo.Core.OutputGenerators;
 using System.Data.SqlClient;
 
 namespace DBInfo.OutputGenerators {
-  public class SQLServerOutputGenerator : IScriptOutputGenerator {
+  public class SQLServerOutputGenerator : IScriptOutputHandler {
 
     public string ScriptTerminator {
       get { return "go"; }
@@ -24,25 +24,25 @@ namespace DBInfo.OutputGenerators {
     }
     private string GetSQLType(Column Coluna) {
       switch (Coluna.Type) {
-        case Column.DBColumnType.DBInteger: return "int";
-        case Column.DBColumnType.DBVarchar: return "varchar(" + Coluna.Size.ToString() + ")";
-        case Column.DBColumnType.DBChar: return "char(" + Coluna.Size.ToString() + ")";
-        case Column.DBColumnType.DBBlob: return "image";
-        case Column.DBColumnType.DBDecimal: return "decimal(" + Coluna.Precision.ToString() + "," + Coluna.Scale.ToString() + ")";
-        case Column.DBColumnType.DBFloat: return "float";
-        case Column.DBColumnType.DBMemo: return "text";
-        case Column.DBColumnType.DBDateTime: return "datetime";
-        case Column.DBColumnType.DBBit: return "bit";
-        case Column.DBColumnType.DBSmallDateTime: return "smalldatetime";
-        case Column.DBColumnType.DBMoney: return "money";
-        case Column.DBColumnType.DBSmallInt: return "smallint";
-        case Column.DBColumnType.DBNumeric: return "numeric(" + Coluna.Precision.ToString() + "," + Coluna.Scale.ToString() + ")";
-        case Column.DBColumnType.DBGUID: return "uniqueidentifier";
-        case Column.DBColumnType.DBBigInt: return "bigint";
-        case Column.DBColumnType.DBTinyInt: return "tinyint";
-        case Column.DBColumnType.DBBinary: return "binary";
-        case Column.DBColumnType.DBNVarchar: return "nvarchar(" + Coluna.Size.ToString() + ")";
-        case Column.DBColumnType.DBTimeStamp: return "timestamp";
+        case DBColumnType.DBInteger: return "int";
+        case DBColumnType.DBVarchar: return "varchar(" + Coluna.Size.ToString() + ")";
+        case DBColumnType.DBChar: return "char(" + Coluna.Size.ToString() + ")";
+        case DBColumnType.DBBlob: return "image";
+        case DBColumnType.DBDecimal: return "decimal(" + Coluna.Precision.ToString() + "," + Coluna.Scale.ToString() + ")";
+        case DBColumnType.DBFloat: return "float";
+        case DBColumnType.DBMemo: return "text";
+        case DBColumnType.DBDateTime: return "datetime";
+        case DBColumnType.DBBit: return "bit";
+        case DBColumnType.DBSmallDateTime: return "smalldatetime";
+        case DBColumnType.DBMoney: return "money";
+        case DBColumnType.DBSmallInt: return "smallint";
+        case DBColumnType.DBNumeric: return "numeric(" + Coluna.Precision.ToString() + "," + Coluna.Scale.ToString() + ")";
+        case DBColumnType.DBGUID: return "uniqueidentifier";
+        case DBColumnType.DBBigInt: return "bigint";
+        case DBColumnType.DBTinyInt: return "tinyint";
+        case DBColumnType.DBBinary: return "binary";
+        case DBColumnType.DBNVarchar: return "nvarchar(" + Coluna.Size.ToString() + ")";
+        case DBColumnType.DBTimeStamp: return "timestamp";
         default: throw new Exception("Tipo de dados não suportado " + Coluna.Type.ToString());
       }
     }
@@ -164,7 +164,7 @@ namespace DBInfo.OutputGenerators {
       return TmpScript;
     }
 
-    private string PegarValorPara(Column.DBColumnType ADBColumnType, object AValue) {
+    private string PegarValorPara(DBColumnType ADBColumnType, object AValue) {
       System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
       if (AValue is DBNull) {
         return "null";

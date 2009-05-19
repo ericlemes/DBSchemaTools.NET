@@ -15,7 +15,7 @@ namespace DBInfo.Core.OutputGenerators {
       set { _ScriptName = value;}
     }
 
-    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputGenerator OutputGenerator) {
+    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputHandler OutputGenerator) {
       FileStream fs = new FileStream(OutputDir + "\\" + ScriptName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       foreach (Table t in db.Tables) {
@@ -56,7 +56,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();
     }
 
-    private void WriteConstraints(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+    private void WriteConstraints(StreamWriter sw, Table t, IScriptOutputHandler OutputGen) {
       sw.WriteLine(t.PrimaryKeyScript);
       sw.WriteLine(OutputGen.ScriptTerminator);
       sw.WriteLine("");
@@ -67,7 +67,7 @@ namespace DBInfo.Core.OutputGenerators {
       }      
     }    
 
-    private void WriteFKs(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+    private void WriteFKs(StreamWriter sw, Table t, IScriptOutputHandler OutputGen) {
       foreach (ForeignKey fk in t.ForeignKeys) {
         sw.WriteLine(fk.Script);
         sw.WriteLine(OutputGen.ScriptTerminator);
@@ -75,7 +75,7 @@ namespace DBInfo.Core.OutputGenerators {
       }   
     }
 
-    private void WriteIndexes(StreamWriter sw, Table t, IScriptOutputGenerator OutputGen) {
+    private void WriteIndexes(StreamWriter sw, Table t, IScriptOutputHandler OutputGen) {
       foreach (Index i in t.Indexes) {
         sw.WriteLine(i.Script);
         sw.WriteLine(OutputGen.ScriptTerminator);
@@ -83,24 +83,24 @@ namespace DBInfo.Core.OutputGenerators {
       }
     }
 
-    private void WriteFunction(StreamWriter sw, Function f, IScriptOutputGenerator OutputGen) {
+    private void WriteFunction(StreamWriter sw, Function f, IScriptOutputHandler OutputGen) {
       sw.WriteLine(f.CreateFunctionScript);
       sw.WriteLine(OutputGen.ScriptTerminator);
       sw.WriteLine("");      
     }
 
-    private void WriteProcedure(StreamWriter sw, Procedure p, IScriptOutputGenerator OutputGen) {
+    private void WriteProcedure(StreamWriter sw, Procedure p, IScriptOutputHandler OutputGen) {
       sw.WriteLine(p.CreateProcedureScript);
       sw.WriteLine(OutputGen.ScriptTerminator);
       sw.WriteLine("");
     }
 
-    private void WriteView(StreamWriter sw, View v, IScriptOutputGenerator OutputGen) {
+    private void WriteView(StreamWriter sw, View v, IScriptOutputHandler OutputGen) {
       sw.WriteLine(v.CreateViewScript);
       sw.WriteLine(OutputGen.ScriptTerminator);      
     }
 
-    private void WriteTrigger(StreamWriter sw, Trigger t, IScriptOutputGenerator OutputGen) {
+    private void WriteTrigger(StreamWriter sw, Trigger t, IScriptOutputHandler OutputGen) {
       sw.WriteLine(t.CreateTriggerScript);
       sw.WriteLine(OutputGen.ScriptTerminator);      
     }

@@ -14,17 +14,7 @@ namespace DBInfo.Core.OutputGenerators {
   public interface IOutputGenerator {
     GeneratorType Type{
       get;
-    }
-    
-    IScriptOutputGenerator ScriptOutputGen{
-      get;
-      set;
     }   
-    
-    IScriptFileOutputGenerator ScriptFileOutputGenerator{
-      get;
-      set;
-    }
     
     string OutputDir{
       get;

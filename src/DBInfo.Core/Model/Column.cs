@@ -1,29 +1,30 @@
 using System;
 
 namespace DBInfo.Core.Model {
+  public enum DBColumnType {
+    DBInteger = 1,
+    DBVarchar = 2,
+    DBChar = 3,
+    DBDecimal = 4,
+    DBFloat = 5,
+    DBMemo = 6,
+    DBBlob = 7,
+    DBDateTime = 8,
+    DBBit = 9,
+    DBSmallDateTime = 10,
+    DBMoney = 11,
+    DBSmallInt = 12,
+    DBNumeric = 13,
+    DBGUID = 14,
+    DBBigInt = 15,
+    DBTinyInt = 16,
+    DBBinary = 17,
+    DBNVarchar = 18,
+    DBRowID = 19, //RowID Oracle, RecID Progress
+    DBTimeStamp = 20
+  }
+
   public class Column {
-    public enum DBColumnType {
-      DBInteger = 1,
-      DBVarchar = 2,
-      DBChar = 3,
-      DBDecimal = 4,
-      DBFloat = 5,
-      DBMemo = 6,
-      DBBlob = 7,
-      DBDateTime = 8,
-      DBBit = 9,
-      DBSmallDateTime = 10,
-      DBMoney = 11,
-      DBSmallInt = 12,
-      DBNumeric = 13,
-      DBGUID = 14,
-      DBBigInt = 15,
-      DBTinyInt = 16,
-      DBBinary = 17,
-      DBNVarchar = 18,
-      DBRowID = 19, //RowID Oracle, RecID Progress
-      DBTimeStamp = 20
-    }
 
     private Table _Table;
     public Table Table{

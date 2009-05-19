@@ -126,7 +126,7 @@ namespace DBInfo.DBExtractors {
         Column c = new Column();
         c.Table = table;
         c.Name = (string)row[0];
-        c.Type = (Column.DBColumnType)Convert.ToInt32(row[1]);
+        c.Type = (DBColumnType)Convert.ToInt32(row[1]);
         if (((int)c.Type) == -1)
           throw new Exception("Tipo de dados não suportado para a coluna " + table.TableName + "." + c.Name);
         c.Size = Convert.ToInt32(row[2]);

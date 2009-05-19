@@ -72,7 +72,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();    
     }
 
-    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputGenerator OutputGenerator) {
+    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputHandler OutputGenerator) {
       string FullTableDir = OutputDir + "\\" + TablesDir;
       Directory.CreateDirectory(FullTableDir);
       
@@ -127,7 +127,7 @@ namespace DBInfo.Core.OutputGenerators {
       }
     }
     
-    private void WriteFKs(string FileName, Table t, IScriptOutputGenerator OutputGen){
+    private void WriteFKs(string FileName, Table t, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       foreach(ForeignKey fk in t.ForeignKeys){
@@ -140,7 +140,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();
     }
     
-    private void WriteConstraints(string FileName, Table t, IScriptOutputGenerator OutputGen){
+    private void WriteConstraints(string FileName, Table t, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       sw.WriteLine(t.PrimaryKeyScript);
@@ -156,7 +156,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();      
     }
     
-    private void WriteFunction(string FileName, Function f, IScriptOutputGenerator OutputGen){
+    private void WriteFunction(string FileName, Function f, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);     
       sw.WriteLine(f.CreateFunctionScript);
@@ -167,7 +167,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();
     }
     
-    private void WriteProcedure(string FileName, Procedure p, IScriptOutputGenerator OutputGen){
+    private void WriteProcedure(string FileName, Procedure p, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       sw.WriteLine(p.CreateProcedureScript);
@@ -178,7 +178,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();
     }
     
-    private void WriteIndexes(string FileName, Table t, IScriptOutputGenerator OutputGen){
+    private void WriteIndexes(string FileName, Table t, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       foreach (Index i in t.Indexes){
@@ -191,7 +191,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();      
     }
     
-    private void WriteTrigger(string FileName, Trigger t, IScriptOutputGenerator OutputGen){
+    private void WriteTrigger(string FileName, Trigger t, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
       sw.WriteLine(t.CreateTriggerScript);
@@ -201,7 +201,7 @@ namespace DBInfo.Core.OutputGenerators {
       fs.Close();
     }
     
-    private void WriteView(string FileName, View v, IScriptOutputGenerator OutputGen){
+    private void WriteView(string FileName, View v, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);      
       sw.WriteLine(v.CreateViewScript);

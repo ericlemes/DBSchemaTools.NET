@@ -7,7 +7,7 @@ using DBInfo.Core.Model;
 using System.Collections.Generic;
 
 namespace DBInfo.Core.OutputGenerators {
-  public class ScriptOutputGenerator : IOutputGenerator {
+  public class ScriptOutputGenerator : IScriptOutputGenerator {
 
     public delegate void BeforeGenerateScriptHandler(DBObjectType objectType, string objectName);
     public event BeforeGenerateScriptHandler BeforeGenerateScript;
@@ -21,8 +21,8 @@ namespace DBInfo.Core.OutputGenerators {
       get { return GeneratorType.Script;}
     }
 
-    private IScriptOutputGenerator _ScriptOutputGen;
-    public IScriptOutputGenerator ScriptOutputGen {
+    private IScriptOutputHandler _ScriptOutputGen;
+    public IScriptOutputHandler ScriptOutputGen {
       get { return _ScriptOutputGen; }
       set { _ScriptOutputGen = value; }
     }        
