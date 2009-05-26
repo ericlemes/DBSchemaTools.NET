@@ -13,7 +13,7 @@
 				<xsd:sequence>
 					<xsd:element name="TableName" type="xsd:string"/>
 					<xsd:element name="Columns" type="db:ArrayOfColumn"/>
-					<xsd:element name="HasIdentity" type="xsd:boolean" minOccurs="0"/>
+					<xsd:element name="HasIdentity" type="db:YesNo" />
 					<xsd:element name="IdentitySeed" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="IdentityIncrement" type="xsd:integer" minOccurs="0"/>
 				</xsd:sequence>
@@ -56,8 +56,8 @@
 			<xsd:element name="Size" type="xsd:integer" minOccurs="0"/>
 			<xsd:element name="Precision" type="xsd:integer" minOccurs="0"/>
 			<xsd:element name="Scale" type="xsd:integer" minOccurs="0"/>
-			<xsd:element name="Nullable" type="xsd:boolean" minOccurs="0"/>
-			<xsd:element name="Identity" type="xsd:boolean" minOccurs="0"/>
+			<xsd:element name="Nullable" type="db:YesNo" />
+			<xsd:element name="IdentityColumn" type="db:YesNo" />
 			<xsd:element name="DefaultValue" type="xsd:string" minOccurs="0"/>
 			<xsd:element name="ConstraintDefaultName" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
@@ -70,8 +70,8 @@
 					<xsd:element name="ForeignKeyName" type="xsd:string"/>
 					<xsd:element name="RefTableName" type="xsd:string"/>
 					<xsd:element name="Columns" type="db:ArrayOfForeignKeyColumn"/>
-					<xsd:element name="DeleteCascade" type="xsd:boolean" minOccurs="0"/>
-					<xsd:element name="UpdateCascade" type="xsd:boolean" minOccurs="0"/>
+					<xsd:element name="DeleteCascade" type="db:YesNo" />
+					<xsd:element name="UpdateCascade" type="db:YesNo" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -98,8 +98,8 @@
 				<xsd:sequence>
 					<xsd:element name="TableName" type="xsd:string"/>
 					<xsd:element name="IndexName" type="xsd:string"/>
-					<xsd:element name="Unique" type="xsd:boolean" minOccurs="0"/>
-					<xsd:element name="Clustered" type="xsd:boolean" minOccurs="0"/>
+					<xsd:element name="Unique" type="db:YesNo" />
+					<xsd:element name="Clustered" type="db:YesNo" />
 					<xsd:element name="Columns" type="db:ArrayOfIndexColumn"/>
 				</xsd:sequence>
 			</xsd:extension>
@@ -184,7 +184,7 @@
 					<xsd:element name="MinValue" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="MaxValue" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="Increment" type="xsd:integer"/>
-					<xsd:element name="CycleOnLimit" type="xsd:boolean" minOccurs="0"/>
+					<xsd:element name="CycleOnLimit" type="db:YesNo" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -199,4 +199,10 @@
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
+	<xsd:simpleType name="YesNo">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Yes"/>
+			<xsd:enumeration value="No"/>
+		</xsd:restriction>
+	</xsd:simpleType>	
 </xsd:schema>

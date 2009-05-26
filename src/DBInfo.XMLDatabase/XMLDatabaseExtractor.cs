@@ -133,7 +133,7 @@ namespace DBInfo.XMLDatabase {
     private DBInfo.Core.Model.Table ParseCreateTableStatement(CreateTable ct){
       DBInfo.Core.Model.Table t = new DBInfo.Core.Model.Table();
       t.TableName = ct.TableName;
-      t.HasIdentity = ct.HasIdentity;
+      t.HasIdentity = ct.HasIdentity == YesNo.Yes;
       t.IdentitySeed = Convert.ToInt32(ct.IdentitySeed);
       t.IdentityIncrement = Convert.ToInt32(ct.IdentityIncrement);
       if (ct.Columns != null){
@@ -144,8 +144,8 @@ namespace DBInfo.XMLDatabase {
           c.Size = Convert.ToInt32(ctc.Size);
           c.Precision = Convert.ToInt32(ctc.Precision);
           c.Scale = Convert.ToInt32(ctc.Scale);
-          c.IsNull = ctc.Nullable;
-          c.IdentityColumn = ctc.Identity;
+          c.IsNull = ctc.Nullable == YesNo.Yes; 
+          c.IdentityColumn = ctc.IdentityColumn == YesNo.Yes;
           c.DefaultValue = ctc.DefaultValue;
           c.ConstraintDefaultName = ctc.ConstraintDefaultName;
           t.Columns.Add(c);
@@ -162,8 +162,8 @@ namespace DBInfo.XMLDatabase {
       DBInfo.Core.Model.ForeignKey fk = new DBInfo.Core.Model.ForeignKey();
       fk.ForeignKeyName = xmlFK.ForeignKeyName;
       fk.RefTableName = xmlFK.RefTableName;
-      fk.DeleteCascade = xmlFK.DeleteCascade;
-      fk.UpdateCascade = xmlFK.UpdateCascade;
+      fk.DeleteCascade = xmlFK.DeleteCascade == YesNo.Yes;
+      fk.UpdateCascade = xmlFK.UpdateCascade == YesNo.Yes;
       
       if (xmlFK.Columns != null){
         foreach(ForeignKeyColumn xmlFKCol in xmlFK.Columns){
@@ -191,8 +191,8 @@ namespace DBInfo.XMLDatabase {
       
       DBInfo.Core.Model.Index i = new DBInfo.Core.Model.Index();
       i.IndexName = xmlIndex.IndexName;
-      i.Unique = xmlIndex.Unique;
-      i.IsClustered = xmlIndex.Clustered;
+      i.Unique = xmlIndex.Unique == YesNo.Yes;
+      i.IsClustered = xmlIndex.Clustered == YesNo.Yes;
       
       if (xmlIndex.Columns != null){
         foreach(IndexColumn xmlIndexCol in xmlIndex.Columns){
@@ -249,6 +249,7 @@ namespace DBInfo.XMLDatabase {
         DBInfo.Core.Model.Column col = t.FindColumn(c);
         if (col == null)
           throw new Exception(String.Format("Couldn't find column {0} when creating primary key {1}", c, xmlPrimaryKey.PrimaryKeyName));
+        col.IsPK = true;
         t.PrimaryKeyColumns.Add(col);
       }
     }
@@ -267,7 +268,7 @@ namespace DBInfo.XMLDatabase {
       s.MinValue = Convert.ToInt32(xmlSequence.MinValue);
       s.MaxValue = Convert.ToInt32(xmlSequence.MaxValue);
       s.Increment = Convert.ToInt32(xmlSequence.Increment);
-      s.CycleOnLimit = xmlSequence.CycleOnLimit;
+      s.CycleOnLimit = xmlSequence.CycleOnLimit == YesNo.Yes;
       
       return s;
     }

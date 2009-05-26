@@ -154,13 +154,9 @@ namespace DBInfo.XMLDatabase {
         
         private string scaleField;
         
-        private bool nullableField;
+        private YesNo nullableField;
         
-        private bool nullableFieldSpecified;
-        
-        private bool identityField;
-        
-        private bool identityFieldSpecified;
+        private YesNo identityColumnField;
         
         private string defaultValueField;
         
@@ -220,7 +216,7 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        public bool Nullable {
+        public YesNo Nullable {
             get {
                 return this.nullableField;
             }
@@ -230,34 +226,12 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool NullableSpecified {
+        public YesNo IdentityColumn {
             get {
-                return this.nullableFieldSpecified;
+                return this.identityColumnField;
             }
             set {
-                this.nullableFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        public bool Identity {
-            get {
-                return this.identityField;
-            }
-            set {
-                this.identityField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool IdentitySpecified {
-            get {
-                return this.identityFieldSpecified;
-            }
-            set {
-                this.identityFieldSpecified = value;
+                this.identityColumnField = value;
             }
         }
         
@@ -352,6 +326,19 @@ namespace DBInfo.XMLDatabase {
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public enum YesNo {
+        
+        /// <remarks/>
+        Yes,
+        
+        /// <remarks/>
+        No,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
@@ -400,9 +387,7 @@ namespace DBInfo.XMLDatabase {
         
         private string incrementField;
         
-        private bool cycleOnLimitField;
-        
-        private bool cycleOnLimitFieldSpecified;
+        private YesNo cycleOnLimitField;
         
         /// <remarks/>
         public string Name {
@@ -459,23 +444,12 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        public bool CycleOnLimit {
+        public YesNo CycleOnLimit {
             get {
                 return this.cycleOnLimitField;
             }
             set {
                 this.cycleOnLimitField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool CycleOnLimitSpecified {
-            get {
-                return this.cycleOnLimitFieldSpecified;
-            }
-            set {
-                this.cycleOnLimitFieldSpecified = value;
             }
         }
     }
@@ -694,13 +668,9 @@ namespace DBInfo.XMLDatabase {
         
         private string indexNameField;
         
-        private bool uniqueField;
+        private YesNo uniqueField;
         
-        private bool uniqueFieldSpecified;
-        
-        private bool clusteredField;
-        
-        private bool clusteredFieldSpecified;
+        private YesNo clusteredField;
         
         private IndexColumn[] columnsField;
         
@@ -725,7 +695,7 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        public bool Unique {
+        public YesNo Unique {
             get {
                 return this.uniqueField;
             }
@@ -735,34 +705,12 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool UniqueSpecified {
-            get {
-                return this.uniqueFieldSpecified;
-            }
-            set {
-                this.uniqueFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        public bool Clustered {
+        public YesNo Clustered {
             get {
                 return this.clusteredField;
             }
             set {
                 this.clusteredField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ClusteredSpecified {
-            get {
-                return this.clusteredFieldSpecified;
-            }
-            set {
-                this.clusteredFieldSpecified = value;
             }
         }
         
@@ -794,13 +742,9 @@ namespace DBInfo.XMLDatabase {
         
         private ForeignKeyColumn[] columnsField;
         
-        private bool deleteCascadeField;
+        private YesNo deleteCascadeField;
         
-        private bool deleteCascadeFieldSpecified;
-        
-        private bool updateCascadeField;
-        
-        private bool updateCascadeFieldSpecified;
+        private YesNo updateCascadeField;
         
         /// <remarks/>
         public string TableName {
@@ -844,7 +788,7 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        public bool DeleteCascade {
+        public YesNo DeleteCascade {
             get {
                 return this.deleteCascadeField;
             }
@@ -854,34 +798,12 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool DeleteCascadeSpecified {
-            get {
-                return this.deleteCascadeFieldSpecified;
-            }
-            set {
-                this.deleteCascadeFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        public bool UpdateCascade {
+        public YesNo UpdateCascade {
             get {
                 return this.updateCascadeField;
             }
             set {
                 this.updateCascadeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool UpdateCascadeSpecified {
-            get {
-                return this.updateCascadeFieldSpecified;
-            }
-            set {
-                this.updateCascadeFieldSpecified = value;
             }
         }
     }
@@ -898,9 +820,7 @@ namespace DBInfo.XMLDatabase {
         
         private Column[] columnsField;
         
-        private bool hasIdentityField;
-        
-        private bool hasIdentityFieldSpecified;
+        private YesNo hasIdentityField;
         
         private string identitySeedField;
         
@@ -928,23 +848,12 @@ namespace DBInfo.XMLDatabase {
         }
         
         /// <remarks/>
-        public bool HasIdentity {
+        public YesNo HasIdentity {
             get {
                 return this.hasIdentityField;
             }
             set {
                 this.hasIdentityField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool HasIdentitySpecified {
-            get {
-                return this.hasIdentityFieldSpecified;
-            }
-            set {
-                this.hasIdentityFieldSpecified = value;
             }
         }
         

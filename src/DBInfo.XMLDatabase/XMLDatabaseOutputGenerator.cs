@@ -167,7 +167,7 @@ namespace DBInfo.XMLDatabase {
       foreach (DBInfo.Core.Model.Table t in db.Tables) {
         DBInfo.XMLDatabase.CreateTable xmlTable = new DBInfo.XMLDatabase.CreateTable();
         xmlTable.TableName = t.TableName;
-        xmlTable.HasIdentity = t.HasIdentity;
+        xmlTable.HasIdentity = t.HasIdentity ? YesNo.Yes : YesNo.No;
         xmlTable.IdentitySeed = t.IdentitySeed.ToString();
         xmlTable.IdentityIncrement = t.IdentityIncrement.ToString();
         xmlTable.Columns = new Column[t.Columns.Count];
@@ -179,8 +179,8 @@ namespace DBInfo.XMLDatabase {
           xmlCol.Size = c.Size.ToString();
           xmlCol.Precision = c.Precision.ToString();
           xmlCol.Scale = c.Scale.ToString();
-          xmlCol.Nullable = c.IsNull;
-          xmlCol.Identity = c.IdentityColumn;
+          xmlCol.Nullable = c.IsNull ? YesNo.Yes : YesNo.No;
+          xmlCol.IdentityColumn = c.IdentityColumn ? YesNo.Yes : YesNo.No;
           xmlCol.DefaultValue = c.DefaultValue;
           xmlCol.ConstraintDefaultName = c.ConstraintDefaultName;
 
@@ -237,8 +237,8 @@ namespace DBInfo.XMLDatabase {
           xmlFK.TableName = t.TableName;
           xmlFK.ForeignKeyName = fk.ForeignKeyName;
           xmlFK.RefTableName = fk.RefTableName;
-          xmlFK.DeleteCascade = fk.DeleteCascade;
-          xmlFK.UpdateCascade = fk.UpdateCascade;
+          xmlFK.DeleteCascade = fk.DeleteCascade ? YesNo.Yes : YesNo.No;
+          xmlFK.UpdateCascade = fk.UpdateCascade ? YesNo.Yes : YesNo.No;
           xmlFK.Columns = new ForeignKeyColumn[fk.Columns.Count];
           foreach(DBInfo.Core.Model.ForeignKeyColumn c in fk.Columns){
             ForeignKeyColumn xmlFKCol = new ForeignKeyColumn();
@@ -265,8 +265,8 @@ namespace DBInfo.XMLDatabase {
           CreateIndex xmlIdx = new CreateIndex();
           xmlIdx.TableName = t.TableName;
           xmlIdx.IndexName = i.IndexName;
-          xmlIdx.Unique = i.Unique;
-          xmlIdx.Clustered = i.IsClustered;
+          xmlIdx.Unique = i.Unique ? YesNo.Yes : YesNo.No;
+          xmlIdx.Clustered = i.IsClustered ? YesNo.Yes : YesNo.No;
           xmlIdx.Columns = new IndexColumn[i.Columns.Count];
           
           foreach(DBInfo.Core.Model.IndexColumn icol in i.Columns){
@@ -345,7 +345,7 @@ namespace DBInfo.XMLDatabase {
         xmlSequence.MinValue = s.MinValue.ToString();
         xmlSequence.MaxValue = s.MaxValue.ToString();
         xmlSequence.Increment = s.Increment.ToString();
-        xmlSequence.CycleOnLimit = s.CycleOnLimit;
+        xmlSequence.CycleOnLimit = s.CycleOnLimit ? YesNo.Yes : YesNo.No;
         
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];

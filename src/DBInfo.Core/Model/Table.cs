@@ -116,6 +116,14 @@ namespace DBInfo.Core.Model {
       }
       return null;
     }
+    
+    public string GetIdentityColumn(){
+      foreach(Column c in this.Columns){
+        if (c.IdentityColumn)
+          return c.Name;
+      }
+      return "";
+    }
 
   }
 }
