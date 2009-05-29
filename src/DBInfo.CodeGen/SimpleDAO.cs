@@ -56,6 +56,12 @@ namespace DBInfo.CodeGen {
       get { return _DAONamespace;}
       set { _DAONamespace = value;}
     }
+    
+    private string _BlobStreamClassSuffix = "BlobStream";
+    public string BlobStreamClassSuffix{
+      get { return _BlobStreamClassSuffix;}
+      set {_BlobStreamClassSuffix = value;}
+    }
 
     public void GenerateOutput(Database db, List<DBObjectType> dataToGenerateOutput) {      
       foreach(Table t in db.Tables){
@@ -166,10 +172,26 @@ namespace DBInfo.CodeGen {
       }
       return tmp;
     }
+    
+    private void GenerateIndexNames(Dictionary<Index, string> IndexNames, List<Index> indexes){
+      foreach(Index i in indexes){
+        string indexName = "";
+        foreach(IndexColumn ic in i.Columns){
+          if (indexName == "")
+            indexName += ic.Column.Name;
+          else
+            indexName += "_" + ic.Column.Name;
+          if (ic.Order == IndexColumn.EnumOrder.Descending)
+            indexName += "Desc";
+        }
+        IndexNames.Add(i, indexName);
+      }
+    }
 
     private void GenerateDatabaseDAO(Table t) {
       CodeNamespace codeNS = new CodeNamespace(_Namespace + "." + DAONamespace);
       codeNS.Imports.Add(new CodeNamespaceImport(_VONamespace));
+      codeNS.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
                                     
       CodeTypeDeclaration daoClass = new CodeTypeDeclaration(t.TableName + _DAOClassSuffix);
       codeNS.Types.Add(daoClass);
@@ -177,12 +199,25 @@ namespace DBInfo.CodeGen {
             
       CodeMemberField asterField = new CodeMemberField(new CodeTypeReference(typeof(string)), "Aster");            
       asterField.Attributes = MemberAttributes.Public;
-      asterField.Attributes &= MemberAttributes.Static;                  
+      asterField.Attributes |= MemberAttributes.Static;                        
       asterField.InitExpression = new CodePrimitiveExpression(GetAster(t, "", true, true));
       daoClass.Members.Add(asterField);
 
       daoClass.Members.Add(GenerateLoadMethod(t));
       daoClass.Members.Add(GenerateInsertMethod(t));
+      daoClass.Members.Add(GenerateUpdateMethod(t));
+      daoClass.Members.Add(GenerateDeleteMethod(t));
+      Dictionary<Index, string> IndexNames = new Dictionary<Index, string>();
+      GenerateIndexNames(IndexNames, t.Indexes);
+      foreach(Index i in t.Indexes){        
+        daoClass.Members.Add(GenerateLoadByIndex(t, i, IndexNames));
+      }
+      
+      foreach(Column c in t.Columns){
+        if (!IsStreamedType(c.Type))
+          continue;
+        codeNS.Types.Add(GenerateBlobStreamClass(t, c));
+      }
 
       CSharpCodeProvider csharp = new CSharpCodeProvider();
 
@@ -287,6 +322,25 @@ namespace DBInfo.CodeGen {
       return command;
     }
     
+    private void CreateSqlParametersPrimaryKey(CodeStatementCollection statementCollection, Table t){
+      int ParamCount = 1;
+      foreach (Column c in t.PrimaryKeyColumns) {
+        CreateSqlParameter(c, "pkParm" + ParamCount.ToString(), statementCollection, new CodeVariableReferenceExpression(c.Name));
+        CodeParameterDeclarationExpression param = new CodeParameterDeclarationExpression(
+          GetTypeFromColumnType(c.Type),
+          c.Name);
+        statementCollection.Add(param);
+      }
+    }
+
+    private void AddPrimaryKeyParams(CodeMemberMethod method, Table t) {
+      foreach (Column c in t.PrimaryKeyColumns) {
+        CodeParameterDeclarationExpression param = new CodeParameterDeclarationExpression(
+          GetTypeFromColumnType(c.Type),
+          c.Name);
+        method.Parameters.Add(param);
+      }
+    }    
     
     private CodeMemberMethod GenerateLoadMethod(Table t){
       CodeMemberMethod loadMethod = new CodeMemberMethod();
@@ -295,17 +349,10 @@ namespace DBInfo.CodeGen {
       loadMethod.ReturnType = new CodeTypeReference(t.TableName + _VOClassSuffix);
       
       AddDefaultParams(loadMethod);
+      AddPrimaryKeyParams(loadMethod, t);      
 
-      foreach (Column c in t.PrimaryKeyColumns) {
-        CodeParameterDeclarationExpression param = new CodeParameterDeclarationExpression(
-          GetTypeFromColumnType(c.Type),
-          c.Name);
-        loadMethod.Parameters.Add(param);
-      }
-
-      CodeExpression selectAsterFromTableWhereByPk = CreateSelectAsterFromTableNameExpression(t, 
-        " where " + GetWhereByPk(t));
-      loadMethod.Statements.Add(CreateCommandDeclaration(selectAsterFromTableWhereByPk));      
+      string sql = "select " + GetAster(t, "", false, true) + " from " + t.TableName + " where " + GetWhereByPk(t);
+      loadMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));      
       
       int ParamCount = 1;
       foreach(Column c in t.PrimaryKeyColumns){
@@ -315,9 +362,15 @@ namespace DBInfo.CodeGen {
         ParamCount++;
       }
       
-      loadMethod.Statements.Add(
+      CreateReaderReturnSingleVO(loadMethod, t);
+      
+      return loadMethod;
+    }
+    
+    private void CreateReaderReturnSingleVO(CodeMemberMethod method, Table t){
+      method.Statements.Add(
         new CodeVariableDeclarationStatement(typeof(SqlDataReader), "rd", new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("cmd"), "ExecuteReader", new CodeExpression[0])));
-        
+
       CodeStatementCollection col = new CodeStatementCollection();
       AssignReaderOutputToNewVO(t, col);
       col.Add(new CodeExpressionStatement(new CodeMethodInvokeExpression(
@@ -329,21 +382,19 @@ namespace DBInfo.CodeGen {
       int i = 0;
       for (i = 0; i < col.Count; i++)
         trueStatements2[i] = col[i];
-       
+
       CodeStatement[] falseStatements2 = new CodeStatement[2];
       falseStatements2[0] = new CodeExpressionStatement(new CodeMethodInvokeExpression(
         new CodeMethodReferenceExpression(
           new CodeVariableReferenceExpression("rd"), "Close"), new CodeExpression[0]));
       falseStatements2[1] = new CodeMethodReturnStatement(new CodePrimitiveExpression(null));
-        
-      loadMethod.Statements.Add(
+
+      method.Statements.Add(
         new CodeConditionStatement(
           new CodeMethodInvokeExpression(
-            new CodeVariableReferenceExpression("rd"), 
-            "Read", 
+            new CodeVariableReferenceExpression("rd"),
+            "Read",
             new CodeExpression[0]), trueStatements2, falseStatements2));      
-      
-      return loadMethod;
     }
     
     private string GetAster(Table t, string Prefix, bool ReturnStreamed, bool ReturnIdentity){
@@ -359,6 +410,93 @@ namespace DBInfo.CodeGen {
           tmp += ", " + Prefix + c.Name;
       }
       return tmp;
+    }
+    
+    private CodeMemberMethod GenerateLoadByIndex(Table t, Index i, Dictionary<Index, string> IndexNames){
+      CodeMemberMethod loadMethod = new CodeMemberMethod();
+      loadMethod.Attributes = MemberAttributes.Public;
+      if (i.Unique){
+        loadMethod.Name = "LoadByAlternateKey_" + IndexNames[i];
+        loadMethod.ReturnType = new CodeTypeReference(t.TableName + _VOClassSuffix);
+      }
+      else {
+        loadMethod.Name = "LoadByIndex_" + IndexNames[i];
+        loadMethod.ReturnType = new CodeTypeReference("List<" + t.TableName + _VOClassSuffix + ">");
+      }              
+
+      AddDefaultParams(loadMethod);
+      
+      foreach(IndexColumn ic in i.Columns){
+        loadMethod.Parameters.Add(
+          new CodeParameterDeclarationExpression(
+            new CodeTypeReference(GetTypeFromColumnType(ic.Column.Type)), 
+            ic.Column.Name));
+      }
+                 
+      string sql =
+        "select " + GetAster(t, "", false, true) + " from " + t.TableName + " where ";
+        
+      bool first = true;
+      foreach(IndexColumn ic in i.Columns){
+        if (first)
+          sql += ic.Column.Name + " = @" + ic.Column.Name;
+        else
+          sql += " and " + ic.Column.Name + " = @" + ic.Column.Name;
+        first = false;
+      }
+      
+      loadMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+      
+      int ParamCount = 1;
+      foreach(IndexColumn ic in i.Columns){
+        CreateSqlParameter(ic.Column, "p" + ParamCount.ToString(), loadMethod, new CodeVariableReferenceExpression(ic.Column.Name));
+        ParamCount++;
+      }      
+      
+      if (i.Unique)      
+        CreateReaderReturnSingleVO(loadMethod, t);
+      else
+        CreateReaderReturnVOList(loadMethod, t);
+      
+      return loadMethod;
+    }    
+    
+    private void CreateReaderReturnVOList(CodeMemberMethod method, Table t){
+      method.Statements.Add(
+          new CodeVariableDeclarationStatement(typeof(SqlDataReader), "rd", new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("cmd"), "ExecuteReader", new CodeExpression[0])));
+    
+      method.Statements.Add(
+          new CodeVariableDeclarationStatement("List<" + t.TableName + _VOClassSuffix + ">", "result",
+          new CodeObjectCreateExpression("List<" + t.TableName + _VOClassSuffix + ">", new CodeExpression[0])));
+
+      CodeIterationStatement whileReaderRead = new CodeIterationStatement(
+        new CodeSnippetStatement(""),
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"),
+            "Read"),
+            new CodeExpression[0]),
+        new CodeSnippetStatement(""));
+      method.Statements.Add(whileReaderRead);
+
+      AssignReaderOutputToNewVO(t, whileReaderRead.Statements);
+      CodeExpression[] addParms = new CodeExpression[1];
+      addParms[0] = new CodeVariableReferenceExpression("vo");
+      whileReaderRead.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("result"),
+            "Add"),
+            addParms));
+            
+      method.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"),
+            "Close")));
+
+      method.Statements.Add(
+        new CodeMethodReturnStatement(new CodeVariableReferenceExpression("result")));      
     }
     
     private CodeMemberMethod GenerateInsertMethod(Table t){
@@ -447,36 +585,226 @@ namespace DBInfo.CodeGen {
            
       return insertMethod;
     }
+
+    private CodeMemberMethod GenerateUpdateMethod(Table t) {
+      CodeMemberMethod updateMethod = new CodeMemberMethod();
+      updateMethod.Attributes = MemberAttributes.Public;
+      updateMethod.Name = "Update";
+      updateMethod.ReturnType = new CodeTypeReference(typeof(int));
+
+      AddDefaultParams(updateMethod);
+
+      CodeParameterDeclarationExpression voParam = new CodeParameterDeclarationExpression(
+        t.TableName + _VOClassSuffix, "vo");
+      updateMethod.Parameters.Add(voParam);
+
+      string sql =
+        "update " + t.TableName + " " +
+        "set ";
+      bool first = true;
+      foreach (Column c in t.Columns){
+        if (IsStreamedType(c.Type))
+          continue;
+        if (c.IsPK)
+          continue;
+        if (first)
+          sql += " " + c.Name + " = @" + c.Name;
+        else
+          sql += ", " + c.Name + " = @" + c.Name;
+        first = false;
+      }
+      sql += " where " +
+      GetWhereByPk(t);                
+      
+      updateMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+      
+      
+      updateMethod.Statements.Add(
+        new CodeVariableDeclarationStatement(typeof(object), "val", new CodePrimitiveExpression(null)));
+      int ParamCount = 1;            
+      foreach(Column c in t.Columns){
+        if (IsStreamedType(c.Type))
+          continue;
+        CodeStatement[] trueStatements = new CodeStatement[1];
+        trueStatements[0] = 
+          new CodeAssignStatement(
+            new CodeVariableReferenceExpression("val"),
+            new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DBNull)), "Value"));
+        CodeStatement[] falseStatements = new CodeStatement[1];
+         falseStatements[0] = 
+          new CodeAssignStatement(
+            new CodeVariableReferenceExpression("val"),
+            new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("vo"), c.Name));
+        CodeConditionStatement ifValueNull = new CodeConditionStatement(
+          new CodeBinaryOperatorExpression(
+            new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("vo"), c.Name),
+            CodeBinaryOperatorType.ValueEquality,
+            new CodePrimitiveExpression(null)),
+            trueStatements,
+            falseStatements);
+        updateMethod.Statements.Add(ifValueNull);
+      
+        CreateSqlParameter(c, "p" + ParamCount.ToString(), updateMethod, new CodeVariableReferenceExpression("val"));
+        
+        ParamCount++;
+      }
+      
+      updateMethod.Statements.Add(        
+          new CodeMethodReturnStatement(
+            new CodeMethodInvokeExpression(
+              new CodeMethodReferenceExpression(
+                new CodeVariableReferenceExpression("cmd"), 
+                "ExecuteNonQuery"), 
+                new CodeExpression[0])));
+      
+      return updateMethod;
+    }
     
-    private void CreateSqlParameter(Column c, string paramName, CodeMemberMethod method, CodeExpression valueExpression){
+    private CodeMemberMethod GenerateDeleteMethod(Table t) {
+      CodeMemberMethod deleteMethod = new CodeMemberMethod();
+      deleteMethod.Attributes = MemberAttributes.Public;
+      deleteMethod.Name = "Delete";
+      deleteMethod.ReturnType = new CodeTypeReference(typeof(int));
+
+      AddDefaultParams(deleteMethod);
+
+      CodeParameterDeclarationExpression voParam = new CodeParameterDeclarationExpression(
+        t.TableName + _VOClassSuffix, "vo");
+      deleteMethod.Parameters.Add(voParam);
+
+      string sql =
+        "delete from " + t.TableName + " " +
+        " where " +
+        GetWhereByPk(t);                
+      
+      deleteMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+      
+      int ParamCount = 1;
+      foreach(Column c in t.PrimaryKeyColumns){
+        CreateSqlParameter(c, "p" + ParamCount.ToString(), deleteMethod, new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("vo"), c.Name));
+        ParamCount++;
+      }
+
+      deleteMethod.Statements.Add(
+        new CodeMethodReturnStatement(
+          new CodeMethodInvokeExpression(
+            new CodeMethodReferenceExpression(
+              new CodeVariableReferenceExpression("cmd"),
+              "ExecuteNonQuery"),
+              new CodeExpression[0])));
+
+      return deleteMethod;      
+    }
+
+    private void CreateSqlParameter(Column c, string paramName, CodeStatementCollection statementCollection, CodeExpression valueExpression) {
       CodeVariableReferenceExpression paramVar = new CodeVariableReferenceExpression(paramName);
 
       CodeVariableDeclarationStatement param = new CodeVariableDeclarationStatement(typeof(SqlParameter), paramName, new CodeObjectCreateExpression(typeof(SqlParameter), new CodeExpression[0]));
-      method.Statements.Add(param);
-      method.Statements.Add(
+      statementCollection.Add(param);
+      statementCollection.Add(
         new CodeAssignStatement(
           new CodeFieldReferenceExpression(paramVar, "ParameterName"),
           new CodePrimitiveExpression("@" + c.Name)));
-      method.Statements.Add(
+      statementCollection.Add(
         new CodeAssignStatement(
           new CodeFieldReferenceExpression(paramVar, "SqlDbType"),
           new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(SqlDbType)), GetSqlDbType(c.Type).ToString())));
       if (c.Size > 0) {
-        method.Statements.Add(
+        statementCollection.Add(
           new CodeAssignStatement(
             new CodeFieldReferenceExpression(paramVar, "Size"),
             new CodePrimitiveExpression(c.Size)));
       }
-      method.Statements.Add(new CodeAssignStatement(
+      statementCollection.Add(new CodeAssignStatement(
         new CodeFieldReferenceExpression(paramVar, "Value"),
         valueExpression));
 
-      method.Statements.Add(
+      statementCollection.Add(
         new CodeMethodInvokeExpression(
           new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("cmd"), "Parameters"),
           "Add",
           new CodeVariableReferenceExpression(paramName)));
     }
+    
+    private void CreateSqlParameter(Column c, string paramName, CodeMemberMethod method, CodeExpression valueExpression){
+      CreateSqlParameter(c, paramName, method.Statements, valueExpression);
+    }
+
+    private void CreateSqlParameter(string ParamVarName, string ParamName, SqlDbType ParamType, int Size, CodeStatementCollection statementCollection, CodeExpression valueExpression, ParameterDirection Direction) {
+      CodeVariableReferenceExpression paramVar = new CodeVariableReferenceExpression(ParamVarName);
+
+      CodeVariableDeclarationStatement param = new CodeVariableDeclarationStatement(
+        typeof(SqlParameter), 
+        ParamVarName, 
+        new CodeObjectCreateExpression(typeof(SqlParameter), new CodeExpression[0]));
+      statementCollection.Add(param);
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "ParameterName"),
+          new CodePrimitiveExpression("@" + ParamName)));
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "SqlDbType"),
+          new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(SqlDbType)), ParamType.ToString())));
+      if (Size > 0) {
+        statementCollection.Add(
+          new CodeAssignStatement(
+            new CodeFieldReferenceExpression(paramVar, "Size"),
+            new CodePrimitiveExpression(Size)));
+      }
+      if (valueExpression != null){
+        statementCollection.Add(new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "Value"),
+          valueExpression));
+      }
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "Direction"),
+          new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ParameterDirection)), Direction.ToString())));
+
+      statementCollection.Add(
+        new CodeMethodInvokeExpression(
+          new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("cmd"), "Parameters"),
+          "Add",
+          paramVar));
+    }
+
+    private void CreateSqlParameter(string ParamVarName, string ParamName, SqlDbType ParamType, CodeExpression Size, CodeStatementCollection statementCollection, CodeExpression valueExpression, ParameterDirection Direction) {
+      CodeVariableReferenceExpression paramVar = new CodeVariableReferenceExpression(ParamVarName);
+
+      CodeVariableDeclarationStatement param = new CodeVariableDeclarationStatement(
+        typeof(SqlParameter),
+        ParamVarName,
+        new CodeObjectCreateExpression(typeof(SqlParameter), new CodeExpression[0]));
+      statementCollection.Add(param);
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "ParameterName"),
+          new CodePrimitiveExpression("@" + ParamName)));
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "SqlDbType"),
+          new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(SqlDbType)), ParamType.ToString())));      
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "Size"),
+          Size));
+      if (valueExpression != null) {
+        statementCollection.Add(new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "Value"),
+          valueExpression));
+      }
+      statementCollection.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(paramVar, "Direction"),
+          new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(ParameterDirection)), Direction.ToString())));
+
+      statementCollection.Add(
+        new CodeMethodInvokeExpression(
+          new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("cmd"), "Parameters"),
+          "Add",
+          paramVar));
+    }        
     
     
     private void AssignReaderOutputToNewVO(Table t, CodeStatementCollection statements){
@@ -488,27 +816,28 @@ namespace DBInfo.CodeGen {
       
       int colIndex = 0;
       foreach(Column c in t.Columns){
-        if (!IsStreamedType(c.Type)){
-          CodeExpression[] readerParms = new CodeExpression[1];
-            readerParms[0] = new CodePrimitiveExpression(colIndex);
+        if (IsStreamedType(c.Type))
+          continue;
+          
+        CodeExpression[] readerParms = new CodeExpression[1];
+          readerParms[0] = new CodePrimitiveExpression(colIndex);
 
-          CodeStatement[] trueStatements1 = new CodeStatement[1];
-          trueStatements1[0] = new CodeAssignStatement(
-            new CodeFieldReferenceExpression(vo, c.Name),
-            new CodePrimitiveExpression(null));
-                  
-          CodeStatement[] falseStatements1 = new CodeStatement[1];
-          falseStatements1[0] = new CodeAssignStatement(
-            new CodeFieldReferenceExpression(vo, c.Name), 
-            new CodeMethodInvokeExpression(rd, GetReaderMethodByType(c.Type), readerParms));          
+        CodeStatement[] trueStatements1 = new CodeStatement[1];
+        trueStatements1[0] = new CodeAssignStatement(
+          new CodeFieldReferenceExpression(vo, c.Name),
+          new CodePrimitiveExpression(null));
+                
+        CodeStatement[] falseStatements1 = new CodeStatement[1];
+        falseStatements1[0] = new CodeAssignStatement(
+          new CodeFieldReferenceExpression(vo, c.Name), 
+          new CodeMethodInvokeExpression(rd, GetReaderMethodByType(c.Type), readerParms));          
 
-          CodeConditionStatement ifStatement = new CodeConditionStatement(
-            new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("rd"), "IsDBNull", readerParms),
-            trueStatements1,
-            falseStatements1);
-          statements.Add(ifStatement);                            
-        }
-        colIndex++;
+        CodeConditionStatement ifStatement = new CodeConditionStatement(
+          new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("rd"), "IsDBNull", readerParms),
+          trueStatements1,
+          falseStatements1);
+        statements.Add(ifStatement);
+        colIndex++;        
       }      
     }
     
@@ -555,6 +884,380 @@ namespace DBInfo.CodeGen {
         return "GetString";
       else 
         throw new Exception(String.Format("Type not supported by SqlDataReader: {0}", t.ToString()));
+    }
+    
+    private CodeTypeDeclaration GenerateBlobStreamClass(Table t, Column c){
+      CodeTypeDeclaration blobClass = new CodeTypeDeclaration();
+      blobClass.Name = t.TableName + c.Name + _BlobStreamClassSuffix;
+      blobClass.IsClass = true;
+      blobClass.Attributes = MemberAttributes.Public;
+      blobClass.BaseTypes.Add(new CodeTypeReference(typeof(Stream)));
+      
+      blobClass.Members.Add(
+        new CodeMemberField(typeof(int), "_ReadPosition"));
+      
+      blobClass.Members.Add(
+        new CodeMemberField(typeof(SqlConnection), "_Connection"));
+      blobClass.Members.Add(
+        new CodeMemberField(typeof(SqlTransaction), "_Transacion"));
+        
+      foreach(Column col in t.PrimaryKeyColumns){
+        blobClass.Members.Add(
+          new CodeMemberField(GetTypeFromColumnType(col.Type), "_" + col.Name));          
+      }
+      
+      blobClass.Members.Add(
+        new CodeMemberField(
+          new CodeTypeReference(typeof(object)), 
+          "_TextPtrOut"));
+
+      blobClass.Members.Add(
+              new CodeMemberField(
+                new CodeTypeReference(typeof(object)),
+                "_LengthOut"));          
+      
+      blobClass.Members.Add(CreateBlobStreamConstructor(t));
+
+      blobClass.Members.Add(CreateGetOnlyFixedReturnValueBooleanProperty("CanRead", true));
+      blobClass.Members.Add(CreateGetOnlyFixedReturnValueBooleanProperty("CanWrite", true));
+      blobClass.Members.Add(CreateGetOnlyFixedReturnValueBooleanProperty("CanSeek", false));            
+      
+      blobClass.Members.Add(GenerateUpdateTextPointerMethod(t, c));
+      blobClass.Members.Add(GenerateBlobStreamWriteMethod(t, c));
+      blobClass.Members.Add(GenerateBlobStreamReadMethod(t, c));
+      CodeMemberMethod setLengthMethod = CreatePublicOverrideNotImplementedMethod("SetLength", null);  
+      setLengthMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(long)), "value"));
+      blobClass.Members.Add(setLengthMethod);
+      
+      CodeMemberMethod seekMethod = CreatePublicOverrideNotImplementedMethod("Seek", new CodeTypeReference(typeof(long)));
+      seekMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(long)), "offset"));
+      seekMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(SeekOrigin)), "origin"));
+      blobClass.Members.Add(seekMethod);
+      
+      blobClass.Members.Add(CreatePublicOverrideMethod("Flush", null));
+      
+      CodeMemberProperty position = new CodeMemberProperty();
+      position.Name = "Position";
+      position.Type = new CodeTypeReference(typeof(long));
+      position.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+
+      CodeExpression[] convertParams = new CodeExpression[1];
+      convertParams[0] = new CodeVariableReferenceExpression("_LengthOut");      
+      position.GetStatements.Add(
+        new CodeMethodReturnStatement(
+          new CodeMethodInvokeExpression(
+            new CodeMethodReferenceExpression(
+              new CodeTypeReferenceExpression(typeof(Convert)), "ToInt64"),
+              convertParams)));
+      position.SetStatements.Add(
+        new CodeThrowExceptionStatement(new CodeObjectCreateExpression(typeof(NotImplementedException))));
+      blobClass.Members.Add(position);
+      
+      CodeMemberProperty length = new CodeMemberProperty();
+      length.Name = "Length";
+      length.Type = new CodeTypeReference(typeof(long));
+      length.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+      
+      length.GetStatements.Add(
+        new CodeMethodReturnStatement(
+          new CodeCastExpression(
+            new CodeTypeReference(typeof(long)), 
+            new CodeVariableReferenceExpression("_LengthOut"))));
+      blobClass.Members.Add(length);
+      
+      return blobClass;      
+    }
+
+    private CodeMemberMethod CreatePublicOverrideMethod(string Name, CodeTypeReference Type) {
+      CodeMemberMethod method = new CodeMemberMethod();
+      method.Name = Name;
+      method.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+      method.ReturnType = Type;      
+
+      return method;
+    }
+    
+    private CodeMemberMethod CreatePublicOverrideNotImplementedMethod(string Name, CodeTypeReference Type){
+      CodeMemberMethod method = CreatePublicOverrideMethod(Name, Type);      
+      
+      method.Statements.Add(
+        new CodeThrowExceptionStatement(
+          new CodeObjectCreateExpression(typeof(NotImplementedException), new CodeExpression[0])));                
+          
+      return method;
+    }
+    
+    private CodeMemberMethod GenerateUpdateTextPointerMethod(Table t, Column c){
+      CodeMemberMethod updateTextPointerMethod = new CodeMemberMethod();
+      updateTextPointerMethod.Name = "UpdateTextPointer";
+      
+      string sql = 
+        "select " +
+        "  @Ptr=TEXTPTR(" + c.Name + "), " +
+        "  @Length=DATALENGTH(" + c.Name + ") " +
+        "from " + t.TableName + " " +        
+        "where " + 
+        GetWhereByPk(t);
+        
+      updateTextPointerMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 100, updateTextPointerMethod.Statements, null, ParameterDirection.Output);
+      CreateSqlParameter("lengthParam", "@Length", SqlDbType.Int, sizeof(int), updateTextPointerMethod.Statements, null, ParameterDirection.Output);
+      CreateSqlParametersPrimaryKey(updateTextPointerMethod.Statements, t);      
+      
+      updateTextPointerMethod.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("cmd"), 
+            "ExecuteNonQuery"), 
+            new CodeExpression[0]));
+      
+      updateTextPointerMethod.Statements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("_TextPtrOut"),
+          new CodeFieldReferenceExpression(
+            new CodeVariableReferenceExpression("ptrParam"), "Value")));
+      
+      updateTextPointerMethod.Statements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("_LengthOut"),
+          new CodeFieldReferenceExpression(
+            new CodeVariableReferenceExpression("lengthParam"), "Value")));
+            
+      return updateTextPointerMethod;
+    }
+    
+    private CodeMemberMethod GenerateBlobStreamWriteMethod(Table t, Column c){
+      CodeMemberMethod writeMethod = new CodeMemberMethod();
+      
+      writeMethod.Name = "Write";
+      writeMethod.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+      
+      writeMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(byte[])),
+          "buffer"));
+      
+      writeMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(int)),
+          "offset"));
+
+      writeMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(int)),
+          "count"));          
+      
+      CodeStatementCollection firstChunkStatements = new CodeStatementCollection();
+      string sqlFirst = 
+        "update " + t.TableName + " set " + c.Name + " = @Chunk " + GetWhereByPk(t);
+      firstChunkStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlFirst)));
+      CreateSqlParameter("chunkParam", "@Chunk", 
+        SqlDbType.Binary, 
+        new CodeVariableReferenceExpression("count"), 
+        firstChunkStatements, 
+        new CodeVariableReferenceExpression("buffer"), 
+        ParameterDirection.Input);
+      CreateSqlParametersPrimaryKey(firstChunkStatements, t);
+      firstChunkStatements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("cmd"), "ExecuteNonQuery"), 
+            new CodeExpression[0]));
+            
+      CodeStatementCollection nextChunksStatements = new CodeStatementCollection();
+      string sqlNext = 
+        "updatetext " + t.TableName + "." + c.Name + " @Ptr @Offset 0 WITH LOG @Chunk";
+      nextChunksStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlNext)));
+      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 16, nextChunksStatements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
+      CreateSqlParameter("offsetParam", "@Offset", SqlDbType.Int, sizeof(int), nextChunksStatements, new CodeVariableReferenceExpression("_LengthOut"), ParameterDirection.Input);
+      CreateSqlParameter("chunkParam", "@Chunk", SqlDbType.Binary, new CodeVariableReferenceExpression("count"), nextChunksStatements, new CodeVariableReferenceExpression("chunk"), ParameterDirection.Input);
+      nextChunksStatements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("cmd"), "ExecuteNonQuery"),
+            new CodeExpression[0]));        
+
+      writeMethod.Statements.Add(
+        new CodeConditionStatement(
+          new CodeBinaryOperatorExpression(
+            new CodeVariableReferenceExpression("_TextPtrOut"),
+              CodeBinaryOperatorType.ValueEquality,            
+              new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DBNull)), "Value")),                                              
+            CodeStatementCollectionToArray(firstChunkStatements),
+            CodeStatementCollectionToArray(nextChunksStatements)));
+      
+      return writeMethod;
+    }
+    
+    private CodeStatement[] CodeStatementCollectionToArray(CodeStatementCollection col){
+      CodeStatement[] arr = new CodeStatement[col.Count];
+      foreach(CodeStatement st in col){
+        arr[col.IndexOf(st)] = st;
+      }
+      return arr;
+    }
+    
+    private CodeMemberMethod GenerateBlobStreamReadMethod(Table t, Column c){
+      CodeMemberMethod readMethod = new CodeMemberMethod();
+      readMethod.Name = "Read";
+      readMethod.ReturnType = new CodeTypeReference(typeof(int));
+
+      readMethod.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+
+      readMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(byte[])),
+          "buffer"));
+
+      readMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(int)),
+          "offset"));
+
+      readMethod.Parameters.Add(
+        new CodeParameterDeclarationExpression(
+          new CodeTypeReference(typeof(int)),
+          "count"));        
+          
+      CodeStatementCollection readPosGtLength = new CodeStatementCollection();
+      readPosGtLength.Add(
+        new CodeMethodReturnStatement(new CodePrimitiveExpression(0)));
+      readMethod.Statements.Add(
+        new CodeConditionStatement(
+          new CodeBinaryOperatorExpression(
+            new CodeVariableReferenceExpression("_ReadPosition"),
+            CodeBinaryOperatorType.GreaterThanOrEqual,
+            new CodeCastExpression(
+              new CodeTypeReference(typeof(int)),
+              new CodeVariableReferenceExpression("_LengthOut"))), CodeStatementCollectionToArray(readPosGtLength)));              
+    
+      
+      readMethod.Statements.Add(new CodeVariableDeclarationStatement(new CodeTypeReference(typeof(int)), "bytesToRead"));
+      CodeStatementCollection lessThanLengthStatements = new CodeStatementCollection();
+      lessThanLengthStatements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("bytesToRead"),
+          new CodeCastExpression(typeof(int),
+            new CodeBinaryOperatorExpression(
+              new CodeCastExpression(typeof(int), new CodeVariableReferenceExpression("_LengthOut")),
+              CodeBinaryOperatorType.Subtract,
+              new CodeVariableReferenceExpression("_ReadPosition")))));
+              
+      CodeStatementCollection readPosLessOrEqLength = new CodeStatementCollection();
+      readPosLessOrEqLength.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("bytesToRead"),
+          new CodeVariableReferenceExpression("count")));
+      
+      readMethod.Statements.Add(
+        new CodeConditionStatement(
+          new CodeBinaryOperatorExpression(
+            new CodeBinaryOperatorExpression(
+              new CodeVariableReferenceExpression("_ReadPosition"),
+              CodeBinaryOperatorType.Add,
+              new CodeVariableReferenceExpression("count")),
+            CodeBinaryOperatorType.GreaterThan,
+              new CodeCastExpression(typeof(int), new CodeVariableReferenceExpression("_LengthOut"))), 
+          CodeStatementCollectionToArray(readPosGtLength),
+          CodeStatementCollectionToArray(readPosLessOrEqLength)));
+      
+      string sql = 
+        "readtext " + t.TableName + "." + c.Name + " @Ptr @Offset @Size HOLDLOCK";
+      
+      readMethod.Statements.Add(
+        CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+
+      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 16, readMethod.Statements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
+      CreateSqlParameter("offsetParam", "@Offset", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("_ReadPosition"), ParameterDirection.Input);
+      CreateSqlParameter("sizeParam", "@Size", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("bytesToRead"), ParameterDirection.Input);      
+      
+      CodeExpression[] readerParms = new CodeExpression[1];
+      readerParms[0] = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(CommandBehavior)), "SingleResult");
+      
+      readMethod.Statements.Add(
+        new CodeVariableDeclarationStatement(
+          new CodeTypeReference(typeof(SqlDataReader)), "rd",
+          new CodeMethodInvokeExpression(
+            new CodeMethodReferenceExpression(
+              new CodeVariableReferenceExpression("cmd"), "ExecuteReader"),
+              readerParms)));
+      readMethod.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"),
+            "Read")));
+            
+      CodeExpression[] getBytesParms = new CodeExpression[5];
+      getBytesParms[0] = new CodePrimitiveExpression(0);
+      getBytesParms[1] = new CodePrimitiveExpression(0);
+      getBytesParms[2] = new CodeVariableReferenceExpression("buffer");
+      getBytesParms[3] = new CodeVariableReferenceExpression("offset");
+      getBytesParms[4] = new CodeVariableReferenceExpression("bytesToRead");
+      readMethod.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"), "GetBytes"),
+            getBytesParms));
+      readMethod.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"), "Close"),
+            new CodeExpression[0]));
+            
+      readMethod.Statements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("_ReadPosition"),
+          new CodeBinaryOperatorExpression(
+            new CodeVariableReferenceExpression("_ReadPosition"),
+            CodeBinaryOperatorType.Add,
+            new CodeVariableReferenceExpression("bytesToRead"))));         
+      
+      readMethod.Statements.Add(
+        new CodeMethodReturnStatement(
+          new CodeVariableReferenceExpression("bytesToRead")));
+      
+      return readMethod;
+    }
+    
+    private CodeConstructor CreateBlobStreamConstructor(Table t){
+      CodeConstructor constructor = new CodeConstructor();      
+
+      AddDefaultParams(constructor);
+      AddPrimaryKeyParams(constructor, t);
+
+      constructor.Statements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("_Connection"),
+          new CodeVariableReferenceExpression("Connection")));
+
+      constructor.Statements.Add(
+        new CodeAssignStatement(
+          new CodeVariableReferenceExpression("_Transaction"),
+          new CodeVariableReferenceExpression("Transaction")));
+
+      foreach (Column col in t.PrimaryKeyColumns) {
+        constructor.Statements.Add(
+          new CodeAssignStatement(
+            new CodeVariableReferenceExpression("_" + col.Name),
+            new CodeVariableReferenceExpression(col.Name)));
+      }
+       
+      return constructor;   
+    }
+    
+    private CodeMemberProperty CreateGetOnlyFixedReturnValueBooleanProperty(string Name, bool value){
+      CodeMemberProperty prop = new CodeMemberProperty();
+      prop.Name = Name;
+      prop.Attributes = (MemberAttributes.Public | MemberAttributes.Override);
+      prop.Type = new CodeTypeReference(typeof(bool));
+      
+      prop.GetStatements.Add(
+        new CodeMethodReturnStatement(new CodePrimitiveExpression(value)));
+        
+      return prop;
     }
 
     #endregion
