@@ -22,6 +22,8 @@ namespace DBInfo.Core.Extractor {
     Indexes,
     ForeignKeys,
     Procedures,
+    ProcedureInputParameters,
+    ProcedureOutputRecordSets,
     Functions,
     TableData,
     Triggers,
@@ -144,13 +146,17 @@ namespace DBInfo.Core.Extractor {
       }
     }
 
-    private void ReadProcedures(Database db) {
+    private void ReadProcedures(Database db, List<DBObjectType> dataToExtract) {
       Extractor.GetProcedures(db);
       foreach(Procedure p in db.Procedures){
         if (BeforeExtractData != null)
           BeforeExtractData(DBObjectType.Procedures, p.Name);
 
         Extractor.GetProcedureText(db, p);        
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.ProcedureInputParameters))
+          Extractor.GetProcedureInputParameters(db, p);
+        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.ProcedureOutputRecordSets))          
+          Extractor.GetProcedureOutputRecordSets(db, p);
       }      
     }
 
@@ -218,7 +224,7 @@ namespace DBInfo.Core.Extractor {
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Functions))
           ReadFunctions(db);
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Procedures))
-          ReadProcedures(db);
+          ReadProcedures(db, dataToExtract);
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Triggers))
           ReadTriggers(db);
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Views))

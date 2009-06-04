@@ -232,10 +232,53 @@ namespace DBInfo.XMLDatabase {
       t.Triggers.Add(tr);
     }
     
+    private DBInfo.Core.Model.ParamDirection GetParameterDirection(ParameterDirection d){
+      if (d == ParameterDirection.Input)
+        return DBInfo.Core.Model.ParamDirection.Input;
+      else if (d == ParameterDirection.Output)
+        return DBInfo.Core.Model.ParamDirection.Output;
+      else if (d == ParameterDirection.InputOutput)
+        return DBInfo.Core.Model.ParamDirection.InputOutput;
+      else
+        throw new Exception(String.Format("Invalid parameter direction {0}", d.ToString()));
+    }
+    
     private DBInfo.Core.Model.Procedure ParseCreateProcedureStatement(CreateProcedure xmlProcedure){
       DBInfo.Core.Model.Procedure p = new DBInfo.Core.Model.Procedure();
       p.Body = xmlProcedure.SourceCode;
       p.Name = xmlProcedure.Name;
+      
+      if (xmlProcedure.InputParameters != null){
+        foreach(Parameter xmlParam in xmlProcedure.InputParameters){
+          DBInfo.Core.Model.Parameter param = new DBInfo.Core.Model.Parameter();
+          param.Name = xmlParam.Name;
+          param.Type = GetDBColumnType(xmlParam.Type);
+          param.Direction = GetParameterDirection(xmlParam.Direction);
+          param.Size = Convert.ToInt32(xmlParam.Size);
+          param.Scale = Convert.ToInt32(xmlParam.Scale);
+          param.Precision = Convert.ToInt32(xmlParam.Precision);
+          p.InputParameters.Add(param);          
+        }
+      }
+      if (xmlProcedure.RecordSets != null){
+        foreach (RecordSetDef xmlRS in xmlProcedure.RecordSets){
+          DBInfo.Core.Model.RecordSet rs = new DBInfo.Core.Model.RecordSet();
+          p.RecordSets.Add(rs);
+          if (xmlRS.Parameters != null){
+            foreach(Parameter xmlParam in xmlRS.Parameters){
+              DBInfo.Core.Model.Parameter param = new DBInfo.Core.Model.Parameter();
+              param.Name = xmlParam.Name;
+              param.Type = GetDBColumnType(xmlParam.Type);
+              param.Direction = GetParameterDirection(xmlParam.Direction);
+              param.Size = Convert.ToInt32(xmlParam.Size);
+              param.Scale = Convert.ToInt32(xmlParam.Scale);
+              param.Precision = Convert.ToInt32(xmlParam.Precision);
+              rs.Parameters.Add(param);
+            }
+          }
+        }        
+      }
+      
       return p;
     }
     

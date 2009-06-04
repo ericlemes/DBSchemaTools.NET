@@ -63,6 +63,195 @@ namespace DBInfo.XMLDatabase {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class RecordSetDef {
+        
+        private Parameter[] parametersField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public Parameter[] Parameters {
+            get {
+                return this.parametersField;
+            }
+            set {
+                this.parametersField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class Parameter {
+        
+        private string nameField;
+        
+        private ColumnType typeField;
+        
+        private string sizeField;
+        
+        private string precisionField;
+        
+        private string scaleField;
+        
+        private ParameterDirection directionField;
+        
+        /// <remarks/>
+        public string Name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public ColumnType Type {
+            get {
+                return this.typeField;
+            }
+            set {
+                this.typeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string Size {
+            get {
+                return this.sizeField;
+            }
+            set {
+                this.sizeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string Precision {
+            get {
+                return this.precisionField;
+            }
+            set {
+                this.precisionField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType="integer")]
+        public string Scale {
+            get {
+                return this.scaleField;
+            }
+            set {
+                this.scaleField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public ParameterDirection Direction {
+            get {
+                return this.directionField;
+            }
+            set {
+                this.directionField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public enum ColumnType {
+        
+        /// <remarks/>
+        Integer,
+        
+        /// <remarks/>
+        Varchar,
+        
+        /// <remarks/>
+        Char,
+        
+        /// <remarks/>
+        Decimal,
+        
+        /// <remarks/>
+        Float,
+        
+        /// <remarks/>
+        Memo,
+        
+        /// <remarks/>
+        Blob,
+        
+        /// <remarks/>
+        DateTime,
+        
+        /// <remarks/>
+        Bit,
+        
+        /// <remarks/>
+        SmallDateTime,
+        
+        /// <remarks/>
+        Money,
+        
+        /// <remarks/>
+        SmallInt,
+        
+        /// <remarks/>
+        Numeric,
+        
+        /// <remarks/>
+        GUID,
+        
+        /// <remarks/>
+        BigInt,
+        
+        /// <remarks/>
+        TinyInt,
+        
+        /// <remarks/>
+        Binary,
+        
+        /// <remarks/>
+        NVarchar,
+        
+        /// <remarks/>
+        RowID,
+        
+        /// <remarks/>
+        TimeStamp,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public enum ParameterDirection {
+        
+        /// <remarks/>
+        Input,
+        
+        /// <remarks/>
+        Output,
+        
+        /// <remarks/>
+        InputOutput,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
     public partial class IndexColumn {
         
         private string nameField;
@@ -254,73 +443,6 @@ namespace DBInfo.XMLDatabase {
                 this.constraintDefaultNameField = value;
             }
         }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
-    [System.SerializableAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
-    public enum ColumnType {
-        
-        /// <remarks/>
-        Integer,
-        
-        /// <remarks/>
-        Varchar,
-        
-        /// <remarks/>
-        Char,
-        
-        /// <remarks/>
-        Decimal,
-        
-        /// <remarks/>
-        Float,
-        
-        /// <remarks/>
-        Memo,
-        
-        /// <remarks/>
-        Blob,
-        
-        /// <remarks/>
-        DateTime,
-        
-        /// <remarks/>
-        Bit,
-        
-        /// <remarks/>
-        SmallDateTime,
-        
-        /// <remarks/>
-        Money,
-        
-        /// <remarks/>
-        SmallInt,
-        
-        /// <remarks/>
-        Numeric,
-        
-        /// <remarks/>
-        GUID,
-        
-        /// <remarks/>
-        BigInt,
-        
-        /// <remarks/>
-        TinyInt,
-        
-        /// <remarks/>
-        Binary,
-        
-        /// <remarks/>
-        NVarchar,
-        
-        /// <remarks/>
-        RowID,
-        
-        /// <remarks/>
-        TimeStamp,
     }
     
     /// <remarks/>
@@ -543,6 +665,10 @@ namespace DBInfo.XMLDatabase {
         
         private string nameField;
         
+        private Parameter[] inputParametersField;
+        
+        private RecordSetDef[] recordSetsField;
+        
         private string sourceCodeField;
         
         /// <remarks/>
@@ -552,6 +678,28 @@ namespace DBInfo.XMLDatabase {
             }
             set {
                 this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public Parameter[] InputParameters {
+            get {
+                return this.inputParametersField;
+            }
+            set {
+                this.inputParametersField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute("RecordSet", IsNullable=false)]
+        public RecordSetDef[] RecordSets {
+            get {
+                return this.recordSetsField;
+            }
+            set {
+                this.recordSetsField = value;
             }
         }
         

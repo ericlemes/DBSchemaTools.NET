@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DBInfo.Core.Model {
   public class Procedure {
@@ -25,6 +26,25 @@ namespace DBInfo.Core.Model {
       get { return _DropProcedureScript; }
       set { _DropProcedureScript = value; }
     }
-
+    
+    private List<Parameter> _InputParameters = new List<Parameter>();
+    public List<Parameter> InputParameters{
+      get { return _InputParameters;}
+      set { _InputParameters = value;}
+    }
+    
+    private List<RecordSet> _RecordSets = new List<RecordSet>();
+    public List<RecordSet> RecordSets {
+      get { return _RecordSets;}
+      set { _RecordSets = value;}
+    }
+  }
+  
+  public class RecordSet{
+    public List<Parameter> _Parameters = new List<Parameter>();
+    public List<Parameter> Parameters{
+      get { return _Parameters; }
+      set { _Parameters = value; }
+    }
   }
 }

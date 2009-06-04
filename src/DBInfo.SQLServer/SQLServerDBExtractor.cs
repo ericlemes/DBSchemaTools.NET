@@ -372,6 +372,166 @@ namespace DBInfo.DBExtractors {
       }
     }
 
+    public void GetProcedureInputParameters(Database db, Procedure p){
+      SqlCommand qry = new SqlCommand(
+        "select " + 
+        "  isp.parameter_name, " + 
+        "  case " +
+        "    when sp.system_type_id = 56 then 1 " +
+        "    when sp.system_type_id = 231 then 18 " +
+        "    when sp.system_type_id = 167 then 2 " +
+        "    when sp.system_type_id = 175 then 3 " +
+        "    when sp.system_type_id = 35 then 6 " +
+        "    when sp.system_type_id = 99 then 6 " +
+        "    when sp.system_type_id = 34 then 7 " +
+        "    when sp.system_type_id = 61 then 8 " +
+        "    when sp.system_type_id = 104 then 9 " +
+        "    when sp.system_type_id = 106 then 4 " +
+        "    when sp.system_type_id = 58 then 10 " +
+        "    when sp.system_type_id = 60 then 11 " +
+        "    when sp.system_type_id = 62 then 5 " +
+        "    when sp.system_type_id = 52 then 12 " +
+        "    when sp.system_type_id = 108 then 13 " +
+        "    when sp.system_type_id = 36 then 14 " +
+        "    when sp.system_type_id = 127 then 15 " +
+        "    when sp.system_type_id = 48 then 16 " +
+        "    when sp.system_type_id = 173 then 17 " +
+        "    when sp.system_type_id = 189 then 20 " + 
+        "    else -1 " +
+        "  end type, " +        
+        "  isp.character_maximum_length, " + 
+        "  isp.numeric_precision, " + 
+        "  isp.numeric_scale, " + 
+        "  isp.parameter_mode " + 
+        "from " + 
+        "  information_schema.parameters isp " + 
+        "    inner join sys.parameters sp on " + 
+        "      sp.object_id = object_id(isp.specific_name) and " + 
+        "      sp.name = isp.parameter_name " + 
+        "where " + 
+        "  isp.specific_name = @name "        
+        , SqlConn);
+        
+      SqlParameter parm = qry.Parameters.Add("@name", SqlDbType.VarChar, 100);
+      parm.Value = p.Name;
+        
+      SqlDataAdapter dat = new SqlDataAdapter();
+      dat.SelectCommand = qry;
+      DataSet ds = new DataSet();
+      dat.Fill(ds);
+      
+      Parameter returnValueParam = new Parameter();
+      returnValueParam.Name = "RETURN_VALUE";
+      returnValueParam.Type = DBColumnType.DBInteger;        
+      returnValueParam.Direction = ParamDirection.Output;
+      p.InputParameters.Add(returnValueParam);
+      
+      foreach(DataRow r in ds.Tables[0].Rows){
+        Parameter param = new Parameter();
+        param.Name = ((string)r[0]).Replace("@", "");
+        param.Type = (DBColumnType)Convert.ToInt32(r[1]);
+        param.Size = r[2] == DBNull.Value ? 0 : (int)r[2];
+        param.Precision = r[3] == DBNull.Value ? 0 : Convert.ToInt32(r[3]);
+        param.Scale = r[4] == DBNull.Value ? 0 : (int)r[4];
+        param.Direction = GetParamDirection((string)r[5]);
+        p.InputParameters.Add(param);
+      }
+    }
+        
+
+    public void GetProcedureOutputRecordSets(Database db, Procedure p){
+      SqlConn.Close();
+      SqlConn.Open();
+    
+      string sql =
+        "exec " + p.Name + " ";
+      bool first = true;
+      foreach(Parameter param in p.InputParameters){
+        if (param.Name == "RETURN_VALUE")
+          continue;
+        if (first)
+          sql += "@" + param.Name;
+        else
+          sql += ", @" + param.Name;
+        first = false;
+      }
+      
+      SqlCommand cmd = new SqlCommand(sql, SqlConn);
+      foreach (Parameter param in p.InputParameters){
+        SqlParameter sqlParam = cmd.Parameters.Add("@" + param.Name, GetSqlDBTypeFromColumnType(param.Type), param.Size);
+        sqlParam.Value = DBNull.Value;
+      }
+      
+      SqlDataAdapter dat = new SqlDataAdapter(cmd);
+      DataSet procReturn = new DataSet();
+      bool extractData = true;
+      try{
+        dat.Fill(procReturn);       
+      }
+      catch(Exception e){
+        extractData = false;
+        //Eric: Ignore procedure execution errors. Some procedures that does some inserts will not return
+        //      any recordset definition and will return errors. The resultset extraction works only for
+        //      procedures that returns recordset definitions when executed with null parameters.
+        Console.WriteLine("Error executing {0}: {1}", p.Name, e.Message);        
+      }
+
+      if (extractData && procReturn.Tables.Count > 0) {
+        foreach (DataTable tbl in procReturn.Tables) {
+          RecordSet rs = new RecordSet();
+          p.RecordSets.Add(rs);
+          foreach (DataColumn dc in tbl.Columns) {
+            Parameter param = new Parameter();
+            param.Name = dc.ColumnName;
+            param.Direction = ParamDirection.Output;
+            param.Type = GetColumnTypeFromType(dc.DataType);
+            param.Size = dc.MaxLength;
+            rs.Parameters.Add(param);
+          }
+        }
+      } 
+    }
+    
+    private string GetValidVOPropertyNameFromColumnName(string 
+    
+    private DBColumnType GetColumnTypeFromType(Type t){
+      if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(string)))
+        return DBColumnType.DBVarchar;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(int)))
+        return DBColumnType.DBInteger;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(long)))
+        return DBColumnType.DBBigInt;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Int16)))
+        return DBColumnType.DBSmallInt;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(float)))
+        return DBColumnType.DBFloat;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(decimal)))
+        return DBColumnType.DBDecimal;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(double)))
+        return DBColumnType.DBFloat;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(DateTime)))
+        return DBColumnType.DBDateTime;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(bool)))
+        return DBColumnType.DBBit;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(byte)))
+        return DBColumnType.DBTinyInt;
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Guid)))
+        return DBColumnType.DBGUID;                      
+      else
+        throw new Exception(String.Format("Type not supported: {0}", t.FullName));
+    }
+    
+    private ParamDirection GetParamDirection(string s){
+      if (s == "IN")
+        return ParamDirection.Input;
+      else if (s == "OUT")
+        return ParamDirection.Output;
+      else if (s == "INOUT")
+        return ParamDirection.InputOutput;
+      else
+        throw new Exception(String.Format("Invalid parameter directon: ", s));
+    }
+
     public void GetProcedureText(Database db, Procedure p) {
       SqlCommand qry = new SqlCommand("sp_helptext " + p.Name, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
@@ -530,6 +690,31 @@ namespace DBInfo.DBExtractors {
 
     public DataSet getTableTriggers(string ATabela) {
       return null;
+    }
+
+    private SqlDbType GetSqlDBTypeFromColumnType(DBColumnType ColumnType) {
+      switch (ColumnType) {
+        case DBColumnType.DBInteger: return SqlDbType.Int;
+        case DBColumnType.DBVarchar: return SqlDbType.VarChar;
+        case DBColumnType.DBChar: return SqlDbType.Char;
+        case DBColumnType.DBBlob: return SqlDbType.Binary;
+        case DBColumnType.DBDecimal: return SqlDbType.Decimal;
+        case DBColumnType.DBFloat: return SqlDbType.Float;
+        case DBColumnType.DBMemo: return SqlDbType.Text;
+        case DBColumnType.DBDateTime: return SqlDbType.DateTime;
+        case DBColumnType.DBBit: return SqlDbType.Bit;
+        case DBColumnType.DBSmallDateTime: return SqlDbType.SmallDateTime;
+        case DBColumnType.DBMoney: return SqlDbType.Money;
+        case DBColumnType.DBSmallInt: return SqlDbType.SmallInt;
+        case DBColumnType.DBNumeric: return SqlDbType.Decimal;
+        case DBColumnType.DBGUID: return SqlDbType.UniqueIdentifier;
+        case DBColumnType.DBBigInt: return SqlDbType.BigInt;
+        case DBColumnType.DBTinyInt: return SqlDbType.TinyInt;
+        case DBColumnType.DBBinary: return SqlDbType.Binary;
+        case DBColumnType.DBNVarchar: return SqlDbType.NVarChar;
+        case DBColumnType.DBTimeStamp: return SqlDbType.Timestamp;
+        default: throw new Exception("Tipo de dados não suportado " + ColumnType.ToString());
+      }
     }
   }
 }

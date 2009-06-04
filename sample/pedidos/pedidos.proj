@@ -2,17 +2,35 @@
 
 	<Import Project="..\..\src\bin\DBInfo.MSBuild.targets" />
 
+	<ItemGroup>
+		<XMLs Include="$(MSBuildProjectDirectory)\Scripts\**\*.xml" />
+	</ItemGroup>
+
 	<Target Name="Build">
 		<DBInfo 
-			dbextractorclass="DBInfo.DBExtractors.SQLServerDBExtractor, DBInfo.SQLServer"
-			outputgeneratorclass="DBInfo.OutputGenerators.SQLServerOutputGenerator, DBInfo.SQLServer"
-			inputtype="database"
-			outputtype="file"
+		  extractorclass="DBInfo.XMLDatabase.XMLDatabaseExtractor, DBInfo.XMLDatabase"			
+			outputgeneratorclass="DBInfo.CodeGen.SimpleDAO, DBInfo.CodeGen"
 			datatoextract="all"
 			datatogenerateoutput="all"
-			inputconnectionstring="server=(local);initial catalog=Teste;user=sa;pwd=123456abc@"
-			outputdir=".\Scripts"
+			scriptfileoutputgenerator="DBInfo.Core.OutputGenerators.SplittedScriptFileOutputGenerator, DBInfo.Core"
+			outputdir=".\src\Pedidos\DAO"
+			inputfiles="@(XMLs)"
 			/>
+		<!-- DBInfo 
+			extractorclass="DBInfo.Core.Extractor.DatabaseExtractor, DBInfo.Core"
+			dbextractorclass="DBInfo.DBExtractors.SQLServerDBExtractor, DBInfo.SQLServer"
+			outputgeneratorclass="DBInfo.XMLDatabase.XMLDatabaseOutputGenerator, DBInfo.XMLDatabase"
+			datatoextract="all"
+			datatogenerateoutput="all"
+			scriptfileoutputgenerator="DBInfo.Core.OutputGenerators.SplittedScriptFileOutputGenerator, DBInfo.Core"
+			outputdir=".\Scripts"
+			inputfiles="@(XMLs)"
+			inputconnectionstring=" "
+			/ -->
+	</Target>
+
+	<Target Name="Serialize">
+		<DBInfoXMLSerializer xmlFile="..\..\src\DBInfo.Core\SampleDBInfoXML.xml" />
 	</Target>
 	
 </Project>

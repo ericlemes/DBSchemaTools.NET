@@ -68,6 +68,34 @@ namespace DBInfo.CodeGen {
         GenerateDatabaseVO(t);
         GenerateDatabaseDAO(t);
       }
+      foreach(Procedure p in db.Procedures){
+        GenerateProcedureInputVO(p);
+        GenerateProcedureOutputVOs(p);
+      }
+    }
+
+    private string _ProcInputVONamespace = "ProcInputVO";
+    public string ProcInputVONamespace {
+      get { return _ProcInputVONamespace; }
+      set { _ProcInputVONamespace = value; }
+    }
+
+    private string _ProcInputVOClassSuffix = "ProcInputVO";
+    public string ProcInputVOClassSuffix {
+      get { return _ProcInputVOClassSuffix; }
+      set { _ProcInputVOClassSuffix = value; }
+    }
+
+    private string _ProcOutputVONamespace = "ProcOutputVO";
+    public string ProcOutputVONamespace {
+      get { return _ProcOutputVONamespace; }
+      set { _ProcOutputVONamespace = value; }
+    }
+
+    private string _ProcOutputVOClassSuffix = "ProcOutputVO";
+    public string ProcOutputVOClassSuffix {
+      get { return _ProcOutputVOClassSuffix; }
+      set { _ProcOutputVOClassSuffix = value; }
     }
     
     private Type GetTypeFromColumnType(DBColumnType t){
@@ -307,29 +335,29 @@ namespace DBInfo.CodeGen {
     }
     
     private CodeVariableDeclarationStatement CreateCommandDeclaration(CodeExpression InitExpression){
+      return CreateCommandDeclaration(InitExpression, "Connection", "Transaction");
+    }
+
+    private CodeVariableDeclarationStatement CreateCommandDeclaration(CodeExpression InitExpression, string ConnectionVarName, string TransactionVarName) {
       CodeExpression[] commandCreateParams = new CodeExpression[3];
-      commandCreateParams[1] = new CodeVariableReferenceExpression("Connection");
-      commandCreateParams[2] = new CodeVariableReferenceExpression("Transaction");
+      commandCreateParams[1] = new CodeVariableReferenceExpression(ConnectionVarName);
+      commandCreateParams[2] = new CodeVariableReferenceExpression(TransactionVarName);
       commandCreateParams[0] = InitExpression;
-                
+
       CodeVariableDeclarationStatement command = new CodeVariableDeclarationStatement(
         typeof(SqlCommand), "cmd",
         new CodeObjectCreateExpression(
           new CodeTypeReference(typeof(SqlCommand)),
           commandCreateParams)
         );
-        
+
       return command;
     }
     
-    private void CreateSqlParametersPrimaryKey(CodeStatementCollection statementCollection, Table t){
+    private void CreateSqlParametersPrimaryKey(CodeStatementCollection statementCollection, Table t, string PrefixForPKVars){
       int ParamCount = 1;
       foreach (Column c in t.PrimaryKeyColumns) {
-        CreateSqlParameter(c, "pkParm" + ParamCount.ToString(), statementCollection, new CodeVariableReferenceExpression(c.Name));
-        CodeParameterDeclarationExpression param = new CodeParameterDeclarationExpression(
-          GetTypeFromColumnType(c.Type),
-          c.Name);
-        statementCollection.Add(param);
+        CreateSqlParameter(c, "pkParm" + ParamCount.ToString(), statementCollection, new CodeVariableReferenceExpression(PrefixForPKVars + c.Name));
       }
     }
 
@@ -511,9 +539,24 @@ namespace DBInfo.CodeGen {
       insertMethod.Parameters.Add(voParam);
 
       string sql = 
-        "insert into " + t.TableName + " ( " + GetAster(t, "", false, false) + ") values (" + GetAster(t, "@", false, false) + ")" +
-        Environment.NewLine + 
-        "select SCOPE_IDENTITY()";
+        "insert into " + t.TableName + " ( " + GetAster(t, "", true, false) + ") values (";
+      bool first = true;
+      foreach(Column c in t.Columns){
+        if (c.IdentityColumn)
+          continue;
+        if (!first)
+          sql += ", ";
+        if (IsStreamedType(c.Type))
+          sql += "null";
+        else
+          sql += "@" + c.Name;
+        first = false;
+      }
+      sql += ")";
+      if (!String.IsNullOrEmpty(t.GetIdentityColumn())){
+        sql += Environment.NewLine + 
+          "select SCOPE_IDENTITY()";
+      }
       
       CodeExpression insertExpression = new CodePrimitiveExpression(sql);      
       insertMethod.Statements.Add(CreateCommandDeclaration(insertExpression));
@@ -899,7 +942,7 @@ namespace DBInfo.CodeGen {
       blobClass.Members.Add(
         new CodeMemberField(typeof(SqlConnection), "_Connection"));
       blobClass.Members.Add(
-        new CodeMemberField(typeof(SqlTransaction), "_Transacion"));
+        new CodeMemberField(typeof(SqlTransaction), "_Transaction"));
         
       foreach(Column col in t.PrimaryKeyColumns){
         blobClass.Members.Add(
@@ -1002,10 +1045,10 @@ namespace DBInfo.CodeGen {
         "where " + 
         GetWhereByPk(t);
         
-      updateTextPointerMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
-      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 100, updateTextPointerMethod.Statements, null, ParameterDirection.Output);
-      CreateSqlParameter("lengthParam", "@Length", SqlDbType.Int, sizeof(int), updateTextPointerMethod.Statements, null, ParameterDirection.Output);
-      CreateSqlParametersPrimaryKey(updateTextPointerMethod.Statements, t);      
+      updateTextPointerMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql), "_Connection", "_Transaction"));
+      CreateSqlParameter("ptrParam", "Ptr", SqlDbType.VarBinary, 100, updateTextPointerMethod.Statements, null, ParameterDirection.Output);
+      CreateSqlParameter("lengthParam", "Length", SqlDbType.Int, sizeof(int), updateTextPointerMethod.Statements, null, ParameterDirection.Output);
+      CreateSqlParametersPrimaryKey(updateTextPointerMethod.Statements, t, "_");      
       
       updateTextPointerMethod.Statements.Add(
         new CodeMethodInvokeExpression(
@@ -1052,15 +1095,15 @@ namespace DBInfo.CodeGen {
       
       CodeStatementCollection firstChunkStatements = new CodeStatementCollection();
       string sqlFirst = 
-        "update " + t.TableName + " set " + c.Name + " = @Chunk " + GetWhereByPk(t);
-      firstChunkStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlFirst)));
-      CreateSqlParameter("chunkParam", "@Chunk", 
+        "update " + t.TableName + " set " + c.Name + " = @Chunk where " + GetWhereByPk(t);
+      firstChunkStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlFirst), "_Connection", "_Transaction"));
+      CreateSqlParameter("chunkParam", "Chunk", 
         SqlDbType.Binary, 
         new CodeVariableReferenceExpression("count"), 
         firstChunkStatements, 
         new CodeVariableReferenceExpression("buffer"), 
         ParameterDirection.Input);
-      CreateSqlParametersPrimaryKey(firstChunkStatements, t);
+      CreateSqlParametersPrimaryKey(firstChunkStatements, t, "_");
       firstChunkStatements.Add(
         new CodeMethodInvokeExpression(
           new CodeMethodReferenceExpression(
@@ -1070,10 +1113,10 @@ namespace DBInfo.CodeGen {
       CodeStatementCollection nextChunksStatements = new CodeStatementCollection();
       string sqlNext = 
         "updatetext " + t.TableName + "." + c.Name + " @Ptr @Offset 0 WITH LOG @Chunk";
-      nextChunksStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlNext)));
-      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 16, nextChunksStatements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
-      CreateSqlParameter("offsetParam", "@Offset", SqlDbType.Int, sizeof(int), nextChunksStatements, new CodeVariableReferenceExpression("_LengthOut"), ParameterDirection.Input);
-      CreateSqlParameter("chunkParam", "@Chunk", SqlDbType.Binary, new CodeVariableReferenceExpression("count"), nextChunksStatements, new CodeVariableReferenceExpression("chunk"), ParameterDirection.Input);
+      nextChunksStatements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sqlNext), "_Connection", "_Transaction"));
+      CreateSqlParameter("ptrParam", "Ptr", SqlDbType.VarBinary, 16, nextChunksStatements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
+      CreateSqlParameter("offsetParam", "Offset", SqlDbType.Int, sizeof(int), nextChunksStatements, new CodeVariableReferenceExpression("_LengthOut"), ParameterDirection.Input);
+      CreateSqlParameter("chunkParam", "Chunk", SqlDbType.Binary, new CodeVariableReferenceExpression("count"), nextChunksStatements, new CodeVariableReferenceExpression("buffer"), ParameterDirection.Input);
       nextChunksStatements.Add(
         new CodeMethodInvokeExpression(
           new CodeMethodReferenceExpression(
@@ -1088,6 +1131,10 @@ namespace DBInfo.CodeGen {
               new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(DBNull)), "Value")),                                              
             CodeStatementCollectionToArray(firstChunkStatements),
             CodeStatementCollectionToArray(nextChunksStatements)));
+      
+      writeMethod.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(new CodeThisReferenceExpression(), "UpdateTextPointer"), new CodeExpression[0]));
       
       return writeMethod;
     }
@@ -1168,11 +1215,11 @@ namespace DBInfo.CodeGen {
         "readtext " + t.TableName + "." + c.Name + " @Ptr @Offset @Size HOLDLOCK";
       
       readMethod.Statements.Add(
-        CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
+        CreateCommandDeclaration(new CodePrimitiveExpression(sql), "_Connection", "_Transaction"));
 
-      CreateSqlParameter("ptrParam", "@Ptr", SqlDbType.VarBinary, 16, readMethod.Statements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
-      CreateSqlParameter("offsetParam", "@Offset", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("_ReadPosition"), ParameterDirection.Input);
-      CreateSqlParameter("sizeParam", "@Size", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("bytesToRead"), ParameterDirection.Input);      
+      CreateSqlParameter("ptrParam", "Ptr", SqlDbType.VarBinary, 16, readMethod.Statements, new CodeVariableReferenceExpression("_TextPtrOut"), ParameterDirection.Input);
+      CreateSqlParameter("offsetParam", "Offset", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("_ReadPosition"), ParameterDirection.Input);
+      CreateSqlParameter("sizeParam", "Size", SqlDbType.Int, sizeof(int), readMethod.Statements, new CodeVariableReferenceExpression("bytesToRead"), ParameterDirection.Input);      
       
       CodeExpression[] readerParms = new CodeExpression[1];
       readerParms[0] = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(typeof(CommandBehavior)), "SingleResult");
@@ -1224,6 +1271,7 @@ namespace DBInfo.CodeGen {
     
     private CodeConstructor CreateBlobStreamConstructor(Table t){
       CodeConstructor constructor = new CodeConstructor();      
+      constructor.Attributes = MemberAttributes.Public;
 
       AddDefaultParams(constructor);
       AddPrimaryKeyParams(constructor, t);
@@ -1244,6 +1292,11 @@ namespace DBInfo.CodeGen {
             new CodeVariableReferenceExpression("_" + col.Name),
             new CodeVariableReferenceExpression(col.Name)));
       }
+      
+      constructor.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeThisReferenceExpression(), "UpdateTextPointer"), new CodeExpression[0]));
        
       return constructor;   
     }
@@ -1259,6 +1312,97 @@ namespace DBInfo.CodeGen {
         
       return prop;
     }
+
+    private void GenerateProcedureInputVO(Procedure p) {
+      CodeNamespace codeNS = new CodeNamespace(_Namespace + "." + ProcInputVONamespace);
+
+      CodeTypeDeclaration voClass = new CodeTypeDeclaration(p.Name + ProcInputVOClassSuffix);
+      voClass.IsClass = true;
+      foreach (Parameter param in p.InputParameters) {
+        if (IsStreamedType(param.Type))
+          continue;
+        CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + param.Name);
+        voClass.Members.Add(mf);
+
+        CodeMemberProperty mp = new CodeMemberProperty();
+        mp.Attributes = MemberAttributes.Public;
+        mp.HasGet = true;
+        mp.HasSet = true;
+        mp.Name = param.Name;
+        mp.Type = new CodeTypeReference(GetTypeFromColumnType(param.Type));
+
+        mp.SetStatements.Add(new CodeAssignStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), mf.Name), new CodePropertySetValueReferenceExpression()));
+        mp.GetStatements.Add(new CodeMethodReturnStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), mf.Name)));
+
+        voClass.Members.Add(mp);
+      }
+      codeNS.Types.Add(voClass);
+
+      CSharpCodeProvider csharp = new CSharpCodeProvider();
+
+      CodeGeneratorOptions cop = new CodeGeneratorOptions();
+      cop.IndentString = "  ";
+
+      if (!Directory.Exists(OutputDir + "\\" + _ProcInputVONamespace))
+        Directory.CreateDirectory(OutputDir + "\\" + _ProcInputVONamespace);
+
+      FileStream fs = new FileStream(OutputDir + "\\" + _ProcInputVONamespace + "\\" + p.Name + ProcInputVOClassSuffix + ".cs", FileMode.Create, FileAccess.Write);
+      StreamWriter sw = new StreamWriter(fs);
+      csharp.GenerateCodeFromNamespace(codeNS, sw, cop);
+      sw.Flush();
+      sw.Close();
+      fs.Close();
+    }
+
+    private void GenerateProcedureOutputVOs(Procedure p) {          
+      
+      foreach(RecordSet rs in p.RecordSets){
+        string VOClassName;
+        if (p.RecordSets.Count > 1)
+          VOClassName = p.Name + "RS" + (p.RecordSets.IndexOf(rs) + 1).ToString() + ProcOutputVOClassSuffix;
+        else
+          VOClassName = p.Name + ProcOutputVOClassSuffix;
+      
+        CodeNamespace codeNS = new CodeNamespace(_Namespace + "." + ProcOutputVONamespace);
+
+        CodeTypeDeclaration voClass = new CodeTypeDeclaration(VOClassName);
+        voClass.IsClass = true;
+        foreach (Parameter param in rs.Parameters) {
+          if (IsStreamedType(param.Type))
+            continue;
+          CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + param.Name);
+          voClass.Members.Add(mf);
+
+          CodeMemberProperty mp = new CodeMemberProperty();
+          mp.Attributes = MemberAttributes.Public;
+          mp.HasGet = true;
+          mp.HasSet = true;
+          mp.Name = param.Name;
+          mp.Type = new CodeTypeReference(GetTypeFromColumnType(param.Type));
+
+          mp.SetStatements.Add(new CodeAssignStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), mf.Name), new CodePropertySetValueReferenceExpression()));
+          mp.GetStatements.Add(new CodeMethodReturnStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), mf.Name)));
+
+          voClass.Members.Add(mp);
+        }
+        codeNS.Types.Add(voClass);
+
+        CSharpCodeProvider csharp = new CSharpCodeProvider();
+
+        CodeGeneratorOptions cop = new CodeGeneratorOptions();
+        cop.IndentString = "  ";
+
+        if (!Directory.Exists(OutputDir + "\\" + ProcOutputVONamespace))
+          Directory.CreateDirectory(OutputDir + "\\" + ProcOutputVONamespace);
+
+        FileStream fs = new FileStream(OutputDir + "\\" + ProcOutputVONamespace + "\\" + VOClassName + ".cs", FileMode.Create, FileAccess.Write);
+        StreamWriter sw = new StreamWriter(fs);
+        csharp.GenerateCodeFromNamespace(codeNS, sw, cop);
+        sw.Flush();
+        sw.Close();
+        fs.Close();
+      }
+    }        
 
     #endregion
   }

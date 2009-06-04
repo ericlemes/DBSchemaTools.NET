@@ -22,6 +22,8 @@ namespace DBInfo.Core.Extractor {
     DataTable GetTableData(Database db, string tableName);
     void GetProcedures(Database db);
     void GetProcedureText(Database db, Procedure p);
+    void GetProcedureInputParameters(Database db, Procedure p);    
+    void GetProcedureOutputRecordSets(Database db, Procedure p);
     void GetFunctions(Database db);
     void GetFunctionText(Database db, Function f);
     void GetTriggers(Database db, Table table);

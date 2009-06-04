@@ -13,7 +13,7 @@
 				<xsd:sequence>
 					<xsd:element name="TableName" type="xsd:string"/>
 					<xsd:element name="Columns" type="db:ArrayOfColumn"/>
-					<xsd:element name="HasIdentity" type="db:YesNo" />
+					<xsd:element name="HasIdentity" type="db:YesNo"/>
 					<xsd:element name="IdentitySeed" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="IdentityIncrement" type="xsd:integer" minOccurs="0"/>
 				</xsd:sequence>
@@ -56,8 +56,8 @@
 			<xsd:element name="Size" type="xsd:integer" minOccurs="0"/>
 			<xsd:element name="Precision" type="xsd:integer" minOccurs="0"/>
 			<xsd:element name="Scale" type="xsd:integer" minOccurs="0"/>
-			<xsd:element name="Nullable" type="db:YesNo" />
-			<xsd:element name="IdentityColumn" type="db:YesNo" />
+			<xsd:element name="Nullable" type="db:YesNo"/>
+			<xsd:element name="IdentityColumn" type="db:YesNo"/>
 			<xsd:element name="DefaultValue" type="xsd:string" minOccurs="0"/>
 			<xsd:element name="ConstraintDefaultName" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
@@ -70,8 +70,8 @@
 					<xsd:element name="ForeignKeyName" type="xsd:string"/>
 					<xsd:element name="RefTableName" type="xsd:string"/>
 					<xsd:element name="Columns" type="db:ArrayOfForeignKeyColumn"/>
-					<xsd:element name="DeleteCascade" type="db:YesNo" />
-					<xsd:element name="UpdateCascade" type="db:YesNo" />
+					<xsd:element name="DeleteCascade" type="db:YesNo"/>
+					<xsd:element name="UpdateCascade" type="db:YesNo"/>
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -98,8 +98,8 @@
 				<xsd:sequence>
 					<xsd:element name="TableName" type="xsd:string"/>
 					<xsd:element name="IndexName" type="xsd:string"/>
-					<xsd:element name="Unique" type="db:YesNo" />
-					<xsd:element name="Clustered" type="db:YesNo" />
+					<xsd:element name="Unique" type="db:YesNo"/>
+					<xsd:element name="Clustered" type="db:YesNo"/>
 					<xsd:element name="Columns" type="db:ArrayOfIndexColumn"/>
 				</xsd:sequence>
 			</xsd:extension>
@@ -149,6 +149,8 @@
 			<xsd:extension base="db:Statement">
 				<xsd:sequence>
 					<xsd:element name="Name" type="xsd:string"/>
+					<xsd:element name="InputParameters" type="db:ArrayOfParameter"/>
+					<xsd:element name="RecordSets" type="db:ArrayOfRecordSetDef"/>
 					<xsd:element name="SourceCode" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:extension>
@@ -184,7 +186,7 @@
 					<xsd:element name="MinValue" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="MaxValue" type="xsd:integer" minOccurs="0"/>
 					<xsd:element name="Increment" type="xsd:integer"/>
-					<xsd:element name="CycleOnLimit" type="db:YesNo" />
+					<xsd:element name="CycleOnLimit" type="db:YesNo"/>
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -204,5 +206,37 @@
 			<xsd:enumeration value="Yes"/>
 			<xsd:enumeration value="No"/>
 		</xsd:restriction>
-	</xsd:simpleType>	
+	</xsd:simpleType>
+	<xsd:complexType name="Parameter">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string"/>
+			<xsd:element name="Type" type="db:ColumnType"/>
+			<xsd:element name="Size" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Precision" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Scale" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Direction" type="db:ParameterDirection"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="ParameterDirection">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Input"/>
+			<xsd:enumeration value="Output"/>
+			<xsd:enumeration value="InputOutput"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="ArrayOfParameter">
+		<xsd:sequence>
+			<xsd:element name="Parameter" type="db:Parameter" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RecordSetDef">
+		<xsd:sequence>
+			<xsd:element name="Parameters" type="db:ArrayOfParameter"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ArrayOfRecordSetDef">
+		<xsd:sequence>
+			<xsd:element name="RecordSet" type="db:RecordSetDef" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
 </xsd:schema>

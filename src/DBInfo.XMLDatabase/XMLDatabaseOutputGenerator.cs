@@ -302,6 +302,17 @@ namespace DBInfo.XMLDatabase {
       }
     }
     
+    private ParameterDirection GetParameterDirection(DBInfo.Core.Model.ParamDirection d){
+      if (d == DBInfo.Core.Model.ParamDirection.Input)
+        return ParameterDirection.Input;
+      else if (d == DBInfo.Core.Model.ParamDirection.Output)
+        return ParameterDirection.Output;
+      else if (d == DBInfo.Core.Model.ParamDirection.InputOutput)
+        return ParameterDirection.InputOutput;
+      else
+        throw new Exception(String.Format("Invalid parameter direction: {0}", d.ToString()));
+    }
+    
     private void GenerateProcedures(DBInfo.Core.Model.Database db){
       if (!Directory.Exists(OutputDir + "\\" + ProceduresDir))
         Directory.CreateDirectory(OutputDir + "\\" + ProceduresDir);    
@@ -310,6 +321,36 @@ namespace DBInfo.XMLDatabase {
         DBInfo.XMLDatabase.CreateProcedure xmlProc = new DBInfo.XMLDatabase.CreateProcedure();
         xmlProc.Name = p.Name;
         xmlProc.SourceCode = p.Body;
+        
+        xmlProc.InputParameters = new Parameter[p.InputParameters.Count];
+        
+        foreach(DBInfo.Core.Model.Parameter parm in p.InputParameters){
+          Parameter xmlParam = new Parameter();
+          xmlParam.Name = parm.Name;
+          xmlParam.Type = getColumnType(parm.Type);
+          xmlParam.Size = parm.Size.ToString();
+          xmlParam.Precision = parm.Precision.ToString();
+          xmlParam.Scale = parm.Scale.ToString();
+          xmlParam.Direction = GetParameterDirection(parm.Direction);
+          xmlProc.InputParameters[p.InputParameters.IndexOf(parm)] = xmlParam;
+        }
+        
+        xmlProc.RecordSets = new RecordSetDef[p.RecordSets.Count];
+        foreach(DBInfo.Core.Model.RecordSet r in p.RecordSets){
+          RecordSetDef xmlRS = new RecordSetDef();
+          xmlRS.Parameters = new Parameter[r.Parameters.Count];
+          foreach(DBInfo.Core.Model.Parameter parm in r.Parameters){
+            Parameter xmlParam = new Parameter();
+            xmlParam.Name = parm.Name;
+            xmlParam.Type = getColumnType(parm.Type);
+            xmlParam.Size = parm.Size.ToString();
+            xmlParam.Precision = parm.Precision.ToString();
+            xmlParam.Scale = parm.Scale.ToString();
+            xmlParam.Direction = GetParameterDirection(parm.Direction);
+            xmlRS.Parameters[r.Parameters.IndexOf(parm)] = xmlParam;
+          }
+          xmlProc.RecordSets[p.RecordSets.IndexOf(r)] = xmlRS;
+        }
 
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];
