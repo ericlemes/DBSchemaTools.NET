@@ -7,7 +7,8 @@ namespace DBInfo.Core.Model {
   public enum ParamDirection{
     Input,
     Output,
-    InputOutput
+    InputOutput,
+    ReturnValue
   }
 
   public class Parameter {

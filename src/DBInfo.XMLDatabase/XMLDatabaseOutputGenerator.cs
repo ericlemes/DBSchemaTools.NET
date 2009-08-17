@@ -116,46 +116,56 @@ namespace DBInfo.XMLDatabase {
     }
     
     private ColumnType getColumnType(M.DBColumnType type){
-      if (type == M.DBColumnType.DBBigInt)
+      if (type == M.DBColumnType.BigInt)
         return ColumnType.BigInt;
-      else if (type == M.DBColumnType.DBBinary)
+      else if (type == M.DBColumnType.Binary)
         return ColumnType.Binary;
-      else if (type == M.DBColumnType.DBBit)
+      else if (type == M.DBColumnType.Bit)
         return ColumnType.Bit;
-      else if (type == M.DBColumnType.DBBlob)
-        return ColumnType.Blob;
-      else if (type == M.DBColumnType.DBChar)
-        return ColumnType.Char;
-      else if (type == M.DBColumnType.DBDateTime)
+      else if (type == M.DBColumnType.Image)
+        return ColumnType.Image;
+      else if (type == M.DBColumnType.DateTime)
         return ColumnType.DateTime;
-      else if (type == M.DBColumnType.DBDecimal)
+      else if (type == M.DBColumnType.Decimal)
         return ColumnType.Decimal;
-      else if (type == M.DBColumnType.DBFloat)
+      else if (type == M.DBColumnType.Float)
         return ColumnType.Float;
-      else if (type == M.DBColumnType.DBGUID)
-        return ColumnType.GUID;
-      else if (type == M.DBColumnType.DBInteger)
+      else if (type == M.DBColumnType.UniqueIdentifier)
+        return ColumnType.UniqueIdentifier;
+      else if (type == M.DBColumnType.Integer)
         return ColumnType.Integer;
-      else if (type == M.DBColumnType.DBMemo)
-        return ColumnType.Memo;
-      else if (type == M.DBColumnType.DBMoney)
+      else if (type == M.DBColumnType.Text)
+        return ColumnType.Text;
+      else if (type == M.DBColumnType.Money)
         return ColumnType.Money;
-      else if (type == M.DBColumnType.DBNumeric)
+      else if (type == M.DBColumnType.Numeric)
         return ColumnType.Numeric;
-      else if (type == M.DBColumnType.DBNVarchar)
-        return ColumnType.NVarchar;
-      else if (type == M.DBColumnType.DBRowID)
-        return ColumnType.RowID;
-      else if (type == M.DBColumnType.DBSmallDateTime)
+      else if (type == M.DBColumnType.NVarchar)
+        return ColumnType.NVarchar;      
+      else if (type == M.DBColumnType.SmallDateTime)
         return ColumnType.SmallDateTime;
-      else if (type == M.DBColumnType.DBSmallInt)
+      else if (type == M.DBColumnType.SmallInt)
         return ColumnType.SmallInt;
-      else if (type == M.DBColumnType.DBTimeStamp)
+      else if (type == M.DBColumnType.TimeStamp)
         return ColumnType.TimeStamp;
-      else if (type == M.DBColumnType.DBTinyInt)
+      else if (type == M.DBColumnType.TinyInt)
         return ColumnType.TinyInt;
-      else if (type == M.DBColumnType.DBVarchar)
+      else if (type == M.DBColumnType.VarChar)
         return ColumnType.Varchar;
+      else if (type == M.DBColumnType.Char)
+        return ColumnType.Char;
+      else if (type == M.DBColumnType.NChar)
+        return ColumnType.NChar;
+      else if (type == M.DBColumnType.Real)
+        return ColumnType.Real;
+      else if (type == M.DBColumnType.SmallMoney)
+        return ColumnType.SmallMoney;
+      else if (type == M.DBColumnType.VarBinary)
+        return ColumnType.VarBinary;
+      else if (type == M.DBColumnType.Xml)
+        return ColumnType.Xml;
+      else if (type == M.DBColumnType.NText)
+        return ColumnType.NText;                
       else 
         throw new Exception(String.Format("Type not supported by XMLDatabase: {0}", type.ToString()));
     }
@@ -309,6 +319,8 @@ namespace DBInfo.XMLDatabase {
         return ParameterDirection.Output;
       else if (d == DBInfo.Core.Model.ParamDirection.InputOutput)
         return ParameterDirection.InputOutput;
+      else if (d == DBInfo.Core.Model.ParamDirection.ReturnValue)
+        return ParameterDirection.ReturnValue;
       else
         throw new Exception(String.Format("Invalid parameter direction: {0}", d.ToString()));
     }

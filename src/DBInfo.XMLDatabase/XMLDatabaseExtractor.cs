@@ -87,45 +87,55 @@ namespace DBInfo.XMLDatabase {
     
     private DBInfo.Core.Model.DBColumnType GetDBColumnType(ColumnType ct){
       if (ct == ColumnType.BigInt)
-        return DBInfo.Core.Model.DBColumnType.DBBigInt;
+        return DBInfo.Core.Model.DBColumnType.BigInt;
       else if (ct == ColumnType.Binary)
-        return DBInfo.Core.Model.DBColumnType.DBBinary;
+        return DBInfo.Core.Model.DBColumnType.Binary;
       else if (ct == ColumnType.Bit)
-        return DBInfo.Core.Model.DBColumnType.DBBit;
-      else if (ct == ColumnType.Blob)
-        return DBInfo.Core.Model.DBColumnType.DBBlob;
+        return DBInfo.Core.Model.DBColumnType.Bit;
       else if (ct == ColumnType.Char)
-        return DBInfo.Core.Model.DBColumnType.DBChar;
+        return DBInfo.Core.Model.DBColumnType.Char;
       else if (ct == ColumnType.DateTime)
-        return DBInfo.Core.Model.DBColumnType.DBDateTime;
+        return DBInfo.Core.Model.DBColumnType.DateTime;
       else if (ct == ColumnType.Decimal)
-        return DBInfo.Core.Model.DBColumnType.DBDecimal;
+        return DBInfo.Core.Model.DBColumnType.Decimal;
       else if (ct == ColumnType.Float)
-        return DBInfo.Core.Model.DBColumnType.DBFloat;
-      else if (ct == ColumnType.GUID)
-        return DBInfo.Core.Model.DBColumnType.DBGUID;
+        return DBInfo.Core.Model.DBColumnType.Float;
+      else if (ct == ColumnType.UniqueIdentifier)
+        return DBInfo.Core.Model.DBColumnType.UniqueIdentifier;
       else if (ct == ColumnType.Integer)
-        return DBInfo.Core.Model.DBColumnType.DBInteger;
-      else if (ct == ColumnType.Memo)
-        return DBInfo.Core.Model.DBColumnType.DBMemo;
+        return DBInfo.Core.Model.DBColumnType.Integer;
+      else if (ct == ColumnType.Text)
+        return DBInfo.Core.Model.DBColumnType.Text;
       else if (ct == ColumnType.Money)
-        return DBInfo.Core.Model.DBColumnType.DBMoney;
+        return DBInfo.Core.Model.DBColumnType.Money;
       else if (ct == ColumnType.Numeric)
-        return DBInfo.Core.Model.DBColumnType.DBNumeric;
+        return DBInfo.Core.Model.DBColumnType.Numeric;
       else if (ct == ColumnType.NVarchar)
-        return DBInfo.Core.Model.DBColumnType.DBNVarchar;
-      else if (ct == ColumnType.RowID)
-        return DBInfo.Core.Model.DBColumnType.DBRowID;
+        return DBInfo.Core.Model.DBColumnType.NVarchar;
       else if (ct == ColumnType.SmallDateTime)
-        return DBInfo.Core.Model.DBColumnType.DBSmallDateTime;
+        return DBInfo.Core.Model.DBColumnType.SmallDateTime;
       else if (ct == ColumnType.SmallInt)
-        return DBInfo.Core.Model.DBColumnType.DBSmallInt;
+        return DBInfo.Core.Model.DBColumnType.SmallInt;
       else if (ct == ColumnType.TimeStamp)
-        return DBInfo.Core.Model.DBColumnType.DBTimeStamp;
+        return DBInfo.Core.Model.DBColumnType.TimeStamp;
       else if (ct == ColumnType.TinyInt)
-        return DBInfo.Core.Model.DBColumnType.DBTinyInt;
+        return DBInfo.Core.Model.DBColumnType.TinyInt;
       else if (ct == ColumnType.Varchar)
-        return DBInfo.Core.Model.DBColumnType.DBVarchar;
+        return DBInfo.Core.Model.DBColumnType.VarChar;
+      else if (ct == ColumnType.Real)
+        return DBInfo.Core.Model.DBColumnType.Real;
+      else if (ct == ColumnType.Image)
+        return DBInfo.Core.Model.DBColumnType.Image;
+      else if (ct == ColumnType.NChar)
+        return DBInfo.Core.Model.DBColumnType.NChar;
+      else if (ct == ColumnType.SmallMoney)
+        return DBInfo.Core.Model.DBColumnType.SmallMoney;
+      else if (ct == ColumnType.VarBinary)
+        return DBInfo.Core.Model.DBColumnType.VarBinary;
+      else if (ct == ColumnType.Xml)
+        return DBInfo.Core.Model.DBColumnType.Xml;        
+      else if (ct == ColumnType.NText)
+        return DBInfo.Core.Model.DBColumnType.NText;
       else
         throw new Exception(String.Format("Type not supported: {0}", ct.ToString()));      
     }
@@ -239,6 +249,8 @@ namespace DBInfo.XMLDatabase {
         return DBInfo.Core.Model.ParamDirection.Output;
       else if (d == ParameterDirection.InputOutput)
         return DBInfo.Core.Model.ParamDirection.InputOutput;
+      else if (d == ParameterDirection.ReturnValue)
+        return DBInfo.Core.Model.ParamDirection.ReturnValue;
       else
         throw new Exception(String.Format("Invalid parameter direction {0}", d.ToString()));
     }

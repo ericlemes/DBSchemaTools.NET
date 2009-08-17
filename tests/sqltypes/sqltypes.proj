@@ -1,0 +1,55 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+
+	<Import Project="..\..\src\bin\DBInfo.MSBuild.targets" />
+
+	<PropertyGroup>
+		<SqlCmd>"C:\Arquivos de programas\Microsoft SQL Server\90\Tools\Binn\SqlCmd.exe"</SqlCmd>
+		<SqlServer>(local)</SqlServer>
+		<SqlUser>sa</SqlUser>
+		<SqlPassword>123456</SqlPassword>
+	</PropertyGroup>
+
+	<Target Name="Build">
+		<DBInfo 
+			extractorclass="DBInfo.Core.Extractor.DatabaseExtractor, DBInfo.Core"
+			dbextractorclass="DBInfo.DBExtractors.SQLServerDBExtractor, DBInfo.SQLServer"
+			outputgeneratorclass="DBInfo.XMLDatabase.XMLDatabaseOutputGenerator, DBInfo.XMLDatabase"
+			datatoextract="all"
+			datatogenerateoutput="all"
+			scriptfileoutputgenerator="DBInfo.Core.OutputGenerators.SplittedScriptFileOutputGenerator, DBInfo.Core"
+			outputdir=".\XMLScripts"
+			inputfiles="@(XMLs)"
+			inputconnectionstring="server=(local);initial catalog=Tests;user=sa;pwd=123456"
+			/>
+
+		<CreateItem Include="$(MSBuildProjectDirectory)\XMLScripts\**\*.xml" >
+			<Output TaskParameter="Include" ItemName="Xmls"/>
+		</CreateItem>
+
+		<DBInfo 
+			extractorclass="DBInfo.XMLDatabase.XMLDatabaseExtractor, DBInfo.XMLDatabase"
+			outputgeneratorclass="DBInfo.Core.OutputGenerators.ScriptOutputGenerator, DBInfo.Core"
+			datatoextract="all"
+			datatogenerateoutput="all"
+			scriptoutputgeneratorclass="DBInfo.SQLServer.SQLServerOutputGenerator, DBInfo.SQLServer"
+			scriptfileoutputgenerator="DBInfo.Core.OutputGenerators.ConsolidatedScriptFileOutputGenerator, DBInfo.Core"
+			outputdir=".\SQLScripts"
+			inputfiles="@(XMLs)"
+			inputconnectionstring="server=(local);initial catalog=Tests;user=sa;pwd=123456"
+			/>
+
+		<Exec Command="$(SqlCmd) -S $(SqlServer) -U $(SqlUser) -P $(SqlPassword) -q &quot;create database SqlTypes&quot;" />
+		<Exec Command="$(SqlCmd) -S $(SqlServer) -U $(SqlUser) -P $(SqlPassword) -d SqlTypes -i $(MSBuildProjectDirectory)\SQLScripts\database_script.sql" />
+
+		<DBInfo 
+			extractorclass="DBInfo.XMLDatabase.XMLDatabaseExtractor, DBInfo.XMLDatabase"
+			outputgeneratorclass="DBInfo.CodeGen.SimpleDAO, DBInfo.CodeGen"
+			datatoextract="all"
+			datatogenerateoutput="all"
+			outputdir=".\SqlTypeTests"
+			inputfiles="@(XMLs)"
+			inputconnectionstring="server=(local);initial catalog=Tests;user=sa;pwd=123456"
+			/>
+	</Target>
+	
+</Project>

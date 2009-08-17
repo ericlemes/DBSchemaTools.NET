@@ -61,7 +61,7 @@ namespace DBInfo.CodeGen {
     public string BlobStreamClassSuffix{
       get { return _BlobStreamClassSuffix;}
       set {_BlobStreamClassSuffix = value;}
-    }
+    }        
 
     public void GenerateOutput(Database db, List<DBObjectType> dataToGenerateOutput) {      
       foreach(Table t in db.Tables){
@@ -71,6 +71,7 @@ namespace DBInfo.CodeGen {
       foreach(Procedure p in db.Procedures){
         GenerateProcedureInputVO(p);
         GenerateProcedureOutputVOs(p);
+        GenerateProcedureDAO(p);
       }
     }
 
@@ -97,54 +98,76 @@ namespace DBInfo.CodeGen {
       get { return _ProcOutputVOClassSuffix; }
       set { _ProcOutputVOClassSuffix = value; }
     }
+
+    private string _ProcedureDAONamespace = "ProcedureDAO";
+    public string ProcedureDAONamespace {
+      get { return _ProcedureDAONamespace; }
+      set { _ProcedureDAONamespace = value; }
+    }
+
+    private string _ProcedureDAOClassSuffix = "ProcedureDAO";
+    public string ProcedureDAOClassSuffix {
+      get { return _ProcedureDAOClassSuffix; }
+      set { _ProcedureDAOClassSuffix = value; }
+    }
     
     private Type GetTypeFromColumnType(DBColumnType t){
-      if (t == DBColumnType.DBBigInt)
+      if (t == DBColumnType.BigInt)
         return typeof(long?);
-      else if (t == DBColumnType.DBBit)
+      else if (t == DBColumnType.Bit)
         return typeof(bool?);
-      else if (t == DBColumnType.DBChar)
+      else if (t == DBColumnType.Char)
         return typeof(string);
-      else if (t == DBColumnType.DBDateTime)
+      else if (t == DBColumnType.DateTime)
         return typeof(DateTime?);
-      else if (t == DBColumnType.DBDecimal)
+      else if (t == DBColumnType.Decimal)
         return typeof(decimal?);
-      else if (t == DBColumnType.DBFloat)
-        return typeof(float?);
-      else if (t == DBColumnType.DBGUID)
+      else if (t == DBColumnType.Float)
+        return typeof(double?);
+      else if (t == DBColumnType.UniqueIdentifier)
         return typeof(Guid?);
-      else if (t == DBColumnType.DBInteger)
+      else if (t == DBColumnType.Integer)
         return typeof(int?);
-      else if (t == DBColumnType.DBMemo)
+      else if (t == DBColumnType.Text)
         return typeof(string);
-      else if (t == DBColumnType.DBMoney)
-        return typeof(float?);
-      else if (t == DBColumnType.DBNumeric)
+      else if (t == DBColumnType.Money)
         return typeof(decimal?);
-      else if (t == DBColumnType.DBNVarchar)
+      else if (t == DBColumnType.Numeric)
+        return typeof(decimal?);
+      else if (t == DBColumnType.NVarchar)
         return typeof(string);
-      else if (t == DBColumnType.DBRowID)
-        return typeof(string);
-      else if (t == DBColumnType.DBSmallDateTime)
+      else if (t == DBColumnType.SmallDateTime)
         return typeof(DateTime?);
-      else if (t == DBColumnType.DBSmallInt)
+      else if (t == DBColumnType.SmallInt)
         return typeof(Int16?);
-      else if (t == DBColumnType.DBTimeStamp)
+      else if (t == DBColumnType.TimeStamp)
         return typeof(string);
-      else if (t == DBColumnType.DBTinyInt)
-        return typeof(Int16?);
-      else if (t == DBColumnType.DBVarchar)
+      else if (t == DBColumnType.TinyInt)
+        return typeof(byte?);
+      else if (t == DBColumnType.VarChar)
         return typeof(string);      
+      else if (t == DBColumnType.Real)
+        return typeof(float?);
+      else if (t == DBColumnType.NChar)
+        return typeof(string);
+      else if (t == DBColumnType.SmallMoney)
+        return typeof(decimal?);      
+      else if (t == DBColumnType.NText)
+        return typeof(string);
       else
         throw new Exception(String.Format("Unsuported type: {0}", t.ToString()));
     }
     
     private bool IsStreamedType(DBColumnType t){
-      if (t == DBColumnType.DBBinary)
+      if (t == DBColumnType.Binary)
         return true;
-      else if (t == DBColumnType.DBBlob)
+      else if (t == DBColumnType.Image)
         return true;
-      else if (t == DBColumnType.DBTimeStamp)
+      else if (t == DBColumnType.TimeStamp)
+        return true;
+      else if (t == DBColumnType.VarBinary)
+        return true;
+      else if (t == DBColumnType.Xml)
         return true;
       return false;
     }
@@ -265,46 +288,52 @@ namespace DBInfo.CodeGen {
     }
     
     private SqlDbType GetSqlDbType(DBColumnType t){
-      if (t == DBColumnType.DBBigInt)
+      if (t == DBColumnType.BigInt)
         return SqlDbType.BigInt;
-      else if (t == DBColumnType.DBBinary)
+      else if (t == DBColumnType.Binary)
         return SqlDbType.Binary;
-      else if (t == DBColumnType.DBBit)
+      else if (t == DBColumnType.Bit)
         return SqlDbType.Bit;
-      else if (t == DBColumnType.DBBlob)
+      else if (t == DBColumnType.Image)
         return SqlDbType.Image;
-      else if (t == DBColumnType.DBChar)
+      else if (t == DBColumnType.Char)
         return SqlDbType.Char;
-      else if (t == DBColumnType.DBDateTime)
+      else if (t == DBColumnType.DateTime)
         return SqlDbType.DateTime;
-      else if (t == DBColumnType.DBDecimal)
+      else if (t == DBColumnType.Decimal)
         return SqlDbType.Decimal;
-      else if (t == DBColumnType.DBFloat)
+      else if (t == DBColumnType.Float)
         return SqlDbType.Float;
-      else if (t == DBColumnType.DBGUID)
+      else if (t == DBColumnType.UniqueIdentifier)
         return SqlDbType.UniqueIdentifier;
-      else if (t == DBColumnType.DBInteger)
+      else if (t == DBColumnType.Integer)
         return SqlDbType.Int;
-      else if (t == DBColumnType.DBMemo)
+      else if (t == DBColumnType.Text)
         return SqlDbType.Text;
-      else if (t == DBColumnType.DBMoney)
+      else if (t == DBColumnType.Money)
         return SqlDbType.Money;
-      else if (t == DBColumnType.DBNumeric)
+      else if (t == DBColumnType.Numeric)
         return SqlDbType.Decimal;
-      else if (t == DBColumnType.DBNVarchar)
-        return SqlDbType.NVarChar;
-      else if (t == DBColumnType.DBRowID)
-        return SqlDbType.VarChar;
-      else if (t == DBColumnType.DBSmallDateTime)
+      else if (t == DBColumnType.NVarchar)
+        return SqlDbType.NVarChar;      
+      else if (t == DBColumnType.SmallDateTime)
         return SqlDbType.SmallDateTime;
-      else if (t == DBColumnType.DBSmallInt)
+      else if (t == DBColumnType.SmallInt)
         return SqlDbType.SmallInt;
-      else if (t == DBColumnType.DBTimeStamp)
+      else if (t == DBColumnType.TimeStamp)
         return SqlDbType.Timestamp;
-      else if (t == DBColumnType.DBTinyInt)
+      else if (t == DBColumnType.TinyInt)
         return SqlDbType.TinyInt;
-      else if (t == DBColumnType.DBVarchar)
+      else if (t == DBColumnType.VarChar)
         return SqlDbType.VarChar;
+      else if (t == DBColumnType.NChar)
+        return SqlDbType.NChar;
+      else if (t == DBColumnType.Real)
+        return SqlDbType.Real;
+      else if (t == DBColumnType.SmallMoney)
+        return SqlDbType.SmallMoney;
+      else if (t == DBColumnType.NText)
+        return SqlDbType.NText;
       else
         throw new Exception(String.Format("Can't find SqlDbType for Type {0}", t.ToString()));
     }
@@ -885,45 +914,51 @@ namespace DBInfo.CodeGen {
     }
     
     private string GetReaderMethodByType(DBColumnType t){
-      if (t == DBColumnType.DBBigInt)
+      if (t == DBColumnType.BigInt)
         return "GetInt64";
-      else if (t == DBColumnType.DBBinary)
+      else if (t == DBColumnType.Binary)
         return "GetBytes";
-      else if (t == DBColumnType.DBBit)
+      else if (t == DBColumnType.Bit)
         return "GetBoolean";
-      else if (t == DBColumnType.DBBlob)
+      else if (t == DBColumnType.Image)
         return "GetBytes";
-      else if (t == DBColumnType.DBChar)
+      else if (t == DBColumnType.Char)
         return "GetString";
-      else if (t == DBColumnType.DBDateTime)
+      else if (t == DBColumnType.DateTime)
         return "GetDateTime";
-      else if (t == DBColumnType.DBDecimal)
+      else if (t == DBColumnType.Decimal)
         return "GetDecimal";
-      else if (t == DBColumnType.DBFloat)
-        return "GetFloat";
-      else if (t == DBColumnType.DBGUID)
+      else if (t == DBColumnType.Float)
+        return "GetDouble";
+      else if (t == DBColumnType.UniqueIdentifier)
         return "GetGuid";
-      else if (t == DBColumnType.DBInteger)
+      else if (t == DBColumnType.Integer)
         return "GetInt32";
-      else if (t == DBColumnType.DBMemo)
+      else if (t == DBColumnType.Text)
         return "GetString";
-      else if (t == DBColumnType.DBMoney)
-        return "GetFloat";        
-      else if (t == DBColumnType.DBNumeric)
+      else if (t == DBColumnType.Money)
+        return "GetDecimal";        
+      else if (t == DBColumnType.Numeric)
         return "GetDecimal";
-      else if (t == DBColumnType.DBNVarchar)
+      else if (t == DBColumnType.NVarchar)
         return "GetString";
-      else if (t == DBColumnType.DBRowID)
-        return "GetString";
-      else if (t == DBColumnType.DBSmallDateTime)
+      else if (t == DBColumnType.SmallDateTime)
         return "GetDateTime";
-      else if (t == DBColumnType.DBSmallInt)
+      else if (t == DBColumnType.SmallInt)
         return "GetInt16";
-      else if (t == DBColumnType.DBTimeStamp)
+      else if (t == DBColumnType.TimeStamp)
         return "GetString";
-      else if (t == DBColumnType.DBTinyInt)
-        return "GetInt16";
-      else if (t == DBColumnType.DBVarchar)
+      else if (t == DBColumnType.TinyInt)
+        return "GetByte";
+      else if (t == DBColumnType.VarChar)
+        return "GetString";
+      else if (t == DBColumnType.Real)
+        return "GetFloat";
+      else if (t == DBColumnType.NChar)
+        return "GetString";
+      else if (t == DBColumnType.SmallMoney)
+        return "GetDecimal";
+      else if (t == DBColumnType.NText)
         return "GetString";
       else 
         throw new Exception(String.Format("Type not supported by SqlDataReader: {0}", t.ToString()));
@@ -1368,16 +1403,18 @@ namespace DBInfo.CodeGen {
         CodeTypeDeclaration voClass = new CodeTypeDeclaration(VOClassName);
         voClass.IsClass = true;
         foreach (Parameter param in rs.Parameters) {
+          string Name = RemoveSpecialChars(param.Name);
+        
           if (IsStreamedType(param.Type))
             continue;
-          CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + param.Name);
+          CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + Name);
           voClass.Members.Add(mf);
 
           CodeMemberProperty mp = new CodeMemberProperty();
           mp.Attributes = MemberAttributes.Public;
           mp.HasGet = true;
           mp.HasSet = true;
-          mp.Name = param.Name;
+          mp.Name = Name;
           mp.Type = new CodeTypeReference(GetTypeFromColumnType(param.Type));
 
           mp.SetStatements.Add(new CodeAssignStatement(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), mf.Name), new CodePropertySetValueReferenceExpression()));
@@ -1402,7 +1439,251 @@ namespace DBInfo.CodeGen {
         sw.Close();
         fs.Close();
       }
-    }        
+    }
+    
+    private string RemoveSpecialChars(string st){
+      string tmp = "";
+      foreach(char c in st){
+        if ("abcdefghijklmnopqrstuvxywzABCDEFGHIJKLMNOPQRSTUVXYWZ0123456789".Contains(c))
+          tmp += c;
+      }
+      if ("0123456789".Contains(tmp.Substring(0, 1)))
+        tmp = "A" + tmp;        
+      return tmp;      
+    }
+
+    private void GenerateProcedureDAO(Procedure p) {
+      CodeNamespace codeNS = new CodeNamespace(_Namespace + "." + _ProcedureDAONamespace);
+      codeNS.Imports.Add(new CodeNamespaceImport(_ProcInputVONamespace));
+      codeNS.Imports.Add(new CodeNamespaceImport(_ProcOutputVONamespace));
+      codeNS.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
+
+      CodeTypeDeclaration daoClass = new CodeTypeDeclaration(p.Name + _ProcedureDAOClassSuffix);
+      codeNS.Types.Add(daoClass);
+      daoClass.IsClass = true;      
+
+      daoClass.Members.Add(GenerateExecuteMethod(p));      
+            
+      CSharpCodeProvider csharp = new CSharpCodeProvider();
+
+      CodeGeneratorOptions cop = new CodeGeneratorOptions();
+      cop.IndentString = "  ";
+
+      if (!Directory.Exists(OutputDir + "\\" + _ProcedureDAONamespace))
+        Directory.CreateDirectory(OutputDir + "\\" + _ProcedureDAONamespace);
+
+      FileStream fs = new FileStream(OutputDir + "\\" + _ProcedureDAONamespace + "\\" + p.Name + _ProcedureDAOClassSuffix + ".cs", FileMode.Create, FileAccess.Write);
+      StreamWriter sw = new StreamWriter(fs);
+
+      csharp.GenerateCodeFromNamespace(codeNS, sw, cop);
+      sw.Flush();
+      sw.Close();
+      fs.Close();
+    }
+    
+    private ParameterDirection GetParameterDirectionFromParamDirection(ParamDirection d){
+      if (d == ParamDirection.Input)
+        return ParameterDirection.Input;
+      else if (d == ParamDirection.InputOutput)
+        return ParameterDirection.InputOutput;
+      else if (d == ParamDirection.Output)
+        return ParameterDirection.Output;
+      else 
+        return ParameterDirection.ReturnValue;
+    }
+
+    private CodeMemberMethod GenerateExecuteMethod(Procedure p) {
+      CodeMemberMethod execMethod = new CodeMemberMethod();
+      execMethod.Name = "Execute";
+      execMethod.Attributes = MemberAttributes.Public;
+      if (p.RecordSets.Count <= 0)
+        execMethod.ReturnType = null;
+      else if (p.RecordSets.Count == 1)
+        execMethod.ReturnType = new CodeTypeReference("List<" + p.Name + _ProcOutputVOClassSuffix + ">");
+      else 
+        execMethod.ReturnType = new CodeTypeReference("List<object>");
+
+      AddDefaultParams(execMethod);
+
+      CodeParameterDeclarationExpression inputVOParm = new CodeParameterDeclarationExpression();
+      inputVOParm.Type = new CodeTypeReference(p.Name + ProcInputVOClassSuffix);
+      inputVOParm.Name = "inputVO";
+      execMethod.Parameters.Add(inputVOParm);
+      
+      execMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(p.Name)));
+      execMethod.Statements.Add(
+        new CodeAssignStatement(
+          new CodeFieldReferenceExpression(
+            new CodeVariableReferenceExpression("cmd"), "CommandType"),
+          new CodeFieldReferenceExpression(            
+            new CodeTypeReferenceExpression(new CodeTypeReference(typeof(CommandType))),
+            "StoredProcedure")));
+              
+      
+      int paramCount = 1;
+      
+      execMethod.Statements.Add(
+        new CodeVariableDeclarationStatement(typeof(object), "val"));      
+        
+      foreach(Parameter parm in p.InputParameters){ 
+        CodeStatement[] trueStatements = new CodeStatement[1];
+        trueStatements[0] = new CodeAssignStatement(new CodeVariableReferenceExpression("val"),
+          new CodeFieldReferenceExpression(
+            new CodeTypeReferenceExpression(
+              new CodeTypeReference(typeof(DBNull))), "Value"));
+        CodeStatement[] falseStatements = new CodeStatement[1];
+        falseStatements[0] = new CodeAssignStatement(new CodeVariableReferenceExpression("val"),
+          new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("inputVO"), parm.Name));          
+          
+        execMethod.Statements.Add(                  
+          new CodeConditionStatement(
+            new CodeBinaryOperatorExpression(
+              new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("inputVO"), parm.Name),
+              CodeBinaryOperatorType.ValueEquality,
+              new CodePrimitiveExpression(null)),
+              trueStatements,
+              falseStatements));              
+             
+        CreateSqlParameter("p" + paramCount.ToString(), parm.Name, GetSqlDbType(parm.Type), parm.Size, 
+          execMethod.Statements, new CodeVariableReferenceExpression("val"), 
+          GetParameterDirectionFromParamDirection(parm.Direction));
+          
+        paramCount++;
+      }
+      
+      if (p.RecordSets.Count <= 0){
+        execMethod.Statements.Add(
+          new CodeMethodInvokeExpression(
+            new CodeMethodReferenceExpression(new CodeVariableReferenceExpression("cmd"), "ExecuteNonQuery"), new CodeExpression[0]));
+      }
+      else if (p.RecordSets.Count == 1){
+        CreateReaderReturnProcVOList(execMethod, p, p.RecordSets[0], p.Name + ProcOutputVOClassSuffix, "result", true, false);
+      }
+      else {
+        //More than one recordset.
+        execMethod.Statements.Add(          
+          new CodeVariableDeclarationStatement("List<object>", "result", 
+          new CodeObjectCreateExpression("List<object>", new CodeExpression[0])));
+                
+        foreach(RecordSet rs in p.RecordSets){
+          string RSName = "RS" + (p.RecordSets.IndexOf(rs) + 1).ToString();
+          bool NextResult = p.RecordSets.IndexOf(rs) < p.RecordSets.Count - 1;
+          CreateReaderReturnProcVOList(execMethod, p, rs, p.Name + RSName + ProcOutputVOClassSuffix, RSName, p.RecordSets.IndexOf(rs) == 0, NextResult);
+          CodeExpression[] addParms = new CodeExpression[1];
+          addParms[0] = new CodeVariableReferenceExpression(RSName);
+          execMethod.Statements.Add(
+            new CodeMethodInvokeExpression(
+              new CodeMethodReferenceExpression(
+                new CodeVariableReferenceExpression("result"), "Add"), addParms));                
+        }
+      }
+      
+      paramCount = 1;
+      foreach(Parameter parm in p.InputParameters){              
+        if (parm.Direction == ParamDirection.ReturnValue || parm.Direction == ParamDirection.Output ||
+          parm.Direction == ParamDirection.InputOutput){
+          execMethod.Statements.Add(
+            new CodeAssignStatement(
+              new CodeFieldReferenceExpression(
+                new CodeVariableReferenceExpression("inputVO"),
+                parm.Name),
+              new CodeCastExpression(new CodeTypeReference(GetTypeFromColumnType(parm.Type)),
+              new CodeFieldReferenceExpression(
+                new CodeVariableReferenceExpression("p" + paramCount.ToString()),
+                "Value"))));
+        }
+        paramCount++;
+      }
+      
+      if (p.RecordSets.Count > 0){
+        execMethod.Statements.Add(
+          new CodeMethodReturnStatement(new CodeVariableReferenceExpression("result")));
+      }
+      
+      return execMethod;
+    }
+
+    private void CreateReaderReturnProcVOList(CodeMemberMethod method, Procedure p, RecordSet r, string OutputVOClass, string ResultVarName, bool declareReader, bool NextResult) {
+      if (declareReader){
+        method.Statements.Add(
+          new CodeVariableDeclarationStatement(typeof(SqlDataReader), "rd", new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("cmd"), "ExecuteReader", new CodeExpression[0])));
+      }
+
+      method.Statements.Add(
+          new CodeVariableDeclarationStatement("List<" + OutputVOClass + ">", ResultVarName,
+          new CodeObjectCreateExpression("List<" + OutputVOClass + ">", new CodeExpression[0])));
+
+      CodeIterationStatement whileReaderRead = new CodeIterationStatement(
+        new CodeSnippetStatement(""),
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression("rd"),
+            "Read"),
+            new CodeExpression[0]),
+        new CodeSnippetStatement(""));
+      method.Statements.Add(whileReaderRead);
+
+      AssignReaderOutputToNewProcVO(p, r, whileReaderRead.Statements, OutputVOClass);
+      CodeExpression[] addParms = new CodeExpression[1];
+      addParms[0] = new CodeVariableReferenceExpression("vo");
+      whileReaderRead.Statements.Add(
+        new CodeMethodInvokeExpression(
+          new CodeMethodReferenceExpression(
+            new CodeVariableReferenceExpression(ResultVarName),
+            "Add"),
+            addParms));
+      
+      if (NextResult){
+        method.Statements.Add(
+                  new CodeMethodInvokeExpression(
+                    new CodeMethodReferenceExpression(
+                      new CodeVariableReferenceExpression("rd"),
+                      "NextResult")));      
+      }
+      else {
+        method.Statements.Add(
+          new CodeMethodInvokeExpression(
+            new CodeMethodReferenceExpression(
+              new CodeVariableReferenceExpression("rd"),
+              "Close")));
+      }
+    }
+
+    private void AssignReaderOutputToNewProcVO(Procedure p, RecordSet r, CodeStatementCollection statements, string OutputVOClass) {
+      CodeVariableDeclarationStatement newVO = new CodeVariableDeclarationStatement(OutputVOClass, "vo", new CodeObjectCreateExpression(OutputVOClass, new CodeExpression[0]));
+      statements.Add(newVO);
+
+      CodeVariableReferenceExpression vo = new CodeVariableReferenceExpression("vo");
+      CodeVariableReferenceExpression rd = new CodeVariableReferenceExpression("rd");
+
+      int colIndex = 0;
+      foreach (Parameter parm in r.Parameters) {
+        if (IsStreamedType(parm.Type))
+          continue;
+
+        string Name = RemoveSpecialChars(parm.Name);          
+
+        CodeExpression[] readerParms = new CodeExpression[1];
+        readerParms[0] = new CodePrimitiveExpression(colIndex);
+
+        CodeStatement[] trueStatements1 = new CodeStatement[1];
+        trueStatements1[0] = new CodeAssignStatement(
+          new CodeFieldReferenceExpression(vo, Name),
+          new CodePrimitiveExpression(null));
+
+        CodeStatement[] falseStatements1 = new CodeStatement[1];
+        falseStatements1[0] = new CodeAssignStatement(
+          new CodeFieldReferenceExpression(vo, Name),
+          new CodeMethodInvokeExpression(rd, GetReaderMethodByType(parm.Type), readerParms));
+
+        CodeConditionStatement ifStatement = new CodeConditionStatement(
+          new CodeMethodInvokeExpression(new CodeVariableReferenceExpression("rd"), "IsDBNull", readerParms),
+          trueStatements1,
+          falseStatements1);
+        statements.Add(ifStatement);
+        colIndex++;
+      }
+    }    
 
     #endregion
   }

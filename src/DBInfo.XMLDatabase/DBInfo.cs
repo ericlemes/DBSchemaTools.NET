@@ -173,10 +173,19 @@ namespace DBInfo.XMLDatabase {
         Integer,
         
         /// <remarks/>
-        Varchar,
+        BigInt,
+        
+        /// <remarks/>
+        Binary,
+        
+        /// <remarks/>
+        Bit,
         
         /// <remarks/>
         Char,
+        
+        /// <remarks/>
+        DateTime,
         
         /// <remarks/>
         Decimal,
@@ -185,46 +194,52 @@ namespace DBInfo.XMLDatabase {
         Float,
         
         /// <remarks/>
-        Memo,
-        
-        /// <remarks/>
-        Blob,
-        
-        /// <remarks/>
-        DateTime,
-        
-        /// <remarks/>
-        Bit,
-        
-        /// <remarks/>
-        SmallDateTime,
+        Image,
         
         /// <remarks/>
         Money,
         
         /// <remarks/>
-        SmallInt,
+        NChar,
+        
+        /// <remarks/>
+        NText,
         
         /// <remarks/>
         Numeric,
         
         /// <remarks/>
-        GUID,
+        NVarchar,
         
         /// <remarks/>
-        BigInt,
+        Real,
+        
+        /// <remarks/>
+        SmallDateTime,
+        
+        /// <remarks/>
+        SmallInt,
+        
+        /// <remarks/>
+        SmallMoney,
+        
+        /// <remarks/>
+        Text,
         
         /// <remarks/>
         TinyInt,
         
         /// <remarks/>
-        Binary,
+        VarBinary,
         
         /// <remarks/>
-        NVarchar,
+        Varchar,
         
         /// <remarks/>
-        RowID,
+        UniqueIdentifier,
+        
+        /// <remarks/>
+        Xml,
         
         /// <remarks/>
         TimeStamp,
@@ -244,6 +259,9 @@ namespace DBInfo.XMLDatabase {
         
         /// <remarks/>
         InputOutput,
+        
+        /// <remarks/>
+        ReturnValue,
     }
     
     /// <remarks/>

@@ -2,26 +2,31 @@ using System;
 
 namespace DBInfo.Core.Model {
   public enum DBColumnType {
-    DBInteger = 1,
-    DBVarchar = 2,
-    DBChar = 3,
-    DBDecimal = 4,
-    DBFloat = 5,
-    DBMemo = 6,
-    DBBlob = 7,
-    DBDateTime = 8,
-    DBBit = 9,
-    DBSmallDateTime = 10,
-    DBMoney = 11,
-    DBSmallInt = 12,
-    DBNumeric = 13,
-    DBGUID = 14,
-    DBBigInt = 15,
-    DBTinyInt = 16,
-    DBBinary = 17,
-    DBNVarchar = 18,
-    DBRowID = 19, //RowID Oracle, RecID Progress
-    DBTimeStamp = 20
+    Integer = 1,
+    VarChar = 2,
+    Char = 3,
+    Decimal = 4,
+    Float = 5,
+    Text = 6,
+    Image = 7,        
+    DateTime = 8,
+    Bit = 9,
+    SmallDateTime = 10,
+    Money = 11,
+    SmallInt = 12,
+    Numeric = 13,
+    UniqueIdentifier = 14,    
+    BigInt = 15,
+    TinyInt = 16,    
+    Binary = 17,
+    NChar = 18,
+    NText = 19,
+    NVarchar = 20, 
+    Real = 21,                                     
+    SmallMoney = 22,        
+    VarBinary = 23,
+    Xml = 24,
+    TimeStamp = 25
   }
 
   public class Column {

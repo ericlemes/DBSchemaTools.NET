@@ -6,8 +6,8 @@ using DBInfo.DBSync;
 using DBInfo.Core;
 using DBInfo.Core.Model;
 using DBInfo.Core.Extractor;
-using DBInfo.OutputGenerators;
 using System.Collections.Generic;
+using DBInfo.SQLServer;
 
 namespace DBInfo.DBSync {
   public class DBSyncScript : DBSync {
@@ -27,9 +27,9 @@ namespace DBInfo.DBSync {
       foreach (object obj in tabela.PrimaryKeyColumns) {
         Column cpk = (Column)obj;
 
-        if ((cpk.Type == DBColumnType.DBChar) ||
-          (cpk.Type == DBColumnType.DBNVarchar) ||
-          (cpk.Type == DBColumnType.DBVarchar)) {
+        if ((cpk.Type == DBColumnType.Char) ||
+          (cpk.Type == DBColumnType.NVarchar) ||
+          (cpk.Type == DBColumnType.VarChar)) {
           criterio += separador + cpk.Name + " = '" + drDado[cpk.Name] + "'";
           separador = " and ";
         } else {
@@ -602,24 +602,24 @@ namespace DBInfo.DBSync {
 
     private string PegarTipoSQL(Column coluna) {
       switch (coluna.Type) {
-        case DBColumnType.DBInteger: return "int";
-        case DBColumnType.DBVarchar: return "varchar(" + coluna.Size.ToString() + ")";
-        case DBColumnType.DBChar: return "char(" + coluna.Size.ToString() + ")";
-        case DBColumnType.DBBlob: return "image";
-        case DBColumnType.DBDecimal: return "decimal(" + coluna.Precision.ToString() + "," + coluna.Scale.ToString() + ")";
-        case DBColumnType.DBFloat: return "float";
-        case DBColumnType.DBMemo: return "text";
-        case DBColumnType.DBDateTime: return "datetime";
-        case DBColumnType.DBBit: return "bit";
-        case DBColumnType.DBSmallDateTime: return "smalldatetime";
-        case DBColumnType.DBMoney: return "money";
-        case DBColumnType.DBSmallInt: return "smallint";
-        case DBColumnType.DBNumeric: return "numeric(" + coluna.Precision.ToString() + "," + coluna.Scale.ToString() + ")";
-        case DBColumnType.DBGUID: return "uniqueidentifier";
-        case DBColumnType.DBBigInt: return "bigint";
-        case DBColumnType.DBTinyInt: return "tinyint";
-        case DBColumnType.DBBinary: return "binary(" + coluna.Size.ToString() + ")";
-        case DBColumnType.DBNVarchar: return "nvarchar(" + coluna.Size.ToString() + ")";
+        case DBColumnType.Integer: return "int";
+        case DBColumnType.VarChar: return "varchar(" + coluna.Size.ToString() + ")";
+        case DBColumnType.Char: return "char(" + coluna.Size.ToString() + ")";
+        case DBColumnType.Image: return "image";
+        case DBColumnType.Decimal: return "decimal(" + coluna.Precision.ToString() + "," + coluna.Scale.ToString() + ")";
+        case DBColumnType.Float: return "float";
+        case DBColumnType.Text: return "text";
+        case DBColumnType.DateTime: return "datetime";
+        case DBColumnType.Bit: return "bit";
+        case DBColumnType.SmallDateTime: return "smalldatetime";
+        case DBColumnType.Money: return "money";
+        case DBColumnType.SmallInt: return "smallint";
+        case DBColumnType.Numeric: return "numeric(" + coluna.Precision.ToString() + "," + coluna.Scale.ToString() + ")";
+        case DBColumnType.UniqueIdentifier: return "uniqueidentifier";
+        case DBColumnType.BigInt: return "bigint";
+        case DBColumnType.TinyInt: return "tinyint";
+        case DBColumnType.Binary: return "binary(" + coluna.Size.ToString() + ")";
+        case DBColumnType.NVarchar: return "nvarchar(" + coluna.Size.ToString() + ")";
         default: throw new Exception("Tipo de dados não suportado " + coluna.Type.ToString());
       }
     }

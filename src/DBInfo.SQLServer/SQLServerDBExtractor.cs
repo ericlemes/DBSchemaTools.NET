@@ -68,11 +68,11 @@ namespace DBInfo.DBExtractors {
           "  c.name, " +
           "  case " +
           "    when c.xtype = 56 then 1 " +
-          "    when c.xtype = 231 then 18 " +
+          "    when c.xtype = 231 then 20 " +
           "    when c.xtype = 167 then 2 " +
           "    when c.xtype = 175 then 3 " +
           "    when c.xtype = 35 then 6 " +
-          "    when c.xtype = 99 then 6 " +
+          "    when c.xtype = 99 then 19 " +
           "    when c.xtype = 34 then 7 " +
           "    when c.xtype = 61 then 8 " +
           "    when c.xtype = 104 then 9 " +
@@ -86,7 +86,12 @@ namespace DBInfo.DBExtractors {
           "    when c.xtype = 127 then 15 " +
           "    when c.xtype = 48 then 16 " +
           "    when c.xtype = 173 then 17 " +
-          "    when c.xtype = 189 then 20 " + 
+          "    when c.xtype = 189 then 25 " + 
+          "    when c.xtype = 239 then 18 " +
+          "    when c.xtype = 59 then 21 " +
+          "    when c.xtype = 122 then 22 " +
+          "    when c.xtype = 165 then 23 " +
+          "    when c.xtype = 241 then 24 " + 
           "    else -1 " +
           "  end type, " +
           "  length, " +
@@ -422,8 +427,8 @@ namespace DBInfo.DBExtractors {
       
       Parameter returnValueParam = new Parameter();
       returnValueParam.Name = "RETURN_VALUE";
-      returnValueParam.Type = DBColumnType.DBInteger;        
-      returnValueParam.Direction = ParamDirection.Output;
+      returnValueParam.Type = DBColumnType.Integer;        
+      returnValueParam.Direction = ParamDirection.ReturnValue;
       p.InputParameters.Add(returnValueParam);
       
       foreach(DataRow r in ds.Tables[0].Rows){
@@ -492,31 +497,31 @@ namespace DBInfo.DBExtractors {
       } 
     }
     
-    private string GetValidVOPropertyNameFromColumnName(string 
+    //private string GetValidVOPropertyNameFromColumnName(string 
     
     private DBColumnType GetColumnTypeFromType(Type t){
       if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(string)))
-        return DBColumnType.DBVarchar;
+        return DBColumnType.VarChar;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(int)))
-        return DBColumnType.DBInteger;
+        return DBColumnType.Integer;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(long)))
-        return DBColumnType.DBBigInt;
+        return DBColumnType.BigInt;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Int16)))
-        return DBColumnType.DBSmallInt;
+        return DBColumnType.SmallInt;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(float)))
-        return DBColumnType.DBFloat;
+        return DBColumnType.Float;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(decimal)))
-        return DBColumnType.DBDecimal;
+        return DBColumnType.Decimal;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(double)))
-        return DBColumnType.DBFloat;
+        return DBColumnType.Float;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(DateTime)))
-        return DBColumnType.DBDateTime;
+        return DBColumnType.DateTime;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(bool)))
-        return DBColumnType.DBBit;
+        return DBColumnType.Bit;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(byte)))
-        return DBColumnType.DBTinyInt;
+        return DBColumnType.TinyInt;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Guid)))
-        return DBColumnType.DBGUID;                      
+        return DBColumnType.UniqueIdentifier;                      
       else
         throw new Exception(String.Format("Type not supported: {0}", t.FullName));
     }
@@ -694,25 +699,24 @@ namespace DBInfo.DBExtractors {
 
     private SqlDbType GetSqlDBTypeFromColumnType(DBColumnType ColumnType) {
       switch (ColumnType) {
-        case DBColumnType.DBInteger: return SqlDbType.Int;
-        case DBColumnType.DBVarchar: return SqlDbType.VarChar;
-        case DBColumnType.DBChar: return SqlDbType.Char;
-        case DBColumnType.DBBlob: return SqlDbType.Binary;
-        case DBColumnType.DBDecimal: return SqlDbType.Decimal;
-        case DBColumnType.DBFloat: return SqlDbType.Float;
-        case DBColumnType.DBMemo: return SqlDbType.Text;
-        case DBColumnType.DBDateTime: return SqlDbType.DateTime;
-        case DBColumnType.DBBit: return SqlDbType.Bit;
-        case DBColumnType.DBSmallDateTime: return SqlDbType.SmallDateTime;
-        case DBColumnType.DBMoney: return SqlDbType.Money;
-        case DBColumnType.DBSmallInt: return SqlDbType.SmallInt;
-        case DBColumnType.DBNumeric: return SqlDbType.Decimal;
-        case DBColumnType.DBGUID: return SqlDbType.UniqueIdentifier;
-        case DBColumnType.DBBigInt: return SqlDbType.BigInt;
-        case DBColumnType.DBTinyInt: return SqlDbType.TinyInt;
-        case DBColumnType.DBBinary: return SqlDbType.Binary;
-        case DBColumnType.DBNVarchar: return SqlDbType.NVarChar;
-        case DBColumnType.DBTimeStamp: return SqlDbType.Timestamp;
+        case DBColumnType.Integer: return SqlDbType.Int;
+        case DBColumnType.VarChar: return SqlDbType.VarChar;
+        case DBColumnType.Char: return SqlDbType.Char;
+        case DBColumnType.Binary: return SqlDbType.Binary;
+        case DBColumnType.Decimal: return SqlDbType.Decimal;
+        case DBColumnType.Float: return SqlDbType.Float;
+        case DBColumnType.Text: return SqlDbType.Text;
+        case DBColumnType.DateTime: return SqlDbType.DateTime;
+        case DBColumnType.Bit: return SqlDbType.Bit;
+        case DBColumnType.SmallDateTime: return SqlDbType.SmallDateTime;
+        case DBColumnType.Money: return SqlDbType.Money;
+        case DBColumnType.SmallInt: return SqlDbType.SmallInt;
+        case DBColumnType.Numeric: return SqlDbType.Decimal;
+        case DBColumnType.UniqueIdentifier: return SqlDbType.UniqueIdentifier;
+        case DBColumnType.BigInt: return SqlDbType.BigInt;
+        case DBColumnType.TinyInt: return SqlDbType.TinyInt;        
+        case DBColumnType.NVarchar: return SqlDbType.NVarChar;
+        case DBColumnType.TimeStamp: return SqlDbType.Timestamp;
         default: throw new Exception("Tipo de dados não suportado " + ColumnType.ToString());
       }
     }

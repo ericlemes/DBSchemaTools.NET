@@ -28,24 +28,29 @@
 	<xsd:simpleType name="ColumnType">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="Integer"/>
-			<xsd:enumeration value="Varchar"/>
+			<xsd:enumeration value="BigInt"/>
+			<xsd:enumeration value="Binary"/>
+			<xsd:enumeration value="Bit"/>
 			<xsd:enumeration value="Char"/>
+			<xsd:enumeration value="DateTime"/>
 			<xsd:enumeration value="Decimal"/>
 			<xsd:enumeration value="Float"/>
-			<xsd:enumeration value="Memo"/>
-			<xsd:enumeration value="Blob"/>
-			<xsd:enumeration value="DateTime"/>
-			<xsd:enumeration value="Bit"/>
-			<xsd:enumeration value="SmallDateTime"/>
+			<xsd:enumeration value="Image"/>
 			<xsd:enumeration value="Money"/>
-			<xsd:enumeration value="SmallInt"/>
+			<xsd:enumeration value="NChar"/>
+			<xsd:enumeration value="NText"/>
 			<xsd:enumeration value="Numeric"/>
-			<xsd:enumeration value="GUID"/>
-			<xsd:enumeration value="BigInt"/>
-			<xsd:enumeration value="TinyInt"/>
-			<xsd:enumeration value="Binary"/>
 			<xsd:enumeration value="NVarchar"/>
-			<xsd:enumeration value="RowID"/>
+			<xsd:enumeration value="Real"/>
+			<xsd:enumeration value="SmallDateTime"/>
+			<xsd:enumeration value="SmallInt"/>
+			<xsd:enumeration value="SmallMoney"/>
+			<xsd:enumeration value="Text"/>
+			<xsd:enumeration value="TinyInt"/>
+			<xsd:enumeration value="VarBinary"/>
+			<xsd:enumeration value="Varchar"/>
+			<xsd:enumeration value="UniqueIdentifier"/>
+			<xsd:enumeration value="Xml"/>
 			<xsd:enumeration value="TimeStamp"/>
 		</xsd:restriction>
 	</xsd:simpleType>
@@ -222,6 +227,7 @@
 			<xsd:enumeration value="Input"/>
 			<xsd:enumeration value="Output"/>
 			<xsd:enumeration value="InputOutput"/>
+			<xsd:enumeration value="ReturnValue"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 	<xsd:complexType name="ArrayOfParameter">
