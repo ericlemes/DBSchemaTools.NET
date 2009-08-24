@@ -135,6 +135,8 @@ namespace DBInfo.DBExtractors {
         if (((int)c.Type) == -1)
           throw new Exception("Tipo de dados não suportado para a coluna " + table.TableName + "." + c.Name);
         c.Size = Convert.ToInt32(row[2]);
+        if (c.Type == DBColumnType.Text || c.Type == DBColumnType.NText)
+          c.Size = Int32.MaxValue;          
         c.Precision = Convert.ToInt32(row[3]);
         c.Scale = Convert.ToInt32(row[4]);
         c.IsNull = Convert.ToBoolean(row[5]);
@@ -485,7 +487,7 @@ namespace DBInfo.DBExtractors {
         foreach (DataTable tbl in procReturn.Tables) {
           RecordSet rs = new RecordSet();
           p.RecordSets.Add(rs);
-          foreach (DataColumn dc in tbl.Columns) {
+          foreach (DataColumn dc in tbl.Columns) {                        
             Parameter param = new Parameter();
             param.Name = dc.ColumnName;
             param.Direction = ParamDirection.Output;
@@ -495,9 +497,7 @@ namespace DBInfo.DBExtractors {
           }
         }
       } 
-    }
-    
-    //private string GetValidVOPropertyNameFromColumnName(string 
+    }    
     
     private DBColumnType GetColumnTypeFromType(Type t){
       if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(string)))
@@ -509,7 +509,7 @@ namespace DBInfo.DBExtractors {
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Int16)))
         return DBColumnType.SmallInt;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(float)))
-        return DBColumnType.Float;
+        return DBColumnType.Real;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(decimal)))
         return DBColumnType.Decimal;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(double)))
@@ -521,7 +521,9 @@ namespace DBInfo.DBExtractors {
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(byte)))
         return DBColumnType.TinyInt;
       else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Guid)))
-        return DBColumnType.UniqueIdentifier;                      
+        return DBColumnType.UniqueIdentifier;    
+      else if (TypeUtility.InheritsFromOrIsNullableThatInheritsFrom(t, typeof(Byte[])))
+        return DBColumnType.Binary;                  
       else
         throw new Exception(String.Format("Type not supported: {0}", t.FullName));
     }

@@ -41,6 +41,15 @@
   <ItemGroup>
     <Compile Include="DAO\TypeTestDAO.cs" />
     <Compile Include="DatabaseVO\TypeTestDatabaseVO.cs" />
+    <Compile Include="ProcedureDAO\TypeTestWithOneRecordSetProcedureDAO.cs" />
+    <Compile Include="ProcedureDAO\TypeTestWithoutRecordSetProcedureDAO.cs" />
+    <Compile Include="ProcedureDAO\TypeTestWithTwoRecordSetsProcedureDAO.cs" />
+    <Compile Include="ProcInputVO\TypeTestWithOneRecordSetProcInputVO.cs" />
+    <Compile Include="ProcInputVO\TypeTestWithoutRecordSetProcInputVO.cs" />
+    <Compile Include="ProcInputVO\TypeTestWithTwoRecordSetsProcInputVO.cs" />
+    <Compile Include="ProcOutputVO\TypeTestWithOneRecordSetProcOutputVO.cs" />
+    <Compile Include="ProcOutputVO\TypeTestWithTwoRecordSetsRS1ProcOutputVO.cs" />
+    <Compile Include="ProcOutputVO\TypeTestWithTwoRecordSetsRS2ProcOutputVO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTest1.cs" />
   </ItemGroup>

@@ -158,7 +158,7 @@ namespace DBInfo.CodeGen {
         throw new Exception(String.Format("Unsuported type: {0}", t.ToString()));
     }
     
-    private bool IsStreamedType(DBColumnType t){
+    private bool IsStreamedType(DBColumnType t, bool XmlIsStreamed){
       if (t == DBColumnType.Binary)
         return true;
       else if (t == DBColumnType.Image)
@@ -168,7 +168,7 @@ namespace DBInfo.CodeGen {
       else if (t == DBColumnType.VarBinary)
         return true;
       else if (t == DBColumnType.Xml)
-        return true;
+        return XmlIsStreamed;
       return false;
     }
     
@@ -178,7 +178,7 @@ namespace DBInfo.CodeGen {
       CodeTypeDeclaration voClass = new CodeTypeDeclaration(t.TableName + _VOClassSuffix);
       voClass.IsClass = true;
       foreach(Column c in t.Columns){      
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           continue;
         CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(c.Type), "_" + c.Name);
         voClass.Members.Add(mf);               
@@ -265,7 +265,7 @@ namespace DBInfo.CodeGen {
       }
       
       foreach(Column c in t.Columns){
-        if (!IsStreamedType(c.Type))
+        if (!IsStreamedType(c.Type, true))
           continue;
         codeNS.Types.Add(GenerateBlobStreamClass(t, c));
       }
@@ -459,7 +459,7 @@ namespace DBInfo.CodeGen {
       foreach(Column c in t.Columns){
         if (c.IdentityColumn && !ReturnIdentity)
           continue;
-        if (IsStreamedType(c.Type) && !ReturnStreamed)
+        if (IsStreamedType(c.Type, true) && !ReturnStreamed)
           continue;
         if (tmp == "")
           tmp += Prefix + c.Name;
@@ -575,7 +575,7 @@ namespace DBInfo.CodeGen {
           continue;
         if (!first)
           sql += ", ";
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           sql += "null";
         else
           sql += "@" + c.Name;
@@ -595,7 +595,7 @@ namespace DBInfo.CodeGen {
       
       int ParamCount = 1;
       foreach(Column c in t.Columns){
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           continue;
         if (c.IdentityColumn)
           continue;
@@ -675,7 +675,7 @@ namespace DBInfo.CodeGen {
         "set ";
       bool first = true;
       foreach (Column c in t.Columns){
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           continue;
         if (c.IsPK)
           continue;
@@ -695,7 +695,7 @@ namespace DBInfo.CodeGen {
         new CodeVariableDeclarationStatement(typeof(object), "val", new CodePrimitiveExpression(null)));
       int ParamCount = 1;            
       foreach(Column c in t.Columns){
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           continue;
         CodeStatement[] trueStatements = new CodeStatement[1];
         trueStatements[0] = 
@@ -888,7 +888,7 @@ namespace DBInfo.CodeGen {
       
       int colIndex = 0;
       foreach(Column c in t.Columns){
-        if (IsStreamedType(c.Type))
+        if (IsStreamedType(c.Type, true))
           continue;
           
         CodeExpression[] readerParms = new CodeExpression[1];
@@ -1354,7 +1354,7 @@ namespace DBInfo.CodeGen {
       CodeTypeDeclaration voClass = new CodeTypeDeclaration(p.Name + ProcInputVOClassSuffix);
       voClass.IsClass = true;
       foreach (Parameter param in p.InputParameters) {
-        if (IsStreamedType(param.Type))
+        if (IsStreamedType(param.Type, false))
           continue;
         CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + param.Name);
         voClass.Members.Add(mf);
@@ -1405,7 +1405,7 @@ namespace DBInfo.CodeGen {
         foreach (Parameter param in rs.Parameters) {
           string Name = RemoveSpecialChars(param.Name);
         
-          if (IsStreamedType(param.Type))
+          if (IsStreamedType(param.Type, false))
             continue;
           CodeMemberField mf = new CodeMemberField(GetTypeFromColumnType(param.Type), "_" + Name);
           voClass.Members.Add(mf);
@@ -1455,7 +1455,8 @@ namespace DBInfo.CodeGen {
     private void GenerateProcedureDAO(Procedure p) {
       CodeNamespace codeNS = new CodeNamespace(_Namespace + "." + _ProcedureDAONamespace);
       codeNS.Imports.Add(new CodeNamespaceImport(_ProcInputVONamespace));
-      codeNS.Imports.Add(new CodeNamespaceImport(_ProcOutputVONamespace));
+      if (p.RecordSets.Count > 0)
+        codeNS.Imports.Add(new CodeNamespaceImport(_ProcOutputVONamespace));
       codeNS.Imports.Add(new CodeNamespaceImport("System.Collections.Generic"));
 
       CodeTypeDeclaration daoClass = new CodeTypeDeclaration(p.Name + _ProcedureDAOClassSuffix);
@@ -1658,8 +1659,10 @@ namespace DBInfo.CodeGen {
 
       int colIndex = 0;
       foreach (Parameter parm in r.Parameters) {
-        if (IsStreamedType(parm.Type))
+        if (IsStreamedType(parm.Type, false)){
+          colIndex++;
           continue;
+        }
 
         string Name = RemoveSpecialChars(parm.Name);          
 

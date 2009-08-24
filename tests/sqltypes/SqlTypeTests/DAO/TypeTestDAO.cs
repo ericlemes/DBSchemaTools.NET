@@ -256,7 +256,7 @@ select SCOPE_IDENTITY()", Connection, Transaction);
       System.Data.SqlClient.SqlParameter p9 = new System.Data.SqlClient.SqlParameter();
       p9.ParameterName = "@NTextTest";
       p9.SqlDbType = System.Data.SqlDbType.NText;
-      p9.Size = 16;
+      p9.Size = 2147483647;
       p9.Value = val;
       cmd.Parameters.Add(p9);
       if ((vo.NumericTest == null)) {
@@ -340,7 +340,7 @@ select SCOPE_IDENTITY()", Connection, Transaction);
       System.Data.SqlClient.SqlParameter p16 = new System.Data.SqlClient.SqlParameter();
       p16.ParameterName = "@TextTest";
       p16.SqlDbType = System.Data.SqlDbType.Text;
-      p16.Size = 16;
+      p16.Size = 2147483647;
       p16.Value = val;
       cmd.Parameters.Add(p16);
       if ((vo.TinyIntTest == null)) {
@@ -502,7 +502,7 @@ select SCOPE_IDENTITY()", Connection, Transaction);
       System.Data.SqlClient.SqlParameter p10 = new System.Data.SqlClient.SqlParameter();
       p10.ParameterName = "@NTextTest";
       p10.SqlDbType = System.Data.SqlDbType.NText;
-      p10.Size = 16;
+      p10.Size = 2147483647;
       p10.Value = val;
       cmd.Parameters.Add(p10);
       if ((vo.NumericTest == null)) {
@@ -586,7 +586,7 @@ select SCOPE_IDENTITY()", Connection, Transaction);
       System.Data.SqlClient.SqlParameter p17 = new System.Data.SqlClient.SqlParameter();
       p17.ParameterName = "@TextTest";
       p17.SqlDbType = System.Data.SqlDbType.Text;
-      p17.Size = 16;
+      p17.Size = 2147483647;
       p17.Value = val;
       cmd.Parameters.Add(p17);
       if ((vo.TinyIntTest == null)) {
