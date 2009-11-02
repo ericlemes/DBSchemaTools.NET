@@ -187,9 +187,9 @@ namespace DBInfo.DBSync {
 
     protected override void ScriptAlteracaoPrimaryKeys(Table tbAtual, Table tbNova) {
       if (tbAtual.PrimaryKeyName == tbNova.PrimaryKeyName) {
-        string relatorio = ScriptAlteracaoColumnsPrimaryKey(tbAtual.PrimaryKeyColumns, tbNova.PrimaryKeyColumns, tbAtual.TableName);
+        /*string relatorio = ScriptAlteracaoColumnsPrimaryKey(tbAtual.PrimaryKeyColumns, tbNova.PrimaryKeyColumns, tbAtual.TableName);
         lstScriptRelatorio.Add(relatorio);
-        AdicionarScriptSegmentado(tbAtual.TableName, relatorio);
+        AdicionarScriptSegmentado(tbAtual.TableName, relatorio);*/
       } else {
         if (tbAtual.PrimaryKeyName != string.Empty) {
           string relatorio = ScriptPrimaryKeyExcluida(tbAtual.PrimaryKeyName, tbAtual.TableName);
@@ -300,16 +300,16 @@ namespace DBInfo.DBSync {
       string relatorioAlteracao = string.Empty;
 
       foreach (object col in ixAtual) {
-        Column ix = PegarColuna(((Column)col).Name, ixNova).Column;
+        /*Column ix = PegarColuna(((Column)col).Name, ixNova).Column;
         if (ix == null)
-          relatorioAlteracao += ScriptColunaIndiceRemovida((Column)col, NomeTabela);
+          relatorioAlteracao += ScriptColunaIndiceRemovida((Column)col, NomeTabela);*/
       }
 
       foreach (object col in ixNova) {
-        Column ix = PegarColuna(((Column)col).Name, ixAtual).Column;
+        /*Column ix = PegarColuna(((Column)col).Name, ixAtual).Column;
 
         if (ix == null)
-          relatorioAlteracao += ScriptColunaIndiceAdicionada((Column)col, NomeTabela);
+          relatorioAlteracao += ScriptColunaIndiceAdicionada((Column)col, NomeTabela);*/
       }
 
       return relatorioAlteracao;
@@ -443,16 +443,16 @@ namespace DBInfo.DBSync {
 
     private string ScriptColunaForeignKeyRemovida(ForeignKeyColumn fk, string NomeTabelaOrigem) {
       string relatorioAlteracao = "Remover Coluna ForeignKey" + Environment.NewLine;
-      relatorioAlteracao += "  Tabela Origem: " + NomeTabelaOrigem + " Coluna Origem: " + fk.Column.Name + Environment.NewLine;
-      relatorioAlteracao += "  Tabela Referência: " + fk.RefTable.TableName + " Coluna Referência: " + fk.RefColumn.Name + Environment.NewLine;
+      relatorioAlteracao += "  Tabela Origem: " + NomeTabelaOrigem + " Coluna Origem: " + fk.Column + Environment.NewLine;
+      relatorioAlteracao += "  Tabela Referência: " + fk.RefTable + " Coluna Referência: " + fk.RefColumn + Environment.NewLine;
       return relatorioAlteracao;
     }
 
 
     private string ScriptColunaForeignKeyAdicionada(ForeignKeyColumn fk, string NomeTabelaOrigem) {
       string relatorioAlteracao = "Adicionar Coluna ForeignKey" + Environment.NewLine;
-      relatorioAlteracao += "  Tabela Origem: " + NomeTabelaOrigem + " Coluna Origem: " + fk.Column.Name + Environment.NewLine;
-      relatorioAlteracao += "  Tabela Referência: " + fk.RefTable.TableName + " Coluna Referência: " + fk.RefColumn.Name + Environment.NewLine;
+      relatorioAlteracao += "  Tabela Origem: " + NomeTabelaOrigem + " Coluna Origem: " + fk.Column + Environment.NewLine;
+      relatorioAlteracao += "  Tabela Referência: " + fk.RefTable + " Coluna Referência: " + fk.RefColumn + Environment.NewLine;
       return relatorioAlteracao;
     }
 
@@ -484,7 +484,7 @@ namespace DBInfo.DBSync {
 
     protected override void ScriptAlteracaoCheckConstraint(Table tbAtual, Table tbNova) {
       foreach (object chkc in tbAtual.CheckConstraints) {
-        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbNova.CheckConstraints);
+        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).CheckConstraintName, tbNova.CheckConstraints);
 
         if (ccdestino != null) {
           string relatorio = ScriptAlteracaoCheckConstraint((CheckConstraint)chkc, ccdestino, tbAtual.TableName);
@@ -499,7 +499,7 @@ namespace DBInfo.DBSync {
 
 
       foreach (object chkc in tbNova.CheckConstraints) {
-        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbAtual.CheckConstraints);
+        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).CheckConstraintName, tbAtual.CheckConstraints);
 
         if (ccorigem == null) {
           string relatorio = ScriptInclusaoCheckConstraint((CheckConstraint)chkc, tbAtual.TableName);
@@ -519,21 +519,21 @@ namespace DBInfo.DBSync {
         relatorioAlteracao += "   Expressão: " + ccNova.Expression + Environment.NewLine;
 
       if (relatorioAlteracao.Length > 0)
-        relatorioAlteracao = "Alteração CheckConstraint: " + ccAtual.Name + Environment.NewLine + relatorioAlteracao;
+        relatorioAlteracao = "Alteração CheckConstraint: " + ccAtual.CheckConstraintName + Environment.NewLine + relatorioAlteracao;
 
       return relatorioAlteracao;
     }
 
 
     private string ScriptInclusaoCheckConstraint(CheckConstraint cc, string NomeTabelaOrigem) {
-      string relatorioAlteracao = "Inclusão CheckConstraint - " + cc.Name + Environment.NewLine;
+      string relatorioAlteracao = "Inclusão CheckConstraint - " + cc.CheckConstraintName + Environment.NewLine;
       relatorioAlteracao += "   Expressão: " + cc.Expression + Environment.NewLine;
       return relatorioAlteracao;
     }
 
 
     private string ScriptCheckConstraintExcluida(CheckConstraint cc, string TableName) {
-      return "Excluir CheckConstraint - " + cc.Name + Environment.NewLine;
+      return "Excluir CheckConstraint - " + cc.CheckConstraintName + Environment.NewLine;
     }
 
 

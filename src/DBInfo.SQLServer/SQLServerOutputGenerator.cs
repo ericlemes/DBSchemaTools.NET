@@ -4,6 +4,7 @@ using System.Data;
 using DBInfo.Core.Model;
 using DBInfo.Core.OutputGenerators;
 using System.Data.SqlClient;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.SQLServer {
   public class SQLServerOutputGenerator : IScriptOutputHandler {
@@ -74,12 +75,12 @@ namespace DBInfo.SQLServer {
         return " default " + AColumn.DefaultValue + " ";
     }
 
-    public string GenerateTableScript(Table table) {
+    public string GenerateCreateTableScript(CreateTable CreateTableStatement){
       string TmpScript = "";
-      TmpScript = "create table " + table.TableName + "(" + Environment.NewLine;
-      foreach (Column c in table.Columns) {
-        TmpScript += "  " + c.Name + " " + GetSQLType(c) + PegarIdentity(table, c) + PegarDefault(table, c) + PegarIsNull(c.IsNull);
-        if (table.Columns.IndexOf(c) == (table.Columns.Count - 1))
+      TmpScript = "create table " + CreateTableStatement.Table.TableName + "(" + Environment.NewLine;
+      foreach (Column c in CreateTableStatement.Table.Columns) {
+        TmpScript += "  " + c.Name + " " + GetSQLType(c) + PegarIdentity(CreateTableStatement.Table, c) + PegarDefault(CreateTableStatement.Table, c) + PegarIsNull(c.IsNull);
+        if (CreateTableStatement.Table.Columns.IndexOf(c) == (CreateTableStatement.Table.Columns.Count - 1))
           TmpScript += Environment.NewLine;
         else
           TmpScript += "," + Environment.NewLine;
@@ -88,26 +89,27 @@ namespace DBInfo.SQLServer {
       return TmpScript;
     }
 
-    public string GenerateCheckConstraintScript(Table table, CheckConstraint check) {      
+    public string GenerateCreateCheckConstraintScript(CreateCheckConstraint CreateCheckConstraintStatement){
       string ScriptContent = "";
 
-      ScriptContent += "alter table " + table.TableName + Environment.NewLine;
-      ScriptContent += "  add constraint " + check.Name + Environment.NewLine;
-      ScriptContent += "  check " + check.Expression +
+      ScriptContent += "alter table " + CreateCheckConstraintStatement.CheckConstraint.TableName + Environment.NewLine;
+      ScriptContent += "  add constraint " + CreateCheckConstraintStatement.CheckConstraint.CheckConstraintName + Environment.NewLine;
+      ScriptContent += "  check " + CreateCheckConstraintStatement.CheckConstraint.Expression +
         Environment.NewLine + Environment.NewLine;
 
       return ScriptContent;
     }
 
-    public string GeneratePrimaryKeyScript(Table table) {
+    public string GenerateCreatePrimaryKeyScript(CreatePrimaryKey CreatePrimaryKeyStatement){
       string TmpScript = "";
-      if (table.PrimaryKeyName != String.Empty) {
-        TmpScript += "alter table " + table.TableName + Environment.NewLine;
-        TmpScript += "  add constraint " + table.PrimaryKeyName + Environment.NewLine;
+      if (CreatePrimaryKeyStatement.Table.PrimaryKeyName != String.Empty) {
+        TmpScript += "alter table " + CreatePrimaryKeyStatement.Table.TableName + Environment.NewLine;
+        TmpScript += "  add constraint " + CreatePrimaryKeyStatement.Table.PrimaryKeyName + Environment.NewLine;
         TmpScript += "  primary key (" + Environment.NewLine;
-        foreach (Column c in table.PrimaryKeyColumns) {
-          TmpScript += "    " + c.Name;
-          if (table.PrimaryKeyColumns.IndexOf(c) != table.PrimaryKeyColumns.Count - 1)
+        foreach (string colName in CreatePrimaryKeyStatement.Table.PrimaryKeyColumns) {
+          //Column c = CreatePrimaryKeyStatement.Table.FindColumn(colName);
+          TmpScript += "    " + colName;
+          if (CreatePrimaryKeyStatement.Table.PrimaryKeyColumns.IndexOf(colName) != CreatePrimaryKeyStatement.Table.PrimaryKeyColumns.Count - 1)
             TmpScript += "," + Environment.NewLine;
           else
             TmpScript += Environment.NewLine + "  )" + Environment.NewLine;;
@@ -123,13 +125,13 @@ namespace DBInfo.SQLServer {
         return "";
     }
 
-    public string GenerateIndexScript(Table table, Index index) {
+    public string GenerateCreateIndexScript(CreateIndex CreateIndexStatement){
       string TmpScript = "";
 
-      TmpScript += "create " + PegarUnique(index.Unique) + "index " + index.IndexName + " on " + table.TableName + " (" + Environment.NewLine;
-      foreach (IndexColumn c in index.Columns) {
-        TmpScript += "  " + c.Column.Name;
-        if (index.Columns.IndexOf(c) != (index.Columns.Count - 1))
+      TmpScript += "create " + PegarUnique(CreateIndexStatement.Index.Unique) + "index " + CreateIndexStatement.Index.IndexName + " on " + CreateIndexStatement.Index.TableName + " (" + Environment.NewLine;
+      foreach (IndexColumn c in CreateIndexStatement.Index.Columns) {
+        TmpScript += "  " + c.Column;
+        if (CreateIndexStatement.Index.Columns.IndexOf(c) != (CreateIndexStatement.Index.Columns.Count - 1))
           TmpScript += "," + Environment.NewLine;
         else
           TmpScript += Environment.NewLine + ")" + Environment.NewLine;
@@ -146,204 +148,67 @@ namespace DBInfo.SQLServer {
       return Tmp;
     }
 
-    public string GenerateForeignKeysScript(Table table, ForeignKey fk) {
+    public string GenerateCreateForeignKeysScript(CreateForeignKey CreateForeignKeyStatement){
       string TmpScript = "";
 
-      TmpScript += "alter table " + table.TableName + Environment.NewLine;
-      TmpScript += "  add constraint \"" + fk.ForeignKeyName + "\" foreign key (" + Environment.NewLine;
-      foreach (ForeignKeyColumn fkcol in fk.Columns) {
-        TmpScript += "    " + fkcol.Column.Name;
-        if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
+      TmpScript += "alter table " + CreateForeignKeyStatement.ForeignKey.TableName + Environment.NewLine;
+      TmpScript += "  add constraint \"" + CreateForeignKeyStatement.ForeignKey.ForeignKeyName + "\" foreign key (" + Environment.NewLine;
+      foreach (ForeignKeyColumn fkcol in CreateForeignKeyStatement.ForeignKey.Columns) {
+        TmpScript += "    " + fkcol.Column;
+        if (CreateForeignKeyStatement.ForeignKey.Columns.IndexOf(fkcol) != CreateForeignKeyStatement.ForeignKey.Columns.Count - 1)
           TmpScript += "," + Environment.NewLine;
         else
           TmpScript += Environment.NewLine + "  )" + Environment.NewLine;
       }
-      TmpScript += "  references " + fk.RefTableName + " (" + Environment.NewLine;
-      foreach (ForeignKeyColumn fkcol in fk.Columns) {
-        TmpScript += "    " + fkcol.RefColumn.Name;
-        if (fk.Columns.IndexOf(fkcol) != fk.Columns.Count - 1)
+      TmpScript += "  references " + CreateForeignKeyStatement.ForeignKey.RefTableName + " (" + Environment.NewLine;
+      foreach (ForeignKeyColumn fkcol in CreateForeignKeyStatement.ForeignKey.Columns) {
+        TmpScript += "    " + fkcol.RefColumn;
+        if (CreateForeignKeyStatement.ForeignKey.Columns.IndexOf(fkcol) != CreateForeignKeyStatement.ForeignKey.Columns.Count - 1)
           TmpScript += "," + Environment.NewLine;
         else
-          TmpScript += Environment.NewLine + "  ) " + PegarUpdateDeleteCascade(fk) + Environment.NewLine + Environment.NewLine;
+          TmpScript += Environment.NewLine + "  ) " + PegarUpdateDeleteCascade(CreateForeignKeyStatement.ForeignKey) + Environment.NewLine + Environment.NewLine;
       }
 
       return TmpScript;
     }
-
-    private string PegarValorPara(DBColumnType ADBColumnType, object AValue) {
-      System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-      if (AValue is DBNull) {
-        return "null";
-      } else if (AValue is string) {
-        return "'" + Convert.ToString(AValue).Replace("'", "''") + "'";
-      } else if (AValue is int || AValue is Int16 || AValue is Byte || AValue is Int64)
-        return Convert.ToString(AValue);
-      else if (AValue is bool) {
-        if ((bool)AValue)
-          return "1";
-        else
-          return "0";
-      } else if (AValue is DateTime)
-        return "'" + Convert.ToDateTime(AValue).ToString("yyyy-MM-dd HH:mm:ss") + "'";
-      else if (AValue is Guid)
-        return "'" + AValue.ToString() + "'";
-      else if (AValue is decimal)
-        return ((decimal)AValue).ToString("0.000000");
-      else if (AValue is float)
-        return ((float)AValue).ToString("0.000000");
-      else if (AValue is Double)
-        return ((Double)AValue).ToString("0.000000");
-      else
-        throw new Exception("Não foi possível converter o valor " + AValue.ToString() + " para " + ADBColumnType.ToString());
-    }
-
-    private string MontarWherePK(Table ATable, DataRow ARow) {
-      string s = "";
-      if (ATable.PrimaryKeyName == String.Empty)
-        return "";
-      else {
-        s += " where ";
-        foreach (Column c in ATable.PrimaryKeyColumns) {
-          s += c.Name + " = " + PegarValorPara(c.Type, ARow[c.Name]);
-          if (ATable.PrimaryKeyColumns.IndexOf(c) != ATable.PrimaryKeyColumns.Count - 1)
-            s += " and ";
-        }
-        s += " ";
-      }
-      return s;
-    }
-
-    public string GenerateTableDataStartScript(Table ATable) {
-      if (ATable.HasIdentity)
-        return "set IDENTITY_INSERT dbo." + ATable.TableName + " on" + Environment.NewLine + Environment.NewLine;
-      else
-        return "";
-    }
-
-    public string GenerateTableDataEndScript(Table ATable) {
-      if (ATable.HasIdentity)
-        return "set IDENTITY_INSERT dbo." + ATable.TableName + " off" + Environment.NewLine + Environment.NewLine;
-      else
-        return "";
-    }
-
-    public string GenerateTableDataRowScript(Table ATable, DataRow ARow) {
-      string s = "";
-      if (ATable.PrimaryKeyName != String.Empty)
-        s += "if not exists(select 1 from " + ATable.TableName + MontarWherePK(ATable, ARow) + ")" + Environment.NewLine;
-      s += "  insert into dbo." + ATable.TableName + "(" + Environment.NewLine;
-      foreach (Column c in ATable.Columns) {
-        s += "    " + c.Name;
-        if (ATable.Columns.IndexOf(c) != ATable.Columns.Count - 1)
-          s += "," + Environment.NewLine;
-        else
-          s += Environment.NewLine + "  )" + Environment.NewLine;
-      }
-      s += "  values (" + Environment.NewLine;
-      foreach (Column c in ATable.Columns) {
-        s += "    " + PegarValorPara(c.Type, ARow[c.Name]);
-        if (ATable.Columns.IndexOf(c) != ATable.Columns.Count - 1)
-          s += "," + Environment.NewLine;
-        else
-          s += Environment.NewLine + "  )" + Environment.NewLine + Environment.NewLine;
-      }
-      return s;
-    }
-
-    public string AlterarScriptDadosIniciaisLinha(Table ATable, DataRow ARow) {
-      string s = "";
-      if (ATable.PrimaryKeyName != String.Empty)
-        s += "if exists(select 1 from " + ATable.TableName + MontarWherePK(ATable, ARow) + ")" + Environment.NewLine;
-      s += "  update dbo." + ATable.TableName + Environment.NewLine + "SET ";
-
-      foreach (Column c in ATable.Columns) {
-        if (!IsPK(c.Name, ATable)) {
-          if (ARow[c.Name] == System.DBNull.Value)
-            s += "     " + c.Name + " = NULL";
-          else
-            s += "     " + c.Name + " = " + PegarValorPara(c.Type, ARow[c.Name]);
-
-          if (ATable.Columns.IndexOf(c) != ATable.Columns.Count - 1) {
-            s += "," + Environment.NewLine;
-          } else {
-            s += MontarWherePK(ATable, ARow);
-            s += Environment.NewLine + Environment.NewLine;
-          }
-        }
-      }
-      return s;
-    }
     
-    public string GenerateDropProcedureScript(Procedure procedure) {
+    public string GenerateCreateProcedureScript(CreateProcedure CreateProcedureStatement){
       string Tmp = "";
-      Tmp += "if exists(select 1 from sysobjects where name = '" + procedure.Name + "')" + Environment.NewLine;
-      Tmp += "  drop procedure dbo." + procedure.Name + Environment.NewLine;
+      Tmp += "if exists(select 1 from sysobjects where name = '" + CreateProcedureStatement.Procedure.Name + "')" + Environment.NewLine;
+      Tmp += "begin " + Environment.NewLine;
+      Tmp += "  drop procedure dbo." + CreateProcedureStatement.Procedure.Name + Environment.NewLine;
+      Tmp += "end" + Environment.NewLine;
+      Tmp += "GO " + Environment.NewLine;      
       Tmp += Environment.NewLine;
-      return Tmp;
-    }
 
-    public string GenerateCreateProcedureScript(Procedure procedure) {      
-      return procedure.Body;
+      return Tmp + CreateProcedureStatement.Procedure.Body;
     }
     
-    public string GenerateDropFunctionScript(Function function){
+    public string GenerateCreateFunctionScript(CreateFunction CreateFunction){
       string Tmp =
-        "drop function dbo." + function.Name + Environment.NewLine;
-      return Tmp;
-    }
+        "drop function dbo." + CreateFunction.Function.Name + Environment.NewLine;
 
-    public string GenerateCreateFunctionScript(Function function) {      
-      string Tmp = "";
-      Tmp += function.Body;      
+      Tmp += CreateFunction.Function.Body;      
 
       return Tmp;
     }
     
-    public string GenerateDropTriggerScript(Table table, Trigger trigger){
-      string tmp =
-        "drop trigger dbo." + trigger.Name + Environment.NewLine;
-      return tmp;
-    }
-
-    public string GenerateCreateTriggerScript(Table table, Trigger trigger) {
-      string Tmp = "";      
-      Tmp += trigger.Body;      
-
-      return Tmp;
-    }
-    
-    public string GenerateDropViewScript(View view){
+    public string GenerateCreateTriggerScript(CreateTrigger CreateTriggerStatement){
       string Tmp =
-        "drop view dbo." + view.Name + Environment.NewLine;
-      return Tmp;
-    }
+        "drop trigger dbo." + CreateTriggerStatement.Trigger.TriggerName + Environment.NewLine;
 
-    public string GenerateCreateViewScript(View view) {      
-      string Tmp = "";      
-      Tmp += view.Body;      
+      Tmp += CreateTriggerStatement.Trigger.Body;      
 
       return Tmp;
     }
+    
+    public string GenerateCreateViewScript(CreateView CreateViewStatement){
+      string Tmp =
+        "drop view dbo." + CreateViewStatement.View.Name + Environment.NewLine;
 
-    public string GenerateSequenceScript(Sequence seq) {
-      return null;
-    }
+      Tmp += CreateViewStatement.View.Body;      
 
-    private SqlConnection _conn;
-
-    public void OpenOutputDatabaseConnection(string connString) {
-      _conn = new SqlConnection();      
-      _conn.ConnectionString = connString;
-      _conn.Open();
-    }
-
-    public void ExecuteOuputDatabaseScript(string script) {
-      SqlCommand cmd = new SqlCommand(script, _conn);
-      cmd.ExecuteNonQuery();
-    }
-
-    public void CloseOutputDatabaseConnection() {
-      _conn.Close();
+      return Tmp;
     }
 
   }

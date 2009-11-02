@@ -383,7 +383,7 @@ select SCOPE_IDENTITY()", Connection, Transaction);
     }
     
     public virtual int Update(System.Data.SqlClient.SqlConnection Connection, System.Data.SqlClient.SqlTransaction Transaction, TypeTestDatabaseVO vo) {
-      System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(@"update TypeTest set  BigIntTest = @BigIntTest, BitTest = @BitTest, CharTest = @CharTest, DateTimeTest = @DateTimeTest, DecimalTest = @DecimalTest, FloatTest = @FloatTest, MoneyTest = @MoneyTest, NCharTest = @NCharTest, NTextTest = @NTextTest, NumericTest = @NumericTest, NVarcharTest = @NVarcharTest, RealTest = @RealTest, SmallDateTimeTest = @SmallDateTimeTest, SmallIntTest = @SmallIntTest, SmallMoneyTest = @SmallMoneyTest, TextTest = @TextTest, TinyIntTest = @TinyIntTest, VarCharTest = @VarCharTest, UniqueIdentifierTest = @UniqueIdentifierTest where TypeTestID = @TypeTestID", Connection, Transaction);
+      System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(@"update TypeTest set  TypeTestID = @TypeTestID, BigIntTest = @BigIntTest, BitTest = @BitTest, CharTest = @CharTest, DateTimeTest = @DateTimeTest, DecimalTest = @DecimalTest, FloatTest = @FloatTest, MoneyTest = @MoneyTest, NCharTest = @NCharTest, NTextTest = @NTextTest, NumericTest = @NumericTest, NVarcharTest = @NVarcharTest, RealTest = @RealTest, SmallDateTimeTest = @SmallDateTimeTest, SmallIntTest = @SmallIntTest, SmallMoneyTest = @SmallMoneyTest, TextTest = @TextTest, TinyIntTest = @TinyIntTest, VarCharTest = @VarCharTest, UniqueIdentifierTest = @UniqueIdentifierTest where TypeTestID = @TypeTestID", Connection, Transaction);
       object val = null;
       if ((vo.TypeTestID == null)) {
         val = System.DBNull.Value;

@@ -9,20 +9,30 @@ using DBInfo.Core.Extractor;
 using DBInfo.Core.OutputGenerators;
 using System.Reflection;
 using DBInfo.Core.Model;
+using DBInfo.Core.Statement;
+using DBInfo.Core;
 
 namespace DBInfo.MSBuild {
-  public class DBInfo:Task {    
-    private string _ExtractorClass;
+
+  public enum ExtractionType{
+    Database,
+    Script
+  }
+
+  public class DBInfo:Task {        
     [Required]    
-    public string ExtractorClass{
-      get { return _ExtractorClass;}
-      set { _ExtractorClass = value;}
+    public string extractiontype{
+      get; set;      
     }
   
     private string _DBExtractorClass;    
     public string dbextractorclass{
       get {return _DBExtractorClass;}
       set {_DBExtractorClass = value;}
+    }
+
+    public string ScriptExtractorClass{
+      get; set;
     }
     
     private string _OutputGeneratorClass = "";
@@ -124,62 +134,88 @@ namespace DBInfo.MSBuild {
       List<DBObjectType> dataToExtract = GetDataToExtractEnum();
       List<DBObjectType> dataToGenerateOutput = GetDataToGenerateOutputEnum();
       
-      Type extractorClass = Type.GetType(_ExtractorClass);
-      if (extractorClass == null)
-        throw new Exception(String.Format("Couldn't create instance for type {0}", _ExtractorClass));
-      IExtractor extractor = (IExtractor)Activator.CreateInstance(extractorClass);
-      
-      if (extractor.Type == ExtractorType.Database){        
+      ExtractionType exType;
+      if(this.extractiontype.ToLower() == "database")
+        exType = ExtractionType.Database;
+      else if (this.extractiontype == "script")
+        exType = ExtractionType.Script;
+      else
+        throw new Exception(String.Format("Invalid extraction type: {0}", this.extractiontype));
+                        
+      Database db = null;
+      List<BaseStatement> statementCol = null;
+      if (exType == ExtractionType.Database){  
+        if (String.IsNullOrEmpty(_DBExtractorClass))
+          throw new Exception("For database extraction type, dbextractorclass is required");
+                  
         Type dbExtractorClass = Type.GetType(_DBExtractorClass);
         if (dbExtractorClass == null)
           throw new Exception(String.Format("Couldn't create instance for type {0}", _DBExtractorClass));
-        IDatabaseExtractor dbExtractor = (IDatabaseExtractor)Activator.CreateInstance(dbExtractorClass);      
-        
-        //DatabaseExtractor dbe = new DatabaseExtractor();
-        
+        IDatabaseExtractor dbExtractor = (IDatabaseExtractor)Activator.CreateInstance(dbExtractorClass);
+
+        DatabaseExtractor extractor = new DatabaseExtractor();        
         extractor.Extractor = dbExtractor;
-        extractor.InputConnectionString = _InputConnectionString;       
-        /*if (!String.IsNullOrEmpty(_TableNames)){
-          string[] names = _TableNames.Split(';');
-          foreach(string s in names){
-            dbe.TableNames.Add(s);
-          }
-        }*/
+        extractor.InputConnectionString = _InputConnectionString;
+        
+        db = extractor.Extract(dataToExtract);
       }
       else {
+        if (String.IsNullOrEmpty(ScriptExtractorClass))
+          throw new Exception("For script extraction type, scriptextractorclass is required");      
+      
+        Type scriptExtractorClass = Type.GetType(ScriptExtractorClass);
+        if (scriptExtractorClass == null)
+          throw new Exception(String.Format("Couldn't create instance for type {0}", scriptExtractorClass));
+
+        IScriptExtractor scriptExtractor = (IScriptExtractor)Activator.CreateInstance(scriptExtractorClass);      
+      
         if (_InputFiles == null)
           throw new Exception("InputFiles must be specified.");
+                
         foreach (ITaskItem file in _InputFiles) {
-          extractor.InputFiles.Add(file.ItemSpec);
+          scriptExtractor.InputFiles.Add(file.ItemSpec);
         }
-      }
+        statementCol = scriptExtractor.Extract(dataToExtract);
+      }           
       
       Type outputGenClass = Type.GetType(_OutputGeneratorClass);
       if (outputGenClass == null)
         throw new Exception(String.Format("Couldn't create instance for type {0}", _OutputGeneratorClass));
       IOutputGenerator gen = (IOutputGenerator)Activator.CreateInstance(outputGenClass);
             
-      if (gen.Type == GeneratorType.Script){
+      if (gen.ExpectedInputType == ExpectedInputType.StatementCollection){
+        if (statementCol == null){
+          DatabaseToStatementCollectionConverter conv = new DatabaseToStatementCollectionConverter();
+          statementCol = conv.Convert(db);
+        }
+      
         Type scriptOutputGenClass = Type.GetType(_ScriptOutputGeneratorClass);      
       
-        if (scriptOutputGenClass == null)
-          throw new Exception(String.Format("Couldn't create instance for type {0}", _ScriptOutputGeneratorClass));
-        IScriptOutputHandler scriptOutputGen = (IScriptOutputHandler)Activator.CreateInstance(scriptOutputGenClass);
-        ((IScriptOutputGenerator)gen).ScriptOutputGen = scriptOutputGen;
+        if (((IStatementCollectionOutputGenerator)gen).RequiresScriptOutputHandler){
+          if (scriptOutputGenClass == null)
+            throw new Exception(String.Format("Couldn't create instance for type {0}", _ScriptOutputGeneratorClass));
+          IScriptOutputHandler scriptOutputGen = (IScriptOutputHandler)Activator.CreateInstance(scriptOutputGenClass);
+          ((IStatementCollectionOutputGenerator)gen).ScriptOutputGen = scriptOutputGen;
+        }
 
         if (String.IsNullOrEmpty(ScriptFileOutputGenerator))
           throw new Exception(String.Format("For output file type you must specify ScriptFileOutputGenerator"));
         Type scriptFileOutputGeneratorType = Type.GetType(ScriptFileOutputGenerator);
         if (scriptFileOutputGeneratorType == null)
           throw new Exception(String.Format("Couldn't create instance for type {0}", ScriptFileOutputGenerator));
-        ((IScriptOutputGenerator)gen).ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+        ((IStatementCollectionOutputGenerator)gen).ScriptFileOutputGenerator = (IScriptFileOutputGenerator)Activator.CreateInstance(scriptFileOutputGeneratorType);
+
+        gen.OutputDir = OutputDir;
+        ((IStatementCollectionOutputGenerator)gen).GenerateOutput(statementCol, dataToGenerateOutput);
       }
-
-      Database db = extractor.Extract(dataToExtract);
-
-      gen.OutputDir = OutputDir;      
-      gen.GenerateOutput(db, dataToGenerateOutput);
+      else {
+        StatementCollectionToDatabaseConverter conv = new StatementCollectionToDatabaseConverter();
+        db = conv.Convert(statementCol);
       
+        gen.OutputDir = OutputDir;
+        ((IDBSchemaOutputGenerator)gen).GenerateOutput(db, dataToGenerateOutput);
+      }
+                  
       return true;
     }
   }

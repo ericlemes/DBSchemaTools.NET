@@ -53,52 +53,6 @@ namespace DBInfo.DBSync {
     }
 
 
-    public void CompararDadosIniciais(Database Base, string[] DadosIniciais, string CaminhoCargaInicial, string OrigemComparacao) {
-      Table tabela = new Table();
-      SQLServerOutputGenerator sg = new SQLServerOutputGenerator();
-      string script = string.Empty;
-
-      foreach (string s in DadosIniciais) {
-        bool HasChanges = false;
-
-        tabela = Base.FindTable(s, true);
-        if (tabela != null) {          
-          DataSet dsImportado = new DataSet();
-          dsImportado.ReadXml(CaminhoCargaInicial + s + ".xml");
-          script += sg.GenerateTableDataStartScript(tabela);
-
-          if (tabela.TableData != null) {
-            foreach (DataRow dr in dsImportado.Tables[0].Rows) {
-              string criterio = CriarCriterio(tabela, dr);
-
-              DataRow[] dtrs = tabela.TableData.Select(criterio);
-              if (dtrs.Length > 0) {
-                if (CompararDiferencaDados(dtrs[0], dr)) {
-                  script += sg.AlterarScriptDadosIniciaisLinha(tabela, dr);
-                  HasChanges = true;
-                }
-              } else {
-                script += sg.GenerateTableDataRowScript(tabela, dr);
-                HasChanges = true;
-              }
-            }
-          }
-        } else {
-          throw new Exception("Não foi encontrada tabela " + s);
-        }
-
-        script += sg.GenerateTableDataEndScript(tabela);
-
-        if (HasChanges) {
-          StreamWriter sw = new StreamWriter(OrigemComparacao + s + "CargaInicial.sql", false, System.Text.Encoding.Default);
-          sw.Write(script);
-          sw.Close();
-        }
-        script = string.Empty;
-      }
-    }
-
-
     public override void CompararDB(Database BaseAtual, Database NovaBase) {
       LimparScripts();
 
@@ -254,7 +208,7 @@ namespace DBInfo.DBSync {
       foreach (object fk in Tabela.ForeignKeys) {
         bool colunadependente = false;
         foreach (object fkc in ((ForeignKey)fk).Columns) {
-          if (((ForeignKeyColumn)fkc).Column.Name == NomeColuna)
+          if (((ForeignKeyColumn)fkc).Column == NomeColuna)
             colunadependente = true;
         }
 
@@ -664,7 +618,7 @@ namespace DBInfo.DBSync {
         return;
 
       if (tbAtual.PrimaryKeyName == tbNova.PrimaryKeyName) {
-        if (!ValidaAlteracaoColumnsPrimaryKey(tbAtual.PrimaryKeyColumns, tbNova.PrimaryKeyColumns)) {
+        /*if (!ValidaAlteracaoColumnsPrimaryKey(tbAtual.PrimaryKeyColumns, tbNova.PrimaryKeyColumns)) {
 
           string segmentacao = ScriptConstraintExcluida(tbAtual.PrimaryKeyName, tbAtual.TableName);
           lstScriptExclusaoPK.Add(segmentacao);
@@ -674,7 +628,7 @@ namespace DBInfo.DBSync {
           lstScriptCriacaoPK.Add(segmentacao);
           AdicionarScriptSegmentado(tbNova.TableName, segmentacao);
 
-        }
+        }*/
       } else {
         if (tbAtual.PrimaryKeyName != string.Empty) {
           string segmentacao = ScriptConstraintExcluida(tbAtual.PrimaryKeyName, tbAtual.TableName);
@@ -790,16 +744,16 @@ namespace DBInfo.DBSync {
 
     private bool ValidaAlteracaoColumnsIndice(List<IndexColumn> ixAtual, List<IndexColumn> ixNova, string NomeTabela) {
       foreach (object col in ixAtual) {
-        Column ix = PegarColuna(((Column)col).Name, ixNova).Column;
+        /*Column ix = PegarColuna(((Column)col).Name, ixNova).Column;
         if (ix == null)
-          return false;
+          return false;*/
       }
 
       foreach (object col in ixNova) {
-        Column ix = PegarColuna(((Column)col).Name, ixAtual).Column;
+        /*Column ix = PegarColuna(((Column)col).Name, ixAtual).Column;
 
         if (ix == null)
-          return false;
+          return false;*/
       }
 
       return true;
@@ -917,8 +871,8 @@ namespace DBInfo.DBSync {
 
       foreach (object col in ForeignKey.Columns) {
         ForeignKeyColumn coluna = (ForeignKeyColumn)col;
-        ColunaOrigem += SeparadorColuna + "[" + coluna.Column.Name + "]";
-        ColunaReferencia += SeparadorColuna + "[" + coluna.RefColumn.Name + "]";
+        ColunaOrigem += SeparadorColuna + "[" + coluna.Column + "]";
+        ColunaReferencia += SeparadorColuna + "[" + coluna.RefColumn + "]";
         SeparadorColuna = ", ";
       }
 
@@ -949,11 +903,11 @@ namespace DBInfo.DBSync {
 
     protected override void ScriptAlteracaoCheckConstraint(Table tbAtual, Table tbNova) {
       foreach (object chkc in tbAtual.CheckConstraints) {
-        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbNova.CheckConstraints);
+        CheckConstraint ccdestino = PegarCheckConstraint(((CheckConstraint)chkc).CheckConstraintName, tbNova.CheckConstraints);
 
         if (ccdestino != null) {
           if (!ValidaAlteracaoCheckConstraint((CheckConstraint)chkc, ccdestino, tbAtual.TableName)) {
-            string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Name, tbAtual.TableName);
+            string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).CheckConstraintName, tbAtual.TableName);
             lstScriptExclusaoCheckConstraint.Add(segmentacao);
             AdicionarScriptSegmentado(tbAtual.TableName, segmentacao);
 
@@ -963,7 +917,7 @@ namespace DBInfo.DBSync {
 
           }
         } else {
-          string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).Name, tbAtual.TableName);
+          string segmentacao = ScriptConstraintExcluida(((CheckConstraint)chkc).CheckConstraintName, tbAtual.TableName);
           lstScriptExclusaoCheckConstraint.Add(segmentacao);
           AdicionarScriptSegmentado(tbAtual.TableName, segmentacao);
         }
@@ -971,7 +925,7 @@ namespace DBInfo.DBSync {
 
 
       foreach (object chkc in tbNova.CheckConstraints) {
-        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).Name, tbAtual.CheckConstraints);
+        CheckConstraint ccorigem = PegarCheckConstraint(((CheckConstraint)chkc).CheckConstraintName, tbAtual.CheckConstraints);
 
         if (ccorigem == null) {
           string segmentacao = ScriptInclusaoCheckConstraint((CheckConstraint)chkc, tbAtual.TableName);
@@ -991,7 +945,7 @@ namespace DBInfo.DBSync {
 
     private string ScriptInclusaoCheckConstraint(CheckConstraint cc, string NomeTabelaOrigem) {
       string script = "ALTER TABLE [dbo].[" + NomeTabelaOrigem + "] ADD " + Environment.NewLine;
-      script += "CONSTRAINT [" + cc.Name + "] CHECK " + cc.Expression + Environment.NewLine;
+      script += "CONSTRAINT [" + cc.CheckConstraintName + "] CHECK " + cc.Expression + Environment.NewLine;
       script += "GO " + Environment.NewLine + Environment.NewLine;
       return script;
     }

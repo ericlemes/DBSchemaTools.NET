@@ -8,9 +8,14 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Xml;
 using M=DBInfo.Core.Model;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.XMLDatabase {
-  public class XMLDatabaseOutputGenerator : IOutputGenerator {
+  public class XMLDatabaseOutputGenerator : IStatementCollectionOutputGenerator {
+
+    public bool RequiresScriptOutputHandler {
+      get { return false; }
+    }
 
     private string _TablesDir = "Tables";
     public string TablesDir {
@@ -68,8 +73,8 @@ namespace DBInfo.XMLDatabase {
   
     #region IOutputGenerator Members
 
-    public GeneratorType Type {
-      get { return GeneratorType.Generic; }
+    public ExpectedInputType ExpectedInputType {
+      get { return ExpectedInputType.StatementCollection; }
     }
     
     private string _OutputDir;
@@ -83,37 +88,7 @@ namespace DBInfo.XMLDatabase {
     public string OutputConnectionString {
       get { return _OutputConnectionString; }
       set { _OutputConnectionString = value; }
-    }
-
-    public void GenerateOutput(DBInfo.Core.Model.Database db, List<DBObjectType> dataToGenerateOutput) {
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Tables)) {
-        GenerateTables(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
-        GenerateConstraints(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
-        GenerateForeignKeys(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes)) {
-        GenerateIndexes(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Triggers)) {
-        GenerateTriggers(db);
-      }                        
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures)) {
-        GenerateProcedures(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Functions)) {
-        GenerateFunctions(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Sequences)) {
-        GenerateSequences(db);
-      }
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Views)) {
-        GenerateViews(db);
-      }                        
-    }
+    }    
     
     private ColumnType getColumnType(M.DBColumnType type){
       if (type == M.DBColumnType.BigInt)
@@ -170,11 +145,13 @@ namespace DBInfo.XMLDatabase {
         throw new Exception(String.Format("Type not supported by XMLDatabase: {0}", type.ToString()));
     }
 
-    private void GenerateTables(DBInfo.Core.Model.Database db) {
+    private void GenerateTables(List<DBInfo.Core.Statement.CreateTable> createTableList) {
       if (!Directory.Exists(OutputDir + "\\" + TablesDir))
-        Directory.CreateDirectory(OutputDir + "\\" + TablesDir);
-
-      foreach (DBInfo.Core.Model.Table t in db.Tables) {
+        Directory.CreateDirectory(OutputDir + "\\" + TablesDir);            
+        
+      foreach(DBInfo.Core.Statement.CreateTable createTable in createTableList){
+        DBInfo.Core.Model.Table t = createTable.Table;
+        
         DBInfo.XMLDatabase.CreateTable xmlTable = new DBInfo.XMLDatabase.CreateTable();
         xmlTable.TableName = t.TableName;
         xmlTable.HasIdentity = t.HasIdentity ? YesNo.Yes : YesNo.No;
@@ -200,114 +177,171 @@ namespace DBInfo.XMLDatabase {
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];
         stCol.Statement[0] = xmlTable;
-        generateXMLOutput(stCol, OutputDir + "\\" + TablesDir + "\\" + t.TableName + ".table.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + TablesDir + "\\" + t.TableName + ".table.xml", true);      
       }
     }
 
-    private void GenerateConstraints(DBInfo.Core.Model.Database db) {
+    private void GenerateConstraints(List<DBInfo.Core.Statement.CreateCheckConstraint> createCheckList,
+      List<DBInfo.Core.Statement.CreatePrimaryKey> createPKList) {
       if (!Directory.Exists(OutputDir + "\\" + ConstraintsDir))
         Directory.CreateDirectory(OutputDir + "\\" + ConstraintsDir);
 
-      foreach (DBInfo.Core.Model.Table t in db.Tables) {
-        DBInfo.XMLDatabase.CreatePrimaryKey xmlPK = new DBInfo.XMLDatabase.CreatePrimaryKey();
-        xmlPK.TableName = t.TableName;
-        xmlPK.PrimaryKeyName = t.PrimaryKeyName;
-        xmlPK.Columns = new string[t.PrimaryKeyColumns.Count];
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.CreateCheckConstraint ccc in createCheckList
+         select ccc.CheckConstraint.TableName).Union<string>(
+          from DBInfo.Core.Statement.CreatePrimaryKey cpk in createPKList
+          select cpk.Table.TableName).Distinct<string>().ToList<string>();  
 
-        foreach (DBInfo.Core.Model.Column c in t.PrimaryKeyColumns) {
-          xmlPK.Columns[t.PrimaryKeyColumns.IndexOf(c)] = c.Name;
-        }
+      foreach (string tableName in tableNames) {
+        DBInfo.Core.Statement.CreatePrimaryKey createPK = 
+          (from DBInfo.Core.Statement.CreatePrimaryKey cpk in createPKList
+           where cpk.Table.TableName == tableName
+           select cpk).FirstOrDefault<DBInfo.Core.Statement.CreatePrimaryKey>();
+           
+        List<DBInfo.Core.Statement.CreateCheckConstraint> createCheckStatements = 
+          (from DBInfo.Core.Statement.CreateCheckConstraint ccc in createCheckList
+           where ccc.CheckConstraint.TableName == tableName
+           select ccc).ToList<DBInfo.Core.Statement.CreateCheckConstraint>();
 
+        int StatementCount = 0;
+        if (createPK != null)
+          StatementCount++;
+        StatementCount += createCheckStatements.Count;          
         StatementCollection stCol = new StatementCollection();
-        stCol.Statement = new Statement[t.CheckConstraints.Count + 1];                
-        stCol.Statement[0] = xmlPK;        
+        stCol.Statement = new Statement[StatementCount];
+        int count = 0;
+           
+        if (createPK != null){
+          DBInfo.XMLDatabase.CreatePrimaryKey xmlPK = new DBInfo.XMLDatabase.CreatePrimaryKey();
+          xmlPK.TableName = createPK.Table.TableName;
+          xmlPK.PrimaryKeyName = createPK.Table.PrimaryKeyName;
+          xmlPK.Columns = new string[createPK.Table.PrimaryKeyColumns.Count];
 
-        foreach (DBInfo.Core.Model.CheckConstraint ck in t.CheckConstraints) {
+          foreach (string c in createPK.Table.PrimaryKeyColumns) {
+            xmlPK.Columns[createPK.Table.PrimaryKeyColumns.IndexOf(c)] = c;
+          }
+          stCol.Statement[0] = xmlPK;  
+          count++;
+        }                      
+        
+        foreach (DBInfo.Core.Statement.CreateCheckConstraint ccc in createCheckStatements) {
           CreateCheckConstraint xmlCK = new CreateCheckConstraint();
-          xmlCK.TableName = t.TableName;
-          xmlCK.CheckConstraintName = ck.Name;
-          xmlCK.SourceCode = ck.Expression;
-          stCol.Statement[t.CheckConstraints.IndexOf(ck) + 1] = xmlCK;
+          xmlCK.TableName = ccc.CheckConstraint.TableName;
+          xmlCK.CheckConstraintName = ccc.CheckConstraint.CheckConstraintName;
+          xmlCK.SourceCode = ccc.CheckConstraint.Expression;
+          stCol.Statement[count] = xmlCK;
+          count++;
         }
 
-        generateXMLOutput(stCol, OutputDir + "\\" + ConstraintsDir + "\\" + t.TableName + ".constraints.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + ConstraintsDir + "\\" + tableName + ".constraints.xml", true);
       }
     }
     
-    private void GenerateForeignKeys(DBInfo.Core.Model.Database db){
+    private void GenerateForeignKeys(List<DBInfo.Core.Statement.CreateForeignKey> createFKList){
       if (!Directory.Exists(OutputDir + "\\" + ForeignKeysDir))
         Directory.CreateDirectory(OutputDir + "\\" + ForeignKeysDir);
+
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.CreateForeignKey cfk in createFKList
+         select cfk.ForeignKey.TableName).Distinct<string>().ToList<string>();      
       
-      foreach(DBInfo.Core.Model.Table t in db.Tables){
-        StatementCollection xmlDB = new StatementCollection();
-        xmlDB.Statement = new Statement[t.ForeignKeys.Count];
-      
-        foreach(DBInfo.Core.Model.ForeignKey fk in t.ForeignKeys){
-          CreateForeignKey xmlFK = new CreateForeignKey();          
-          xmlFK.TableName = t.TableName;
-          xmlFK.ForeignKeyName = fk.ForeignKeyName;
-          xmlFK.RefTableName = fk.RefTableName;
-          xmlFK.DeleteCascade = fk.DeleteCascade ? YesNo.Yes : YesNo.No;
-          xmlFK.UpdateCascade = fk.UpdateCascade ? YesNo.Yes : YesNo.No;
-          xmlFK.Columns = new ForeignKeyColumn[fk.Columns.Count];
-          foreach(DBInfo.Core.Model.ForeignKeyColumn c in fk.Columns){
-            ForeignKeyColumn xmlFKCol = new ForeignKeyColumn();
-            xmlFKCol.ColumnName = c.Column.Name;
-            xmlFKCol.RefColumnName = c.RefColumn.Name;
-            xmlFK.Columns[fk.Columns.IndexOf(c)] = xmlFKCol;
-          }
-          xmlDB.Statement[t.ForeignKeys.IndexOf(fk)] = xmlFK;
-        }        
+      foreach(string tableName in tableNames){
+        List<DBInfo.Core.Statement.CreateForeignKey> createFKByTable =
+          (from DBInfo.Core.Statement.CreateForeignKey cfk in createFKList
+           where cfk.ForeignKey.TableName == tableName
+           select cfk).ToList<DBInfo.Core.Statement.CreateForeignKey>();
         
-        generateXMLOutput(xmlDB, OutputDir + "\\" + ForeignKeysDir + "\\" + t.TableName + ".fk.xml", true);
+        int count = 0;
+        foreach(DBInfo.Core.Statement.CreateForeignKey cfk in createFKByTable){
+          StatementCollection xmlDB = new StatementCollection();
+          xmlDB.Statement = new Statement[createFKByTable.Count];
+                  
+          CreateForeignKey xmlFK = new CreateForeignKey();          
+          xmlFK.TableName = cfk.ForeignKey.TableName;
+          xmlFK.ForeignKeyName = cfk.ForeignKey.ForeignKeyName;
+          xmlFK.RefTableName = cfk.ForeignKey.RefTableName;
+          xmlFK.DeleteCascade = cfk.ForeignKey.DeleteCascade ? YesNo.Yes : YesNo.No;
+          xmlFK.UpdateCascade = cfk.ForeignKey.UpdateCascade ? YesNo.Yes : YesNo.No;
+          xmlFK.Columns = new ForeignKeyColumn[cfk.ForeignKey.Columns.Count];
+          foreach(DBInfo.Core.Model.ForeignKeyColumn c in cfk.ForeignKey.Columns){
+            ForeignKeyColumn xmlFKCol = new ForeignKeyColumn();
+            xmlFKCol.ColumnName = c.Column;
+            xmlFKCol.RefColumnName = c.RefColumn;
+            xmlFK.Columns[cfk.ForeignKey.Columns.IndexOf(c)] = xmlFKCol;
+          }
+          xmlDB.Statement[count] = xmlFK;          
+          count++;
+          
+          generateXMLOutput(xmlDB, OutputDir + "\\" + ForeignKeysDir + "\\" + tableName + ".fk.xml", true);
+        }
       }
     }
     
-    private void GenerateIndexes(DBInfo.Core.Model.Database db){
+    private void GenerateIndexes(List<DBInfo.Core.Statement.CreateIndex> indexList){
       if (!Directory.Exists(OutputDir + "\\" + IndexesDir))
         Directory.CreateDirectory(OutputDir + "\\" + IndexesDir);
+
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.CreateIndex ci in indexList
+         select ci.Index.TableName).Distinct<string>().ToList<string>();              
         
-      foreach(DBInfo.Core.Model.Table t in db.Tables){
-        StatementCollection stCol = new StatementCollection();
-        stCol.Statement = new Statement[t.Indexes.Count];        
+      foreach(string tableName in tableNames){
+        List<DBInfo.Core.Statement.CreateIndex> createIndex =
+          (from DBInfo.Core.Statement.CreateIndex ci in indexList
+           where ci.Index.TableName == tableName
+           select ci).ToList<DBInfo.Core.Statement.CreateIndex>();
       
-        foreach(DBInfo.Core.Model.Index i in t.Indexes){
+        StatementCollection stCol = new StatementCollection();
+        stCol.Statement = new Statement[createIndex.Count];        
+      
+        int count = 0;
+        foreach(DBInfo.Core.Statement.CreateIndex ci in createIndex){
           CreateIndex xmlIdx = new CreateIndex();
-          xmlIdx.TableName = t.TableName;
-          xmlIdx.IndexName = i.IndexName;
-          xmlIdx.Unique = i.Unique ? YesNo.Yes : YesNo.No;
-          xmlIdx.Clustered = i.IsClustered ? YesNo.Yes : YesNo.No;
-          xmlIdx.Columns = new IndexColumn[i.Columns.Count];
+          xmlIdx.TableName = ci.Index.TableName;
+          xmlIdx.IndexName = ci.Index.IndexName;
+          xmlIdx.Unique = ci.Index.Unique ? YesNo.Yes : YesNo.No;
+          xmlIdx.Clustered = ci.Index.IsClustered ? YesNo.Yes : YesNo.No;
+          xmlIdx.Columns = new IndexColumn[ci.Index.Columns.Count];
           
-          foreach(DBInfo.Core.Model.IndexColumn icol in i.Columns){
+          foreach(DBInfo.Core.Model.IndexColumn icol in ci.Index.Columns){
             IndexColumn xmlIC = new IndexColumn();
             xmlIC.Order = icol.Order == DBInfo.Core.Model.IndexColumn.EnumOrder.Ascending ? SortOrder.Ascending : SortOrder.Descending;
-            xmlIC.Name = icol.Column.Name;
-            xmlIdx.Columns[i.Columns.IndexOf(icol)] = xmlIC;
+            xmlIC.Name = icol.Column;
+            xmlIdx.Columns[ci.Index.Columns.IndexOf(icol)] = xmlIC;
           }        
-          stCol.Statement[t.Indexes.IndexOf(i)] = xmlIdx;
+          stCol.Statement[count] = xmlIdx;
+          count++;
         }
         
-        generateXMLOutput(stCol, OutputDir + "\\" + IndexesDir + "\\" + t.TableName + ".indexes.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + IndexesDir + "\\" + tableName + ".indexes.xml", true);
       }
     }        
     
-    private void GenerateTriggers(DBInfo.Core.Model.Database db){
+    private void GenerateTriggers(List<DBInfo.Core.Statement.CreateTrigger> triggerList){
       if (!Directory.Exists(OutputDir + "\\" + TriggersDir))
         Directory.CreateDirectory(OutputDir + "\\" + TriggersDir);
+
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.CreateTrigger ct in triggerList
+         select ct.Trigger.TableName).Distinct<string>().ToList<string>();             
         
-      foreach(DBInfo.Core.Model.Table t in db.Tables){
-        foreach(DBInfo.Core.Model.Trigger tr in t.Triggers){
+      foreach(string tableName in tableNames){
+        List<DBInfo.Core.Statement.CreateTrigger> createTrigger =
+          (from DBInfo.Core.Statement.CreateTrigger ct in triggerList
+           where ct.Trigger.TableName == tableName
+           select ct).ToList<DBInfo.Core.Statement.CreateTrigger>();
+      
+        foreach(DBInfo.Core.Statement.CreateTrigger tr in createTrigger){
           CreateTrigger xmlTrigger = new CreateTrigger();
-          xmlTrigger.TableName = t.TableName;
-          xmlTrigger.TriggerName = tr.Name;
-          xmlTrigger.SourceCode = tr.Body;
+          xmlTrigger.TableName = tr.Trigger.TableName;
+          xmlTrigger.TriggerName = tr.Trigger.TriggerName;
+          xmlTrigger.SourceCode = tr.Trigger.Body;
           
           StatementCollection stCol = new StatementCollection();
           stCol.Statement = new Statement[1];
           stCol.Statement[0] = xmlTrigger;
           
-          generateXMLOutput(stCol, OutputDir + "\\" + TriggersDir + "\\" + t.TableName + "." + tr.Name + ".trigger.xml", true);
+          generateXMLOutput(stCol, OutputDir + "\\" + TriggersDir + "\\" + tableName + "." + tr.Trigger.TriggerName + ".trigger.xml", true);
         }
       }
     }
@@ -325,18 +359,18 @@ namespace DBInfo.XMLDatabase {
         throw new Exception(String.Format("Invalid parameter direction: {0}", d.ToString()));
     }
     
-    private void GenerateProcedures(DBInfo.Core.Model.Database db){
+    private void GenerateProcedures(List<DBInfo.Core.Statement.CreateProcedure> procList){
       if (!Directory.Exists(OutputDir + "\\" + ProceduresDir))
         Directory.CreateDirectory(OutputDir + "\\" + ProceduresDir);    
     
-      foreach(DBInfo.Core.Model.Procedure p in db.Procedures){
+      foreach(DBInfo.Core.Statement.CreateProcedure p in procList){
         DBInfo.XMLDatabase.CreateProcedure xmlProc = new DBInfo.XMLDatabase.CreateProcedure();
-        xmlProc.Name = p.Name;
-        xmlProc.SourceCode = p.Body;
+        xmlProc.Name = p.Procedure.Name;
+        xmlProc.SourceCode = p.Procedure.Body;
         
-        xmlProc.InputParameters = new Parameter[p.InputParameters.Count];
+        xmlProc.InputParameters = new Parameter[p.Procedure.InputParameters.Count];
         
-        foreach(DBInfo.Core.Model.Parameter parm in p.InputParameters){
+        foreach(DBInfo.Core.Model.Parameter parm in p.Procedure.InputParameters){
           Parameter xmlParam = new Parameter();
           xmlParam.Name = parm.Name;
           xmlParam.Type = getColumnType(parm.Type);
@@ -344,11 +378,11 @@ namespace DBInfo.XMLDatabase {
           xmlParam.Precision = parm.Precision.ToString();
           xmlParam.Scale = parm.Scale.ToString();
           xmlParam.Direction = GetParameterDirection(parm.Direction);
-          xmlProc.InputParameters[p.InputParameters.IndexOf(parm)] = xmlParam;
+          xmlProc.InputParameters[p.Procedure.InputParameters.IndexOf(parm)] = xmlParam;
         }
         
-        xmlProc.RecordSets = new RecordSetDef[p.RecordSets.Count];
-        foreach(DBInfo.Core.Model.RecordSet r in p.RecordSets){
+        xmlProc.RecordSets = new RecordSetDef[p.Procedure.RecordSets.Count];
+        foreach (DBInfo.Core.Model.RecordSet r in p.Procedure.RecordSets) {
           RecordSetDef xmlRS = new RecordSetDef();
           xmlRS.Parameters = new Parameter[r.Parameters.Count];
           foreach(DBInfo.Core.Model.Parameter parm in r.Parameters){
@@ -361,29 +395,29 @@ namespace DBInfo.XMLDatabase {
             xmlParam.Direction = GetParameterDirection(parm.Direction);
             xmlRS.Parameters[r.Parameters.IndexOf(parm)] = xmlParam;
           }
-          xmlProc.RecordSets[p.RecordSets.IndexOf(r)] = xmlRS;
+          xmlProc.RecordSets[p.Procedure.RecordSets.IndexOf(r)] = xmlRS;
         }
 
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];
         stCol.Statement[0] = xmlProc;
-        generateXMLOutput(stCol, OutputDir + "\\" + ProceduresDir + "\\" + p.Name + ".proc.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + ProceduresDir + "\\" + p.Procedure.Name + ".proc.xml", true);
       }
     }
     
-    private void GenerateFunctions(DBInfo.Core.Model.Database db){
+    private void GenerateFunctions(List<DBInfo.Core.Statement.CreateFunction> functionList){
       if (!Directory.Exists(OutputDir + "\\" + FunctionsDir))
         Directory.CreateDirectory(OutputDir + "\\" + FunctionsDir);
       
-      foreach(DBInfo.Core.Model.Function f in db.Functions){
+      foreach(DBInfo.Core.Statement.CreateFunction f in functionList){
         CreateFunction xmlFunction = new CreateFunction();
-        xmlFunction.Name = f.Name;
-        xmlFunction.SourceCode = f.Body;
+        xmlFunction.Name = f.Function.Name;
+        xmlFunction.SourceCode = f.Function.Body;
         
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];
         stCol.Statement[0] = xmlFunction;
-        generateXMLOutput(stCol, OutputDir + "\\" + FunctionsDir + "\\" + f.Name + ".function.xml", true); 
+        generateXMLOutput(stCol, OutputDir + "\\" + FunctionsDir + "\\" + f.Function.Name + ".function.xml", true); 
       }
     }
     
@@ -407,19 +441,19 @@ namespace DBInfo.XMLDatabase {
       }
     }
     
-    private void GenerateViews(DBInfo.Core.Model.Database db){
+    private void GenerateViews(List<DBInfo.Core.Statement.CreateView> viewList){
       if (!Directory.Exists(OutputDir + "\\" + ViewsDir))
         Directory.CreateDirectory(OutputDir + "\\" + ViewsDir);
         
-      foreach ( DBInfo.Core.Model.View v in db.Views){
+      foreach ( DBInfo.Core.Statement.CreateView v in viewList){
         CreateView xmlView = new CreateView();
-        xmlView.Name = v.Name;
-        xmlView.SourceCode = v.Body;
+        xmlView.Name = v.View.Name;
+        xmlView.SourceCode = v.View.Body;
         
         StatementCollection stCol = new StatementCollection();
         stCol.Statement = new Statement[1];
         stCol.Statement[0] = xmlView;
-        generateXMLOutput(stCol, OutputDir + "\\" + ViewsDir + "\\" + v.Name + ".view.xml", true);
+        generateXMLOutput(stCol, OutputDir + "\\" + ViewsDir + "\\" + v.View.Name + ".view.xml", true);
       }
     }
 
@@ -467,6 +501,82 @@ namespace DBInfo.XMLDatabase {
       xml.Save(outputStream);      
     }
 
+    public void GenerateOutput(List<BaseStatement> statements, List<DBObjectType> dataToGenerateOutput){      
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Tables)) {
+        List<DBInfo.Core.Statement.CreateTable> l = 
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateTable
+           select (DBInfo.Core.Statement.CreateTable)s).ToList<DBInfo.Core.Statement.CreateTable>();
+        GenerateTables(l);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
+        List<DBInfo.Core.Statement.CreatePrimaryKey> createPKList =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreatePrimaryKey
+           select (DBInfo.Core.Statement.CreatePrimaryKey)s).ToList<DBInfo.Core.Statement.CreatePrimaryKey>();
+        List<DBInfo.Core.Statement.CreateCheckConstraint> createCheckList =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateCheckConstraint
+           select (DBInfo.Core.Statement.CreateCheckConstraint)s).ToList<DBInfo.Core.Statement.CreateCheckConstraint>();           
+        GenerateConstraints(createCheckList, createPKList);
+      }    
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
+        List<DBInfo.Core.Statement.CreateForeignKey> l =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateForeignKey
+           select (DBInfo.Core.Statement.CreateForeignKey)s).ToList<DBInfo.Core.Statement.CreateForeignKey>();
+        GenerateForeignKeys(l);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes)) {
+        List<DBInfo.Core.Statement.CreateIndex> l =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateIndex
+           select (DBInfo.Core.Statement.CreateIndex)s).ToList<DBInfo.Core.Statement.CreateIndex>();      
+        GenerateIndexes(l);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Triggers)) {
+        List<DBInfo.Core.Statement.CreateTrigger> l =
+            (from BaseStatement s in statements
+             where s is DBInfo.Core.Statement.CreateTrigger
+             select (DBInfo.Core.Statement.CreateTrigger)s).ToList<DBInfo.Core.Statement.CreateTrigger>();      
+        GenerateTriggers(l);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures)) {
+        List<DBInfo.Core.Statement.CreateProcedure> l =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateProcedure
+           select (DBInfo.Core.Statement.CreateProcedure)s).ToList<DBInfo.Core.Statement.CreateProcedure>();            
+        GenerateProcedures(l);
+      }
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Functions)) {
+        List<DBInfo.Core.Statement.CreateFunction> l =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateFunction
+           select (DBInfo.Core.Statement.CreateFunction)s).ToList<DBInfo.Core.Statement.CreateFunction>();                  
+        GenerateFunctions(l);
+      }      
+      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Views)) {
+        List<DBInfo.Core.Statement.CreateView> l =
+          (from BaseStatement s in statements
+           where s is DBInfo.Core.Statement.CreateView
+           select (DBInfo.Core.Statement.CreateView)s).ToList<DBInfo.Core.Statement.CreateView>();                        
+        GenerateViews(l);
+      }                                      
+    }
+
     #endregion
+
+    #region IStatementCollectionOutputGenerator Members
+
+    public IScriptOutputHandler ScriptOutputGen {
+      get; set;      
+    }
+
+    public IScriptFileOutputGenerator ScriptFileOutputGenerator {
+      get; set; 
+    }
+
+    #endregion
+
   }
 }

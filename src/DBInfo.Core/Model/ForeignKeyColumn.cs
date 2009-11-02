@@ -3,22 +3,16 @@ using System;
 namespace DBInfo.Core.Model {
   public class ForeignKeyColumn {
   
-    private Table _RefTable;
-    public Table RefTable{
-      get { return _RefTable;}
-      set { _RefTable = value;}
-    }
+    public string RefTable{
+      get; set;
+    }    
     
-    private Column _Column;
-    public Column Column{
-      get { return _Column;}
-      set { _Column = value;}
-    }
+    public string Column{
+      get; set;
+    } 
     
-    private Column _RefColumn;
-    public Column RefColumn{
-      get { return _RefColumn;}
-      set { _RefColumn = value;}
+    public string RefColumn{
+      get; set;
     }    
   }
 }

@@ -5,20 +5,13 @@ using System.Data;
 using DBInfo.Core.Extractor;
 using DBInfo.Core.Model;
 using System.Collections.Generic;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.Core.OutputGenerators {
-  public class ScriptOutputGenerator : IScriptOutputGenerator {
-
-    public delegate void BeforeGenerateScriptHandler(DBObjectType objectType, string objectName);
-    public event BeforeGenerateScriptHandler BeforeGenerateScript;
-
-    public delegate void BeforeGenerateTableDataHandler(Table table, DataTable dataTable);
-    public event BeforeGenerateTableDataHandler BeforeGenerateTableData;
-    public delegate void BeforeGenerateDataRowHandler(Table table, DataRow row);
-    public event BeforeGenerateDataRowHandler BeforeGenerateDataRow;
+  public class ScriptOutputGenerator : IStatementCollectionOutputGenerator {
     
-    public GeneratorType Type{
-      get { return GeneratorType.Script;}
+    public ExpectedInputType ExpectedInputType{
+      get { return ExpectedInputType.StatementCollection;}
     }
 
     private IScriptOutputHandler _ScriptOutputGen;
@@ -33,159 +26,46 @@ namespace DBInfo.Core.OutputGenerators {
       set { _OutputDir = value;}
     }
     
+    public bool RequiresScriptOutputHandler{
+      get { return true; }
+    }
+    
     private IScriptFileOutputGenerator _ScriptFileOutputGenerator;
     public IScriptFileOutputGenerator ScriptFileOutputGenerator{
       get { return _ScriptFileOutputGenerator;}
       set { _ScriptFileOutputGenerator = value;}
     }
-
-    private void GenerateTables(Database db, List<DBObjectType> dataToGenerateOutput) {
-      foreach (Table table in db.Tables) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.Tables, table.TableName);
-
-        table.TableScript = ScriptOutputGen.GenerateTableScript(table);             
-        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.PrimaryKey)){        
-          if (!String.IsNullOrEmpty(table.PrimaryKeyName))
-            table.PrimaryKeyScript = ScriptOutputGen.GeneratePrimaryKeyScript(table);
-        }
-          
-        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Indexes))
-        foreach (Index index in table.Indexes){
-          index.Script = ScriptOutputGen.GenerateIndexScript(table, index);
-        }        
-
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.CheckConstraints, table.TableName);
-          
-        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.CheckConstraints)) {
-          foreach (CheckConstraint check in table.CheckConstraints){
-            check.Script = ScriptOutputGen.GenerateCheckConstraintScript(table, check);
-          }
-        }
-
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.ForeignKeys, table.TableName);
-
-        if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.ForeignKeys)) {
-          foreach(ForeignKey fk in table.ForeignKeys){
-            fk.Script = ScriptOutputGen.GenerateForeignKeysScript(table, fk);
-          }          
-        }
-      }
-    }
-
-    private void GenerateTableData(Database db) {
-      foreach (string s in db.TableNames) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.TableData, s);
-
-        Table t = db.FindTable(s, true);
-        if (t == null)
-          throw new Exception("Não foi encontrada tabela " + s);
-          
-        if (t.TableData == null)          
-          continue;
-                          
-        if (t.TableData.Rows.Count > 0) {
-          if (BeforeGenerateTableData != null)
-            BeforeGenerateTableData(t, t.TableData);
-          t.TableDataScript = ScriptOutputGen.GenerateTableDataStartScript(t);
-          foreach (DataRow r in t.TableData.Rows) {
-            if (BeforeGenerateDataRow != null)
-              BeforeGenerateDataRow(t, r);
-            t.TableDataScript += ScriptOutputGen.GenerateTableDataRowScript(t, r);
-          }
-          t.TableDataScript += ScriptOutputGen.GenerateTableDataEndScript(t);          
-        }
-      }
-    }
-
-    private void GenerateProcedures(Database db) {
-      foreach (Procedure p in db.Procedures) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.Procedures, p.Name);
-        p.DropProcedureScript = ScriptOutputGen.GenerateDropProcedureScript(p);
-        p.CreateProcedureScript = ScriptOutputGen.GenerateCreateProcedureScript(p);                        
-      }
-    }
-
-    private void GenerateFunctions(Database db) {
-      foreach (Function f in db.Functions) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.Functions, f.Name);
-        f.DropFunctionScript = ScriptOutputGen.GenerateDropFunctionScript(f);
-        f.CreateFunctionScript = ScriptOutputGen.GenerateCreateFunctionScript(f);                
-      }
-    }
-
-    private void GenerateTriggers(Database db) {
-      foreach (Table table in db.Tables) {
-        foreach (Trigger t in table.Triggers) {
-          if (BeforeGenerateScript != null)
-            BeforeGenerateScript(DBObjectType.Triggers, t.Table.TableName + "." + t.Name);
-          t.DropTriggerScript = ScriptOutputGen.GenerateDropTriggerScript(table, t);
-          t.CreateTriggerScript = ScriptOutputGen.GenerateCreateTriggerScript(table, t);          
-        }
-      }
-    }
-
-    private void GenerateViews(Database db) {
-      foreach (View v in db.Views) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.Views, v.Name);
-        v.DropViewScript = ScriptOutputGen.GenerateDropViewScript(v);
-        v.CreateViewScript = ScriptOutputGen.GenerateCreateViewScript(v);
-      }
-    }
-
-    private void GenerateSequences(Database db) {
-      foreach (Sequence s in db.Sequences) {
-        if (BeforeGenerateScript != null)
-          BeforeGenerateScript(DBObjectType.Sequences, s.SequenceName);
-        s.SequenceScript = ScriptOutputGen.GenerateSequenceScript(s);        
-      }
-    }
-
-    public void GenerateOutput(Database db, List<DBObjectType> dataToGenerateOutput) {
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Tables))
-        GenerateTables(db, dataToGenerateOutput);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.TableData))
-        GenerateTableData(db);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Procedures))
-        GenerateProcedures(db);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Functions))
-        GenerateFunctions(db);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Triggers))
-        GenerateTriggers(db);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Views))
-        GenerateViews(db);
-      if (dataToGenerateOutput.Contains(DBObjectType.All) || dataToGenerateOutput.Contains(DBObjectType.Sequences))
-        GenerateSequences(db);
-        
-      SaveScripts(db);
-    }    
-    
-    private void SaveScriptBatch(List<DatabaseScript> scripts, string dir){
-      if (!Directory.Exists(dir))
-        Directory.CreateDirectory(dir);
-      foreach (DatabaseScript ds in scripts) {
-        if (ds.ScriptContent.Trim() != String.Empty) {
-          StreamWriter sw = new StreamWriter(dir + "\\" + ds.ScriptName, false, System.Text.Encoding.Default);
-          sw.Write(ds.ScriptContent);
-          sw.Close();
-        }
-      }
-    }
-    
-    public void SaveScripts(Database db) {      
+   
+    public void SaveScripts(List<BaseStatement> statements) {      
       if (!Directory.Exists(OutputDir))
         Directory.CreateDirectory(OutputDir);        
         
       if (_ScriptFileOutputGenerator == null)
         throw new Exception("ScriptFileOutputGenerator is required");
 
-      _ScriptFileOutputGenerator.GenerateFileOutput(OutputDir, db, ScriptOutputGen); 
+      _ScriptFileOutputGenerator.GenerateFileOutput(OutputDir, statements, ScriptOutputGen); 
+    }
+
+    public void GenerateOutput(List<BaseStatement> statements, List<DBObjectType> dataToGenerateOutput){
+      foreach(BaseStatement s in statements){
+        if (s is CreateTable)
+          s.Script = ScriptOutputGen.GenerateCreateTableScript((CreateTable)s);
+        if (s is CreatePrimaryKey)
+          s.Script = ScriptOutputGen.GenerateCreatePrimaryKeyScript((CreatePrimaryKey)s); 
+        if (s is CreateIndex)
+          s.Script = ScriptOutputGen.GenerateCreateIndexScript((CreateIndex)s);
+        if (s is CreateForeignKey)
+          s.Script = ScriptOutputGen.GenerateCreateForeignKeysScript((CreateForeignKey)s);
+        if (s is CreateProcedure)
+          s.Script = ScriptOutputGen.GenerateCreateProcedureScript((CreateProcedure)s);
+        if (s is CreateFunction)
+          s.Script = ScriptOutputGen.GenerateCreateFunctionScript((CreateFunction)s);
+        if (s is CreateTrigger)
+          s.Script = ScriptOutputGen.GenerateCreateTriggerScript((CreateTrigger)s);
+        if (s is CreateView)
+          s.Script = ScriptOutputGen.GenerateCreateViewScript((CreateView)s);
+      }
+      SaveScripts(statements);
     }
     
 

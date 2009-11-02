@@ -103,7 +103,7 @@ namespace DBInfo.DBSync {
 
     protected IndexColumn PegarColuna(string NomeColuna, List<IndexColumn> colunas) {
       foreach (IndexColumn col in colunas) {
-        if (col.Column.Name == NomeColuna) {
+        if (col.Column == NomeColuna) {
           return col;
         }
       }
@@ -170,9 +170,9 @@ namespace DBInfo.DBSync {
 
     protected ForeignKeyColumn PegarColunasFK(ForeignKeyColumn fkAtual, List<ForeignKeyColumn> ColunasFK) {
       foreach (ForeignKeyColumn fk in ColunasFK) {        
-        if ((fkAtual.RefTable.TableName == fk.RefTable.TableName) &&
-          (fkAtual.Column.Name == fk.Column.Name) &&
-          (fkAtual.RefColumn.Name == fk.RefColumn.Name))
+        if ((fkAtual.RefTable == fk.RefTable) &&
+          (fkAtual.Column == fk.Column) &&
+          (fkAtual.RefColumn== fk.RefColumn))
           return fk;
       }
       return null;
@@ -188,7 +188,7 @@ namespace DBInfo.DBSync {
 
     protected CheckConstraint PegarCheckConstraint(string Nome, List<CheckConstraint> CheckConstraints) {
       foreach (CheckConstraint constraint in CheckConstraints) {
-        if (constraint.Name == Nome) {
+        if (constraint.CheckConstraintName == Nome) {
           return constraint;
         }
       }

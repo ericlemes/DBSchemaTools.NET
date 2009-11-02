@@ -58,6 +58,27 @@ namespace DBInfo.Core.Model {
         }
       }
       return TmpTable;
+    }        
+    
+    public Procedure FindProcedure(string ProcedureName){
+      return 
+        (from Procedure p in this.Procedures
+         where p.Name.ToLower() == ProcedureName.ToLower()
+         select p).FirstOrDefault<Procedure>();
+    }
+    
+    public Function FindFunction(string FunctionName){
+      return
+        (from Function f in this.Functions
+         where f.Name.ToLower() == FunctionName.ToLower()
+         select f).FirstOrDefault<Function>();
+    }
+    
+    public View FindView(string ViewName){
+      return
+        (from View v in this.Views
+         where v.Name.ToLower() == ViewName.ToLower()
+         select v).FirstOrDefault<View>();
     }
 
   }

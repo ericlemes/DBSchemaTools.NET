@@ -7,11 +7,9 @@ namespace DBInfo.Core.Model {
       Descending = 1
     };
 
-    private Column _Column;
-    public Column Column{
-      get { return _Column;}
-      set { _Column = value;}
-    }
+    public string Column{
+      get; set;
+    } 
     
     private EnumOrder _Order;
     public EnumOrder Order{

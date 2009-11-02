@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DBInfo.Core.Model;
 using System.IO;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.Core.OutputGenerators {
   public class ConsolidatedScriptFileOutputGenerator : IScriptFileOutputGenerator {
@@ -15,42 +16,14 @@ namespace DBInfo.Core.OutputGenerators {
       set { _ScriptName = value;}
     }
 
-    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputHandler OutputGenerator) {
+    public void GenerateFileOutput(string OutputDir, List<BaseStatement> statements, IScriptOutputHandler OutputGenerator){
       FileStream fs = new FileStream(OutputDir + "\\" + ScriptName, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
-      foreach (Table t in db.Tables) {
-        sw.WriteLine(t.TableScript);
-        sw.WriteLine(OutputGenerator.ScriptTerminator);        
-        WriteConstraints(sw, t, OutputGenerator);
-        WriteIndexes(sw, t, OutputGenerator);
-      }
-      
-      foreach(Table t in db.Tables){
-        WriteFKs(sw, t, OutputGenerator);        
-      }
-
-      foreach (Function f in db.Functions) {
-        WriteFunction(sw, f, OutputGenerator);
-      }
-
-      foreach (Procedure p in db.Procedures) {
-        WriteProcedure(sw, p, OutputGenerator);
-      }
-
-      foreach (Sequence s in db.Sequences) {
-        sw.WriteLine(s.SequenceScript);
-        sw.WriteLine(OutputGenerator.ScriptTerminator);        
-      }
-
-      foreach (View v in db.Views) {
-        WriteView(sw, v, OutputGenerator);
-      }
-
-      foreach (Table t in db.Tables){
-        foreach (Trigger tr in t.Triggers) {
-          WriteTrigger(sw, tr, OutputGenerator);
-        }      
-      }
+      foreach(BaseStatement s in statements){
+        sw.WriteLine(s.Script);
+        sw.WriteLine(OutputGenerator.ScriptTerminator);              
+        sw.WriteLine("");
+      }      
       sw.Flush();
       sw.Close();
       fs.Close();

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DBInfo.Core.Model;
 using System.IO;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.Core.OutputGenerators {
   public class SplittedScriptFileOutputGenerator : IScriptFileOutputGenerator {
@@ -66,13 +67,13 @@ namespace DBInfo.Core.OutputGenerators {
     private void WriteScript(string File, string Script){
       FileStream fs = new FileStream(File, FileMode.Create, FileAccess.Write);
       StreamWriter sw = new StreamWriter(fs);
-      sw.WriteLine(Script);
+      sw.WriteLine(Script);      
       sw.Flush();
       sw.Close();
       fs.Close();    
     }
 
-    public void GenerateFileOutput(string OutputDir, Database db, IScriptOutputHandler OutputGenerator) {
+    public void GenerateFileOutput(string OutputDir, List<BaseStatement> statements, IScriptOutputHandler OutputGenerator){
       string FullTableDir = OutputDir + "\\" + TablesDir;
       Directory.CreateDirectory(FullTableDir);
       
@@ -98,108 +99,109 @@ namespace DBInfo.Core.OutputGenerators {
       Directory.CreateDirectory(FullTriggersDir);
       
       string FullViewsDir = OutputDir + "\\" + ViewsDir;
-      Directory.CreateDirectory(FullViewsDir);
+      Directory.CreateDirectory(FullViewsDir);            
       
-      foreach(Table t in db.Tables){
-        WriteScript(FullTableDir + "\\" + t.TableName + ".table.sql", t.TableScript);
-        WriteConstraints(FullConstraintsDir + "\\" + t.TableName + ".constraints.sql", t, OutputGenerator);
-        WriteFKs(FullFKDir + "\\" + t.TableName + ".fk.sql", t, OutputGenerator);
-        WriteIndexes(FullIndexesDir + "\\" + t.TableName + ".indexes.sql", t, OutputGenerator);
-        foreach(Trigger tr in t.Triggers){
-          WriteTrigger(FullTriggersDir + "\\" + t.TableName + "." + tr.Name + ".trigger.sql", tr, OutputGenerator);
+      foreach(BaseStatement s in statements){
+        if (s is CreateTable)
+          WriteScript(FullTableDir + "\\" + ((CreateTable)s).Table.TableName + ".table.sql", s.Script);                
+        if (s is CreateTrigger)
+          WriteScript(FullTriggersDir + "\\" + ((CreateTrigger)s).Trigger.TableName + "." + ((CreateTrigger)s).Trigger.TriggerName + ".trigger.sql", s.Script);
+        if (s is CreateFunction)
+          WriteScript(FullFunctionsDir + "\\" + ((CreateFunction)s).Function.Name + ".function.sql", s.Script);
+        if (s is CreateProcedure)
+          WriteScript(FullProceduresDir + "\\" + ((CreateProcedure)s).Procedure.Name + ".procedure.sql", s.Script);
+        if (s is CreateView)
+          WriteScript(FullViewsDir + "\\" + ((CreateView)s).View.Name + ".view.sql", s.Script);
+      }
+      
+      WriteConstraints(FullConstraintsDir, statements, OutputGenerator);      
+      WriteFKs(FullFKDir, statements, OutputGenerator);
+      //WriteIndexes(FullIndexesDir + "\\" + t.TableName + ".indexes.sql", t, OutputGenerator);      
+    }
+
+    private void WriteFKs(string FullFKsDir, List<BaseStatement> statements, IScriptOutputHandler OutputGen) {
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.BaseStatement s in statements
+         where s is CreateForeignKey
+         select (s as CreateForeignKey).ForeignKey.TableName).ToList<string>();
+      foreach (string tableName in tableNames) {
+        FileStream fs = new FileStream(FullFKsDir + "\\" + tableName + ".fk.sql", FileMode.Create, FileAccess.Write);
+        StreamWriter sw = new StreamWriter(fs);
+
+        List<BaseStatement> tableStatements =
+          (from BaseStatement s in statements
+           where s is CreateForeignKey && ((s as CreateForeignKey).ForeignKey.TableName == tableName)
+           select s).ToList<BaseStatement>();
+
+        foreach (BaseStatement s in tableStatements) {
+          sw.WriteLine(s.Script);
+          sw.WriteLine(OutputGen.ScriptTerminator);
+          sw.WriteLine("");
         }
-      }
-      
-      foreach(Function f in db.Functions){
-        WriteFunction(FullFunctionsDir + "\\" + f.Name + ".function.sql", f, OutputGenerator);
-      }
-      
-      foreach(Procedure p in db.Procedures){
-        WriteProcedure(FullProceduresDir + "\\" + p.Name + ".procedure.sql", p, OutputGenerator);
-      }
-      
-      foreach(Sequence s in db.Sequences){
-        WriteScript(FullSequencesDir + "\\" + s.SequenceName + ".sequence.sql", s.SequenceScript);
-      }
-      
-      foreach(View v in db.Views){
-        WriteView(FullViewsDir + "\\" + v.Name + ".view.sql", v, OutputGenerator);
-      }
+
+        sw.Flush();
+        sw.Close();
+        fs.Close();
+      }      
     }
     
-    private void WriteFKs(string FileName, Table t, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      foreach(ForeignKey fk in t.ForeignKeys){
-        sw.WriteLine(fk.Script);
-        sw.WriteLine(OutputGen.ScriptTerminator);
-        sw.WriteLine("");
-      }
-      sw.Flush();
-      sw.Close();
-      fs.Close();
+    private void WriteConstraints(string FullConstraintsDir, List<BaseStatement> statements, IScriptOutputHandler OutputGen){      
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.BaseStatement s in statements
+         where s is CreatePrimaryKey
+         select (s as CreatePrimaryKey).Table.TableName).Union<string>(
+          from BaseStatement s2 in statements
+          where s2 is CreateCheckConstraint
+          select (s2 as CreateCheckConstraint).CheckConstraint.TableName).Distinct<string>().ToList<string>();
+      foreach (string tableName in tableNames) {
+        FileStream fs = new FileStream(FullConstraintsDir + "\\" + tableName + ".constraints.sql", FileMode.Create, FileAccess.Write);
+        StreamWriter sw = new StreamWriter(fs);
+        
+        List<BaseStatement> tableStatements = 
+          (from BaseStatement s in statements
+           where s is CreatePrimaryKey && ((s as CreatePrimaryKey).Table.TableName == tableName)
+           select s).Union<BaseStatement>(
+            from BaseStatement s2 in statements
+            where s2 is CreateCheckConstraint && ((s2 as CreateCheckConstraint).CheckConstraint.TableName == tableName)
+            select s2).ToList<BaseStatement>();
+        
+        foreach(BaseStatement s in tableStatements){
+          sw.WriteLine(s.Script);
+          sw.WriteLine(OutputGen.ScriptTerminator);
+          sw.WriteLine("");
+        }        
+
+        sw.Flush();
+        sw.Close();
+        fs.Close();      
+      }            
     }
-    
-    private void WriteConstraints(string FileName, Table t, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      sw.WriteLine(t.PrimaryKeyScript);
-      sw.WriteLine(OutputGen.ScriptTerminator);
-      sw.WriteLine("");
-      foreach(CheckConstraint cc in t.CheckConstraints){
-        sw.WriteLine(cc.Script);
-        sw.WriteLine(OutputGen.ScriptTerminator);
-        sw.WriteLine("");
-      }
-      sw.Flush();
-      sw.Close();
-      fs.Close();      
-    }
-    
-    private void WriteFunction(string FileName, Function f, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);     
-      sw.WriteLine(f.CreateFunctionScript);
-      sw.WriteLine(OutputGen.ScriptTerminator);
-      sw.WriteLine("");      
-      sw.Flush();
-      sw.Close();
-      fs.Close();
-    }
-    
-    private void WriteProcedure(string FileName, Procedure p, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      sw.WriteLine(p.CreateProcedureScript);
-      sw.WriteLine(OutputGen.ScriptTerminator);
-      sw.WriteLine("");
-      sw.Flush();
-      sw.Close();
-      fs.Close();
-    }
-    
-    private void WriteIndexes(string FileName, Table t, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      foreach (Index i in t.Indexes){
-        sw.WriteLine(i.Script);
-        sw.WriteLine(OutputGen.ScriptTerminator);
-        sw.WriteLine("");
-      }
-      sw.Flush();
-      sw.Close();
-      fs.Close();      
-    }
-    
-    private void WriteTrigger(string FileName, Trigger t, IScriptOutputHandler OutputGen){
-      FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);
-      StreamWriter sw = new StreamWriter(fs);
-      sw.WriteLine(t.CreateTriggerScript);
-      sw.WriteLine(OutputGen.ScriptTerminator);
-      sw.Flush();
-      sw.Close();
-      fs.Close();
-    }
+
+    private void WriteIndexes(string FullIndexesDir, List<BaseStatement> statements, IScriptOutputHandler OutputGen) {     
+      List<string> tableNames =
+        (from DBInfo.Core.Statement.BaseStatement s in statements
+         where s is CreateIndex
+         select (s as CreateIndex).Index.TableName).ToList<string>();
+      foreach (string tableName in tableNames) {
+        FileStream fs = new FileStream(FullIndexesDir + "\\" + tableName + ".fk.sql", FileMode.Create, FileAccess.Write);
+        StreamWriter sw = new StreamWriter(fs);
+
+        List<BaseStatement> tableStatements =
+          (from BaseStatement s in statements
+           where s is CreateIndex && ((s as CreateIndex).Index.TableName == tableName)
+           select s).ToList<BaseStatement>();
+
+        foreach (BaseStatement s in tableStatements) {
+          sw.WriteLine(s.Script);
+          sw.WriteLine(OutputGen.ScriptTerminator);
+          sw.WriteLine("");
+        }
+
+        sw.Flush();
+        sw.Close();
+        fs.Close();
+      }      
+    }    
     
     private void WriteView(string FileName, View v, IScriptOutputHandler OutputGen){
       FileStream fs = new FileStream(FileName, FileMode.Create, FileAccess.Write);

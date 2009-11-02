@@ -3,17 +3,12 @@ using System.Collections.Generic;
 
 namespace DBInfo.Core.Model {
   public class Trigger {
-  
-    private Table _Table;    
-    public Table Table{
-      get { return _Table;}
-      set { _Table = value;}
-    }
-    
-    private string _Name;
-    public string Name{
-      get { return _Name;}
-      set { _Name = value;}
+    public string TableName{
+      get; set;
+    }    
+        
+    public string TriggerName{
+      get; set;      
     }
     
     private string _Body;

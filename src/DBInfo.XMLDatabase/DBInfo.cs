@@ -39,6 +39,7 @@ namespace DBInfo.XMLDatabase {
     }
     
     /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(ExecuteScript))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateView))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateSequence))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(CreateFunction))]
@@ -474,6 +475,27 @@ namespace DBInfo.XMLDatabase {
         
         /// <remarks/>
         No,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.3038")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://dbinfo.sourceforge.net/Schemas/DBInfo.xsd")]
+    public partial class ExecuteScript : Statement {
+        
+        private string sourceCodeField;
+        
+        /// <remarks/>
+        public string SourceCode {
+            get {
+                return this.sourceCodeField;
+            }
+            set {
+                this.sourceCodeField = value;
+            }
+        }
     }
     
     /// <remarks/>

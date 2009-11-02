@@ -12,13 +12,14 @@ using System.IO;
 using Microsoft.CSharp;
 using System.Data.SqlClient;
 using System.Data;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.CodeGen {
-  public class SimpleDAO : IOutputGenerator {
+  public class SimpleDAO : IDBSchemaOutputGenerator {
     #region IOutputGenerator Members
 
-    public GeneratorType Type {
-      get { return GeneratorType.Generic; }
+    public ExpectedInputType ExpectedInputType {
+      get { return ExpectedInputType.DatabaseSchema; }
     }
 
     private string _OutputDir;
@@ -215,11 +216,11 @@ namespace DBInfo.CodeGen {
     
     private string GetWhereByPk(Table t){
       string tmp = "";
-      foreach(Column c in t.PrimaryKeyColumns){
+      foreach(string c in t.PrimaryKeyColumns){
         if (tmp == "")
-          tmp += c.Name + " = @" + c.Name;
+          tmp += c + " = @" + c;
         else
-          tmp += " and " + c.Name + " = @" + c.Name;
+          tmp += " and " + c + " = @" + c;
       }
       return tmp;
     }
@@ -229,9 +230,9 @@ namespace DBInfo.CodeGen {
         string indexName = "";
         foreach(IndexColumn ic in i.Columns){
           if (indexName == "")
-            indexName += ic.Column.Name;
+            indexName += ic.Column;
           else
-            indexName += "_" + ic.Column.Name;
+            indexName += "_" + ic.Column;
           if (ic.Order == IndexColumn.EnumOrder.Descending)
             indexName += "Desc";
         }
@@ -385,13 +386,15 @@ namespace DBInfo.CodeGen {
     
     private void CreateSqlParametersPrimaryKey(CodeStatementCollection statementCollection, Table t, string PrefixForPKVars){
       int ParamCount = 1;
-      foreach (Column c in t.PrimaryKeyColumns) {
+      foreach (string colName in t.PrimaryKeyColumns) {
+        Column c = t.FindColumn(colName);
         CreateSqlParameter(c, "pkParm" + ParamCount.ToString(), statementCollection, new CodeVariableReferenceExpression(PrefixForPKVars + c.Name));
       }
     }
 
     private void AddPrimaryKeyParams(CodeMemberMethod method, Table t) {
-      foreach (Column c in t.PrimaryKeyColumns) {
+      foreach (string colName in t.PrimaryKeyColumns) {
+        Column c = t.FindColumn(colName);
         CodeParameterDeclarationExpression param = new CodeParameterDeclarationExpression(
           GetTypeFromColumnType(c.Type),
           c.Name);
@@ -412,7 +415,8 @@ namespace DBInfo.CodeGen {
       loadMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));      
       
       int ParamCount = 1;
-      foreach(Column c in t.PrimaryKeyColumns){
+      foreach(string colName in t.PrimaryKeyColumns){
+        Column c = t.FindColumn(colName);
         CodeVariableReferenceExpression paramVar = new CodeVariableReferenceExpression("p" + ParamCount.ToString());        
         
         CreateSqlParameter(c, "p" + ParamCount.ToString(), loadMethod, new CodeVariableReferenceExpression(c.Name));      
@@ -484,10 +488,11 @@ namespace DBInfo.CodeGen {
       AddDefaultParams(loadMethod);
       
       foreach(IndexColumn ic in i.Columns){
+        Column indexCol = t.FindColumn(ic.Column);
         loadMethod.Parameters.Add(
           new CodeParameterDeclarationExpression(
-            new CodeTypeReference(GetTypeFromColumnType(ic.Column.Type)), 
-            ic.Column.Name));
+            new CodeTypeReference(GetTypeFromColumnType(indexCol.Type)), 
+            indexCol.Name));
       }
                  
       string sql =
@@ -496,9 +501,9 @@ namespace DBInfo.CodeGen {
       bool first = true;
       foreach(IndexColumn ic in i.Columns){
         if (first)
-          sql += ic.Column.Name + " = @" + ic.Column.Name;
+          sql += ic.Column + " = @" + ic.Column;
         else
-          sql += " and " + ic.Column.Name + " = @" + ic.Column.Name;
+          sql += " and " + ic.Column + " = @" + ic.Column;
         first = false;
       }
       
@@ -506,7 +511,8 @@ namespace DBInfo.CodeGen {
       
       int ParamCount = 1;
       foreach(IndexColumn ic in i.Columns){
-        CreateSqlParameter(ic.Column, "p" + ParamCount.ToString(), loadMethod, new CodeVariableReferenceExpression(ic.Column.Name));
+        Column indexCol = t.FindColumn(ic.Column);
+        CreateSqlParameter(indexCol, "p" + ParamCount.ToString(), loadMethod, new CodeVariableReferenceExpression(ic.Column));
         ParamCount++;
       }      
       
@@ -752,7 +758,8 @@ namespace DBInfo.CodeGen {
       deleteMethod.Statements.Add(CreateCommandDeclaration(new CodePrimitiveExpression(sql)));
       
       int ParamCount = 1;
-      foreach(Column c in t.PrimaryKeyColumns){
+      foreach(string colName in t.PrimaryKeyColumns){
+        Column c = t.FindColumn(colName);
         CreateSqlParameter(c, "p" + ParamCount.ToString(), deleteMethod, new CodeFieldReferenceExpression(new CodeVariableReferenceExpression("vo"), c.Name));
         ParamCount++;
       }
@@ -979,7 +986,8 @@ namespace DBInfo.CodeGen {
       blobClass.Members.Add(
         new CodeMemberField(typeof(SqlTransaction), "_Transaction"));
         
-      foreach(Column col in t.PrimaryKeyColumns){
+      foreach(string colName in t.PrimaryKeyColumns){
+        Column col = t.FindColumn(colName);
         blobClass.Members.Add(
           new CodeMemberField(GetTypeFromColumnType(col.Type), "_" + col.Name));          
       }
@@ -1320,8 +1328,9 @@ namespace DBInfo.CodeGen {
         new CodeAssignStatement(
           new CodeVariableReferenceExpression("_Transaction"),
           new CodeVariableReferenceExpression("Transaction")));
-
-      foreach (Column col in t.PrimaryKeyColumns) {
+                
+      foreach (string colName in t.PrimaryKeyColumns) {
+        Column col = t.FindColumn(colName);
         constructor.Statements.Add(
           new CodeAssignStatement(
             new CodeVariableReferenceExpression("_" + col.Name),
@@ -1686,7 +1695,10 @@ namespace DBInfo.CodeGen {
         statements.Add(ifStatement);
         colIndex++;
       }
-    }    
+    }
+
+    public void GenerateOutput(List<BaseStatement> statements, List<DBObjectType> dataToGenerateOutput){
+    }
 
     #endregion
   }

@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 namespace DBInfo.Core.Model {
   public class Index {
+    public string TableName{
+      get; set;
+    }
+  
     private string _IndexName;
     public string IndexName{
       get { return _IndexName;}

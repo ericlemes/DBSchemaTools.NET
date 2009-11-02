@@ -6,6 +6,7 @@ using DBInfo.Core;
 using DBInfo.Core.Model;
 using System.IO;
 using System.Collections.Generic;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.Core.Extractor {
 /*  public enum InputOutputType{
@@ -27,14 +28,10 @@ namespace DBInfo.Core.Extractor {
     Functions,
     TableData,
     Triggers,
-    Views,
-    Sequences    
+    Views
   };
 
-  public class DatabaseExtractor : IExtractor {
-    public ExtractorType Type{
-      get { return ExtractorType.Database; }
-    }
+  public class DatabaseExtractor {    
       
     private string _InputConnectionString;
     public string InputConnectionString {
@@ -228,9 +225,7 @@ namespace DBInfo.Core.Extractor {
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Triggers))
           ReadTriggers(db);
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Views))
-          ReadViews(db);
-        if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.Sequences))
-          ReadSequences(db);    
+          ReadViews(db);        
         if (dataToExtract.Contains(DBObjectType.All) || dataToExtract.Contains(DBObjectType.TableData)){
           ReadTableData(db);
         }      
@@ -239,6 +234,10 @@ namespace DBInfo.Core.Extractor {
       }
       
       return db;
+    }
+
+    public List<BaseStatement> Extract(List<string> InputFiles){
+      throw new NotImplementedException("Not implemented.");
     }
   }
 }

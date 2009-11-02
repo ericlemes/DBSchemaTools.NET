@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 namespace DBInfo.Core.Model {
   public class ForeignKey {
+    public string TableName{
+      get; set;
+    }    
+  
     private string _ForeignKeyName;    
     public string ForeignKeyName{
       get { return _ForeignKeyName;}

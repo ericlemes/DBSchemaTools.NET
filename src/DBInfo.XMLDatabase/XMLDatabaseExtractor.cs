@@ -5,13 +5,10 @@ using System.Text;
 using DBInfo.Core.Extractor;
 using System.IO;
 using System.Xml.Serialization;
+using DBInfo.Core.Statement;
 
 namespace DBInfo.XMLDatabase {
-  public class XMLDatabaseExtractor : IExtractor  {   
-    public ExtractorType Type {
-      get { return ExtractorType.Generic;}
-    }
-    
+  public class XMLDatabaseExtractor : IScriptExtractor {           
     private string _InputDir;
     public string InputDir{
       get { return _InputDir;}
@@ -35,20 +32,17 @@ namespace DBInfo.XMLDatabase {
       get { return _InputFiles;}
     }
     
-    public DBInfo.Core.Model.Database ExtractXMLDatabase(List<string> XMLFiles){
-      DBInfo.Core.Model.Database db = new DBInfo.Core.Model.Database();
+    public List<BaseStatement> ExtractXMLDatabase(List<string> XMLFiles){
+      List<BaseStatement> statementCol = new List<BaseStatement>();      
       
       foreach(string xmlFile in XMLFiles){
-        ParseXMLFile(xmlFile, db, 1);
-      }
-      foreach (string xmlFile in XMLFiles) {
-        ParseXMLFile(xmlFile, db, 2);
-      }
-      
-      return db;
+        ParseXMLFile(xmlFile, statementCol);
+      }      
+
+      return statementCol;
     }
     
-    private void ParseXMLFile(string xmlFile, DBInfo.Core.Model.Database db, int Step){
+    private void ParseXMLFile(string xmlFile, List<BaseStatement> statementCol){
       FileStream fs = new FileStream(xmlFile, FileMode.Open, FileAccess.Read);
       XmlSerializer xs = new XmlSerializer(typeof(StatementCollection));
       StatementCollection sc = (StatementCollection)xs.Deserialize(fs);
@@ -57,31 +51,25 @@ namespace DBInfo.XMLDatabase {
       if (sc.Statement == null)
         return;
       
-      foreach(Statement s in sc.Statement){
-        if (Step == 1){
-          if (s is CreateTable)
-            db.Tables.Add(ParseCreateTableStatement((CreateTable)s));
-        }
-        else {
-          if (s is CreateForeignKey)
-            ParseCreateForeignKeyStatement((CreateForeignKey)s, db);
-          else if (s is CreateIndex)
-            ParseCreateIndexStatement((CreateIndex)s, db);
-          else if (s is CreateCheckConstraint)
-            ParseCreateCheckConstraintStatement((CreateCheckConstraint)s, db);
-          else if (s is CreateTrigger)
-            ParseCreateTriggerStatement((CreateTrigger)s, db);
-          else if (s is CreateProcedure)
-            db.Procedures.Add(ParseCreateProcedureStatement((CreateProcedure)s));
-          else if (s is CreatePrimaryKey)
-            ParseCreatePrimaryKeyStatement((CreatePrimaryKey)s, db);
-          else if (s is CreateFunction)
-            db.Functions.Add(ParseCreateFunctionStatement((CreateFunction)s));
-          else if (s is CreateSequence)
-            db.Sequences.Add(ParseCreateSequenceStatement((CreateSequence)s));
-          else if (s is CreateView)
-            db.Views.Add(ParseCreateViewStatement((CreateView)s));
-        }
+      foreach(Statement s in sc.Statement){        
+        if (s is CreateTable)
+          statementCol.Add(ParseCreateTableStatement((CreateTable)s));        
+        else if (s is CreateForeignKey)
+          statementCol.Add(ParseCreateForeignKeyStatement((CreateForeignKey)s));
+        else if (s is CreateIndex)
+          statementCol.Add(ParseCreateIndexStatement((CreateIndex)s));
+        else if (s is CreateCheckConstraint)
+          statementCol.Add(ParseCreateCheckConstraintStatement((CreateCheckConstraint)s));
+        else if (s is CreateTrigger)
+          statementCol.Add(ParseCreateTriggerStatement((CreateTrigger)s));
+        else if (s is CreateProcedure)
+          statementCol.Add(ParseCreateProcedureStatement((CreateProcedure)s));
+        else if (s is CreatePrimaryKey)
+          statementCol.Add(ParseCreatePrimaryKeyStatement((CreatePrimaryKey)s));
+        else if (s is CreateFunction)
+          statementCol.Add(ParseCreateFunctionStatement((CreateFunction)s));
+        else if (s is CreateView)
+          statementCol.Add(ParseCreateViewStatement((CreateView)s));                        
       }
     }
     
@@ -140,7 +128,7 @@ namespace DBInfo.XMLDatabase {
         throw new Exception(String.Format("Type not supported: {0}", ct.ToString()));      
     }
     
-    private DBInfo.Core.Model.Table ParseCreateTableStatement(CreateTable ct){
+    private DBInfo.Core.Statement.CreateTable ParseCreateTableStatement(CreateTable ct){
       DBInfo.Core.Model.Table t = new DBInfo.Core.Model.Table();
       t.TableName = ct.TableName;
       t.HasIdentity = ct.HasIdentity == YesNo.Yes;
@@ -161,15 +149,16 @@ namespace DBInfo.XMLDatabase {
           t.Columns.Add(c);
         }
       }      
-      return t;
+      
+      DBInfo.Core.Statement.CreateTable createTable = new DBInfo.Core.Statement.CreateTable();
+      createTable.Table = t;
+      
+      return createTable;
     }
     
-    private void ParseCreateForeignKeyStatement(CreateForeignKey xmlFK, DBInfo.Core.Model.Database db){
-      DBInfo.Core.Model.Table t = db.FindTable(xmlFK.TableName, true);
-      if (t == null)
-        throw new Exception(String.Format("Table {0} not found when creating foreign key {1}", xmlFK.TableName, xmlFK.ForeignKeyName));
-      
+    private DBInfo.Core.Statement.CreateForeignKey ParseCreateForeignKeyStatement(CreateForeignKey xmlFK){      
       DBInfo.Core.Model.ForeignKey fk = new DBInfo.Core.Model.ForeignKey();
+      fk.TableName = xmlFK.TableName;
       fk.ForeignKeyName = xmlFK.ForeignKeyName;
       fk.RefTableName = xmlFK.RefTableName;
       fk.DeleteCascade = xmlFK.DeleteCascade == YesNo.Yes;
@@ -178,28 +167,21 @@ namespace DBInfo.XMLDatabase {
       if (xmlFK.Columns != null){
         foreach(ForeignKeyColumn xmlFKCol in xmlFK.Columns){
           DBInfo.Core.Model.ForeignKeyColumn fkCol = new DBInfo.Core.Model.ForeignKeyColumn();
-          fkCol.Column = t.FindColumn(xmlFKCol.ColumnName);
-          if (fkCol.Column == null)
-            throw new Exception(String.Format("Couldn't find column {0} on table {1} when creating foreign key {2}", xmlFKCol.ColumnName, t.TableName, xmlFK.ForeignKeyName));
-          fkCol.RefTable = db.FindTable(xmlFK.RefTableName, true);
-          if (fkCol.RefTable == null)
-            throw new Exception(String.Format("Couldn't find table {0} when creating foreign key {1}", xmlFK.RefTableName, xmlFK.ForeignKeyName));
-          fkCol.RefColumn = fkCol.RefTable.FindColumn(xmlFKCol.RefColumnName);
-          if (fkCol.RefColumn == null)
-            throw new Exception(String.Format("Couldn't find column {0} on table {1} when creating foreign key {2}", xmlFKCol.RefColumnName, xmlFK.RefTableName, xmlFK.ForeignKeyName));          
+          fkCol.Column = xmlFKCol.ColumnName;          
+          fkCol.RefTable = xmlFK.RefTableName;          
+          fkCol.RefColumn = xmlFKCol.RefColumnName;
           fk.Columns.Add(fkCol);
         }
       }
       
-      t.ForeignKeys.Add(fk);
+      DBInfo.Core.Statement.CreateForeignKey cfk = new DBInfo.Core.Statement.CreateForeignKey();
+      cfk.ForeignKey = fk;
+      return cfk;
     }
     
-    private void ParseCreateIndexStatement(CreateIndex xmlIndex, DBInfo.Core.Model.Database db){
-      DBInfo.Core.Model.Table t = db.FindTable(xmlIndex.TableName, true);
-      if (t == null)
-        throw new Exception(String.Format("Table {0} not found when creating index {1}", xmlIndex.TableName, xmlIndex.IndexName));
-      
+    private DBInfo.Core.Statement.CreateIndex ParseCreateIndexStatement(CreateIndex xmlIndex){     
       DBInfo.Core.Model.Index i = new DBInfo.Core.Model.Index();
+      i.TableName = xmlIndex.TableName;
       i.IndexName = xmlIndex.IndexName;
       i.Unique = xmlIndex.Unique == YesNo.Yes;
       i.IsClustered = xmlIndex.Clustered == YesNo.Yes;
@@ -207,39 +189,38 @@ namespace DBInfo.XMLDatabase {
       if (xmlIndex.Columns != null){
         foreach(IndexColumn xmlIndexCol in xmlIndex.Columns){
           DBInfo.Core.Model.IndexColumn ic = new DBInfo.Core.Model.IndexColumn();
-          ic.Column = t.FindColumn(xmlIndexCol.Name);
-          if (ic.Column == null)
-            throw new Exception(String.Format("Couldn't find column {0} on table {1} when creating index {2}", xmlIndexCol.Name, t.TableName, xmlIndex.IndexName));
+          ic.Column = xmlIndexCol.Name;          
           ic.Order = xmlIndexCol.Order == SortOrder.Ascending ? DBInfo.Core.Model.IndexColumn.EnumOrder.Ascending : DBInfo.Core.Model.IndexColumn.EnumOrder.Descending;
           i.Columns.Add(ic);
         }
       }
       
-      t.Indexes.Add(i);
+      DBInfo.Core.Statement.CreateIndex cidx = new DBInfo.Core.Statement.CreateIndex();
+      cidx.Index = i;
+      return cidx;
     }
     
-    private void ParseCreateCheckConstraintStatement(CreateCheckConstraint xmlCheck, DBInfo.Core.Model.Database db){
-      DBInfo.Core.Model.Table t = db.FindTable(xmlCheck.TableName, true);
-      if (t == null)
-        throw new Exception(String.Format("Couldn't find table {0} when creating check constraint {1}", xmlCheck.TableName, xmlCheck.CheckConstraintName));
-      
+    private DBInfo.Core.Statement.CreateCheckConstraint ParseCreateCheckConstraintStatement(CreateCheckConstraint xmlCheck){      
       DBInfo.Core.Model.CheckConstraint ck = new DBInfo.Core.Model.CheckConstraint();
-      ck.Name = xmlCheck.CheckConstraintName;
+      ck.TableName = xmlCheck.TableName;
+      ck.CheckConstraintName = xmlCheck.CheckConstraintName;
       ck.Expression = xmlCheck.SourceCode;
       
-      t.CheckConstraints.Add(ck);
+      DBInfo.Core.Statement.CreateCheckConstraint scc = new DBInfo.Core.Statement.CreateCheckConstraint();
+      scc.CheckConstraint = ck;
+      
+      return scc;           
     }
     
-    private void ParseCreateTriggerStatement(CreateTrigger xmlTrigger, DBInfo.Core.Model.Database db){
-      DBInfo.Core.Model.Table t = db.FindTable(xmlTrigger.TableName, true);
-      if (t == null)
-        throw new Exception(String.Format("Couldn't find table {0} when creating trigger {1}", xmlTrigger.TableName, xmlTrigger.TriggerName));
-      
-      DBInfo.Core.Model.Trigger tr = new DBInfo.Core.Model.Trigger();
+    private DBInfo.Core.Statement.CreateTrigger ParseCreateTriggerStatement(CreateTrigger xmlTrigger){      
+      DBInfo.Core.Model.Trigger tr = new DBInfo.Core.Model.Trigger();      
+      tr.TableName = xmlTrigger.TableName;
       tr.Body = xmlTrigger.SourceCode;
-      tr.Name = xmlTrigger.TriggerName;
-      tr.Table = t;
-      t.Triggers.Add(tr);
+      tr.TriggerName = xmlTrigger.TriggerName;
+      
+      DBInfo.Core.Statement.CreateTrigger ctrigger = new DBInfo.Core.Statement.CreateTrigger();
+      ctrigger.Trigger = tr;
+      return ctrigger;      
     }
     
     private DBInfo.Core.Model.ParamDirection GetParameterDirection(ParameterDirection d){
@@ -255,7 +236,7 @@ namespace DBInfo.XMLDatabase {
         throw new Exception(String.Format("Invalid parameter direction {0}", d.ToString()));
     }
     
-    private DBInfo.Core.Model.Procedure ParseCreateProcedureStatement(CreateProcedure xmlProcedure){
+    private DBInfo.Core.Statement.CreateProcedure ParseCreateProcedureStatement(CreateProcedure xmlProcedure){
       DBInfo.Core.Model.Procedure p = new DBInfo.Core.Model.Procedure();
       p.Body = xmlProcedure.SourceCode;
       p.Name = xmlProcedure.Name;
@@ -291,54 +272,50 @@ namespace DBInfo.XMLDatabase {
         }        
       }
       
-      return p;
-    }
-    
-    private void ParseCreatePrimaryKeyStatement(CreatePrimaryKey xmlPrimaryKey, DBInfo.Core.Model.Database db){
-      DBInfo.Core.Model.Table t = db.FindTable(xmlPrimaryKey.TableName, true);
-      if (t == null)
-        throw new Exception(String.Format("Couldn't find table {0} when creating primary key {1}", xmlPrimaryKey.TableName, xmlPrimaryKey.PrimaryKeyName));
+      DBInfo.Core.Statement.CreateProcedure cp = new DBInfo.Core.Statement.CreateProcedure();
+      cp.Procedure = p;
       
-      t.PrimaryKeyName = xmlPrimaryKey.PrimaryKeyName;
-      foreach(string c in xmlPrimaryKey.Columns){
-        DBInfo.Core.Model.Column col = t.FindColumn(c);
-        if (col == null)
-          throw new Exception(String.Format("Couldn't find column {0} when creating primary key {1}", c, xmlPrimaryKey.PrimaryKeyName));
-        col.IsPK = true;
-        t.PrimaryKeyColumns.Add(col);
-      }
+      return cp;
     }
     
-    private DBInfo.Core.Model.Function ParseCreateFunctionStatement(CreateFunction xmlFunction){
+    private DBInfo.Core.Statement.CreatePrimaryKey ParseCreatePrimaryKeyStatement(CreatePrimaryKey xmlPrimaryKey){      
+      DBInfo.Core.Model.Table t = new DBInfo.Core.Model.Table();
+      t.TableName = xmlPrimaryKey.TableName;
+      t.PrimaryKeyName = xmlPrimaryKey.PrimaryKeyName;
+      foreach(string c in xmlPrimaryKey.Columns){        
+        t.PrimaryKeyColumns.Add(c);
+      }
+      DBInfo.Core.Statement.CreatePrimaryKey cpk = new DBInfo.Core.Statement.CreatePrimaryKey();
+      cpk.Table = t;
+      return cpk;
+    }
+
+    private DBInfo.Core.Statement.CreateFunction ParseCreateFunctionStatement(CreateFunction xmlFunction) {
       DBInfo.Core.Model.Function f = new DBInfo.Core.Model.Function();
       f.Body = xmlFunction.SourceCode;
       f.Name = xmlFunction.Name;
-      return f;
-    }
-    
-    private DBInfo.Core.Model.Sequence ParseCreateSequenceStatement(CreateSequence xmlSequence){
-      DBInfo.Core.Model.Sequence s = new DBInfo.Core.Model.Sequence();
-      s.SequenceName = xmlSequence.Name;
-      s.Initial = Convert.ToInt32(xmlSequence.Initial);
-      s.MinValue = Convert.ToInt32(xmlSequence.MinValue);
-      s.MaxValue = Convert.ToInt32(xmlSequence.MaxValue);
-      s.Increment = Convert.ToInt32(xmlSequence.Increment);
-      s.CycleOnLimit = xmlSequence.CycleOnLimit == YesNo.Yes;
       
-      return s;
-    }
+      DBInfo.Core.Statement.CreateFunction cf = new DBInfo.Core.Statement.CreateFunction();
+      cf.Function = f;
+      
+      return cf;
+    }   
     
-    private DBInfo.Core.Model.View ParseCreateViewStatement(CreateView xmlView){
+    private DBInfo.Core.Statement.CreateView ParseCreateViewStatement(CreateView xmlView){
       DBInfo.Core.Model.View v = new DBInfo.Core.Model.View();
       v.Name = xmlView.Name;
       v.Body = xmlView.SourceCode;
       
-      return v;
+      DBInfo.Core.Statement.CreateView cv = new DBInfo.Core.Statement.CreateView();
+      cv.View = v;
+      
+      return cv;
     }
-    
-    public DBInfo.Core.Model.Database Extract(List<DBObjectType> dataToExtract){
+        
+
+    public List<BaseStatement> Extract(List<DBObjectType> dataToExtract){
       return ExtractXMLDatabase(_InputFiles);
-    }
+    }    
     
   }
 }

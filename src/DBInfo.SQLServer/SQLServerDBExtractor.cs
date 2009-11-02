@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace DBInfo.DBExtractors {
   public class SQLServerDBExtractor : IDatabaseExtractor {    
-
+  
     private string _InputConnectionString;
     public string InputConnectionString {
       get { return _InputConnectionString; }
@@ -223,9 +223,9 @@ namespace DBInfo.DBExtractors {
       
       foreach (DataRow colrow in ds.Tables[0].Rows) {
         ForeignKeyColumn col = new ForeignKeyColumn();                
-        col.RefTable = db.FindTable(fk.RefTableName, true);
-        col.Column = table.FindColumn((string)colrow[0]);
-        col.RefColumn = col.RefTable.FindColumn((string)colrow[1]);
+        col.RefTable = fk.RefTableName;
+        col.Column = (string)colrow[0];
+        col.RefColumn = (string)colrow[1];
         fk.Columns.Add(col);
       }
     }
@@ -269,11 +269,8 @@ namespace DBInfo.DBExtractors {
       DataSet ds = new DataSet();
       dat.Fill(ds);      
       
-      foreach (DataRow r in ds.Tables[0].Rows) {
-        Column c = table.FindColumn((string)r[0]);
-        if (c == null)
-          throw new Exception("Não foi localizada a coluna " + (string)r[0] + " da primary key da tabela " + table.TableName);
-        table.PrimaryKeyColumns.Add(c);
+      foreach (DataRow r in ds.Tables[0].Rows) {        
+        table.PrimaryKeyColumns.Add((string)r[0]);
       }
     }
 
@@ -338,7 +335,7 @@ namespace DBInfo.DBExtractors {
       
       foreach (DataRow r2 in ds.Tables[0].Rows) {
         IndexColumn c = new IndexColumn();
-        c.Column = table.FindColumn((string)r2[0]);
+        c.Column = (string)r2[0];
         c.Order = ((IndexColumn.EnumOrder)Convert.ToInt32(r2[1]));
         if (c == null)
           throw new Exception("Não foi localizada a coluna " + (string)r2[0] + " do índice " + table.TableName + "." + index.IndexName);
@@ -607,14 +604,14 @@ namespace DBInfo.DBExtractors {
 
       foreach (DataRow r in ds.Tables[0].Rows) {
         Trigger tr = new Trigger();
-        tr.Name = (string)r[0];
-        tr.Table = t;        
+        tr.TableName = t.TableName;
+        tr.TriggerName = (string)r[0];        
         t.Triggers.Add(tr);        
       }
     }
 
     public void GetTriggerText(Database db, Table t, Trigger tr) {
-      SqlCommand qry = new SqlCommand("sp_helptext " + tr.Name, SqlConn);
+      SqlCommand qry = new SqlCommand("sp_helptext " + tr.TriggerName, SqlConn);
       SqlDataAdapter dat = new SqlDataAdapter();
       dat.SelectCommand = qry;
       DataSet ds = new DataSet();
@@ -685,7 +682,8 @@ namespace DBInfo.DBExtractors {
 
       foreach (DataRow r in ds.Tables[0].Rows) {
         CheckConstraint ch = new CheckConstraint();
-        ch.Name = (string)r[0];
+        ch.TableName = t.TableName;
+        ch.CheckConstraintName = (string)r[0];
         ch.Expression = (string)r[1];
         t.CheckConstraints.Add(ch);      
       }

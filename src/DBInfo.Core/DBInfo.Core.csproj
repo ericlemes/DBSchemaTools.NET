@@ -45,9 +45,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseToStatementCollectionConverter.cs" />
     <Compile Include="Extractor\DatabaseExtractor.cs" />
     <Compile Include="Extractor\IDatabaseExtractor.cs" />
-    <Compile Include="Extractor\IExtractor.cs" />
+    <Compile Include="Extractor\IScriptExtractor.cs" />
     <Compile Include="Model\CheckConstraint.cs" />
     <Compile Include="Model\Column.cs" />
     <Compile Include="Model\Database.cs" />
@@ -59,6 +60,8 @@
     <Compile Include="Model\Parameter.cs" />
     <Compile Include="Model\Procedure.cs" />
     <Compile Include="Model\Sequence.cs" />
+    <Compile Include="StatementCollectionToDatabaseConverter.cs" />
+    <Compile Include="Statement\BaseStatement.cs" />
     <Compile Include="Model\Table.cs" />
     <Compile Include="Model\Trigger.cs" />
     <Compile Include="Model\View.cs" />
@@ -66,11 +69,19 @@
     <Compile Include="OutputGenerators\DatabaseScript.cs" />
     <Compile Include="OutputGenerators\IOutputGenerator.cs" />
     <Compile Include="OutputGenerators\IScriptFileOutputGenerator.cs" />
-    <Compile Include="OutputGenerators\IScriptOutputGenerator.cs" />
     <Compile Include="OutputGenerators\IScriptOutputHandler.cs" />
     <Compile Include="OutputGenerators\ScriptOutputGenerator.cs" />
     <Compile Include="OutputGenerators\SplittedScriptFileOutputGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Statement\CreateCheckConstraint.cs" />
+    <Compile Include="Statement\CreateForeignKey.cs" />
+    <Compile Include="Statement\CreateFunction.cs" />
+    <Compile Include="Statement\CreateIndex.cs" />
+    <Compile Include="Statement\CreatePrimaryKey.cs" />
+    <Compile Include="Statement\CreateProcedure.cs" />
+    <Compile Include="Statement\CreateTable.cs" />
+    <Compile Include="Statement\CreateTrigger.cs" />
+    <Compile Include="Statement\CreateView.cs" />
     <Compile Include="TypeUtility.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace DBInfo.Core.Model {
   public class Table {
@@ -29,8 +30,8 @@ namespace DBInfo.Core.Model {
       set { _PrimaryKeyName = value; }
     }
 
-    private List<Column> _PrimaryKeyColumns = new List<Column>();
-    public List<Column> PrimaryKeyColumns {
+    private List<string> _PrimaryKeyColumns = new List<string>();
+    public List<string> PrimaryKeyColumns {
       get { return _PrimaryKeyColumns; }
       set { _PrimaryKeyColumns = value; }
     }
@@ -109,7 +110,7 @@ namespace DBInfo.Core.Model {
     public ForeignKeyColumn ColumnHasForeignKey(Column AColumn) {
       foreach (ForeignKey fk in ForeignKeys) {
         foreach (ForeignKeyColumn fkcol in fk.Columns) {
-          if (fkcol.Column == AColumn) {
+          if (fkcol.Column == AColumn.Name) {
             return fkcol;
           }
         }
@@ -123,6 +124,35 @@ namespace DBInfo.Core.Model {
           return c.Name;
       }
       return "";
+    }
+    
+    public Index FindIndex(string IndexName){      
+      return 
+        (from Index i in this.Indexes
+         where i.IndexName.ToLower() == IndexName.ToLower()
+         select i).FirstOrDefault<Index>();
+    }
+    
+    public Trigger FindTrigger(string TriggerName){
+      return 
+        (from Trigger tr in this.Triggers
+         where tr.TriggerName.ToLower() == TriggerName.ToLower()
+         select tr).FirstOrDefault<Trigger>();
+    }
+    
+    public ForeignKey FindForeignKey(string ForeignKeyName){
+      return
+        (from ForeignKey fk in this.ForeignKeys
+         where fk.ForeignKeyName.ToLower() == ForeignKeyName.ToLower()
+         select fk).FirstOrDefault<ForeignKey>();
+    }
+    
+    public CheckConstraint FindCheckConstraint(string CheckConstraintName){
+      return 
+        (from CheckConstraint cc in this.CheckConstraints
+         where cc.CheckConstraintName.ToLower() == CheckConstraintName.ToLower()
+         select cc
+         ).FirstOrDefault<CheckConstraint>();
     }
 
   }
